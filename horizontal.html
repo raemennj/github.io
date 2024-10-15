@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Door Equal Space Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Include your font or any external CSS here -->
+    <link href="https://use.typekit.net/iwc3riw.css" rel="stylesheet"/>
+    <style>
+        /* CSS Styles */
+        body {
+            font-size: 18px;
+            margin: 0;
+            padding: 5px;
+            background-color: darkslategrey;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            font-family: "dunbar-tall", sans-serif;
+        }
+        .tab-container {
+            display: flex;
+            width: 100%;
+        }
+        .tab {
+            flex: 1;
+            padding: 15px; 
+            font-size: 19px;
+            cursor: pointer;
+            border-left: 1px solid #363636;
+            border-right: 1px solid #363636;
+            border-bottom: 1px solid #363636;
+            text-align: center;
+            background-color: lightyellow;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            margin-top: 5px;
+        }
+        .tab.active {
+            border-bottom: 0px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            margin-top: 0px;
+        }
+        /* Active tab styles */
+        #smallDoorTab.active {
+            background-color: lightblue;
+        }
+        #bigDoorTab.active {
+            background-color: lightgreen;
+        }
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .input-container div {
+            flex: 1;
+            text-align: center;
+        }
+        input {
+            font-size: 18px;
+            max-width: 100%;
+            text-align: center;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: lightyellow;
+            width: 70%;
+            font-family: "dunbar-tall", sans-serif;
+            cursor: pointer;
+        }
+        .length, .burn, .segmentType {
+            width: 33%;
+            float: left;
+            text-align: center;
+            padding-top: 15px;
+            padding-bottom: 14px;
+            background-color: lightblue;
+            border-bottom: 1px solid #363636;
+        }
+        /* Change background color when Big Door is active */
+        .big-door-active .length,
+        .big-door-active .burn,
+        .big-door-active .segmentType {
+            background-color: lightgreen;
+        }
+        .resultsBG {
+            text-align: center;
+            background-color: lightyellow;
+            width: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .readme-container {      
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            width: 100%;
+            border: none;
+        }
+        .readme-container button {
+            flex: 1;
+            text-align: center;
+            text-decoration: underline;
+            background-color: lightyellow;
+            border: none;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            font-size: 18px;
+            padding-bottom: 10px;
+            font-family: "dunbar-tall", sans-serif;
+        }
+        .close-btn {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        #showModalBtn {
+            color: black;
+            cursor: pointer;
+        }
+        .modal-content {
+            background-color: lightyellow;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 14px;
+            border: 1px solid #888;
+            width: 80%;
+            max-height: calc(100vh - 40px); 
+            overflow-y: auto; 
+        }
+        @media screen and (orientation:landscape) {
+            .modal-content {
+                max-height: calc(100vh - 80px); 
+            }
+        }
+        @media (min-width: 601px) {
+            body {
+                margin: 0 auto; 
+                max-width: 600px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="tab-container">
+        <div id="smallDoorTab" class="tab active" tabindex="0" role="button" onclick="selectDoorType('small')">Small Door</div>
+        <div id="bigDoorTab" class="tab" tabindex="0" role="button" onclick="selectDoorType('big')">Big Door</div>
+    </div>
+    <form class="input-container">
+        <div class="length">
+            <label for="feet">Feet:</label><br>
+            <input type="number" id="feet" placeholder="Feet" min="0" step="1">
+        </div>
+        <div class="burn">
+            <label for="inches">Inches:</label><br>
+            <input type="text" id="inches" placeholder="Inches (e.g., 7 1/2)">
+        </div>
+        <div class="segmentType">
+            <label for="sideBoard">Side Board Width:</label><br>
+            <input type="number" id="sideBoard" placeholder="Inches" min="0" step="any" value="5.5">
+        </div>
+    </form>
+    <div class="resultsBG">
+        <p id="result" role="text" aria-live="assertive"></p>
+    </div>
+    <div class="readme-container">
+        <button id="showModalBtn">Instructions</button>
+        <div id="instructionsModal" class="modal">
+            <div class="modal-content">
+                <p>
+                    Use the tabs above to select the door type: <strong>Small Door</strong> or <strong>Big Door</strong>.
+                </p>
+                <p>
+                    Enter the door width in feet and inches. You can enter either or both. Inches can include fractions (e.g., 7 1/2).
+                </p>
+                <p>
+                    The <strong>Side Board Width</strong> defaults to 5.5 inches but can be adjusted as needed.
+                </p>
+                <p>
+                    The calculator will automatically compute the equal spaces based on your inputs.
+                </p>
+                <p>
+                    <span class="close-btn" id="closeModalBtn" tabindex="0">Close</span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            // State variables
+            let doorType = 'small';
+
+            // Debounce function
+            function debounce(func, delay) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            // References to DOM elements
+            const feetInput = document.getElementById('feet');
+            const inchesInput = document.getElementById('inches');
+            const sideBoardInput = document.getElementById('sideBoard');
+            const smallDoorTab = document.getElementById('smallDoorTab');
+            const bigDoorTab = document.getElementById('bigDoorTab');
+            const resultDiv = document.getElementById('result');
+            const body = document.body;
+
+            // Event listeners for inputs with debounce
+            feetInput.addEventListener('input', debounce(calculateSpaces, 500));
+            inchesInput.addEventListener('input', debounce(calculateSpaces, 500));
+            sideBoardInput.addEventListener('input', debounce(calculateSpaces, 500));
+
+            // Event listeners for door type tabs
+            smallDoorTab.addEventListener('click', () => selectDoorType('small'));
+            bigDoorTab.addEventListener('click', () => selectDoorType('big'));
+
+            // Function to select door type
+            function selectDoorType(type) {
+                doorType = type;
+                // Update tab styles
+                if (type === 'small') {
+                    smallDoorTab.classList.add('active');
+                    bigDoorTab.classList.remove('active');
+                    // Update body class for styling
+                    body.classList.remove('big-door-active');
+                } else {
+                    smallDoorTab.classList.remove('active');
+                    bigDoorTab.classList.add('active');
+                    // Update body class for styling
+                    body.classList.add('big-door-active');
+                }
+                calculateSpaces(); // Trigger calculation immediately
+            }
+
+            // Initial door type selection
+            selectDoorType('small');
+
+            // Function to parse inches input, including fractions
+            function parseInches(inchesStr) {
+                let totalInches = 0;
+                const parts = inchesStr.split(' ').filter(Boolean);
+
+                for (let part of parts) {
+                    if (part.includes('/')) {
+                        const [numerator, denominator] = part.split('/').map(Number);
+                        if (isNaN(numerator) || isNaN(denominator) || denominator === 0) {
+                            return NaN;
+                        }
+                        totalInches += numerator / denominator;
+                    } else {
+                        const number = parseFloat(part);
+                        if (isNaN(number)) {
+                            return NaN;
+                        }
+                        totalInches += number;
+                    }
+                }
+
+                return totalInches;
+            }
+
+            // Function to calculate equal spaces
+            function calculateSpaces() {
+                const feetValue = feetInput.value.trim();
+                const inchesValue = inchesInput.value.trim();
+                const sideBoardValue = sideBoardInput.value.trim();
+
+                // Validate inputs
+                let feet = 0;
+                let inches = 0;
+                let sideBoardWidth = 5.5; // Default value
+
+                if (feetValue !== '') {
+                    feet = parseInt(feetValue, 10);
+                    if (isNaN(feet) || feet < 0) {
+                        resultDiv.innerText = 'Please enter a valid non-negative number for feet.';
+                        return;
+                    }
+                }
+
+                if (inchesValue !== '') {
+                    inches = parseInches(inchesValue);
+                    if (isNaN(inches) || inches < 0) {
+                        resultDiv.innerText = 'Please enter a valid non-negative number for inches.';
+                        return;
+                    }
+                }
+
+                if (sideBoardValue !== '') {
+                    sideBoardWidth = parseFloat(sideBoardValue);
+                    if (isNaN(sideBoardWidth) || sideBoardWidth < 0) {
+                        resultDiv.innerText = 'Please enter a valid non-negative number for side board width.';
+                        return;
+                    }
+                }
+
+                const totalWidth = (feet * 12) + inches;
+
+                // Ensure totalWidth is positive
+                if (totalWidth <= 0) {
+                    resultDiv.innerText = 'Total width must be greater than zero.';
+                    return;
+                }
+
+                let equalSpace;
+
+                if (doorType === 'small') {
+                    const fixedWidth = (2 * sideBoardWidth) + 11.125; // Small door setup
+                    equalSpace = (totalWidth - fixedWidth) / 2;
+                    if (equalSpace < 0) {
+                        resultDiv.innerText = 'Total width is too small for the selected door type.';
+                        return;
+                    }
+                } else if (doorType === 'big') {
+                    const fixedWidth = (2 * sideBoardWidth) + (3 * 11.125); // Big door setup
+                    equalSpace = (totalWidth - fixedWidth) / 4;
+                    if (equalSpace < 0) {
+                        resultDiv.innerText = 'Total width is too small for the selected door type.';
+                        return;
+                    }
+                }
+
+                const resultText = `Each equal space is approximately ${convertToTapeMeasurement(equalSpace)} inches.`;
+                resultDiv.innerText = resultText;
+            }
+
+            // Function to convert decimal inches to tape measurement
+            function convertToTapeMeasurement(decimalInches) {
+                const fraction = Math.round(decimalInches * 16);
+                const whole = Math.floor(fraction / 16);
+                const remainder = fraction % 16;
+
+                if (remainder === 0) return `${whole}"`;
+
+                const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
+                const divisor = gcd(remainder, 16);
+
+                const numerator = remainder / divisor;
+                const denominator = 16 / divisor;
+
+                return `${whole ? whole + ' ' : ''}${numerator}/${denominator}"`;
+            }
+
+            // Instructions modal handling
+            const modal = document.getElementById('instructionsModal');
+            const showModalBtn = document.getElementById('showModalBtn');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+
+            // Function to open the modal
+            function openModal() {
+                modal.style.display = "block";
+                closeModalBtn.focus();
+            }
+
+            // Function to close the modal
+            function closeModal() {
+                modal.style.display = "none";
+                showModalBtn.focus(); 
+            }
+
+            showModalBtn.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+
+            // Event listener to close the modal if a click is detected outside of it
+            window.addEventListener('click', function(event) {
+                if (event.target === modal) {
+                    closeModal(); 
+                }
+            });
+
+            // Initial calculation on page load
+            calculateSpaces();
+        })();
+    </script>
+</body>
+</html>
