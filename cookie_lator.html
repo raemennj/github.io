@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Girl Scout Cookie Sales</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Optional: Remove the Google Fonts link for Arial as it's a system font -->
+  <style>
+    /* ===== BASE STYLES ===== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #32cd32; /* Bright green background */
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 10px; /* Reduced padding for smaller screens */
+    }
+
+    .container {
+      background-color: #f8f8f0; /* Off-white background */
+      padding: 15px; /* Reduced padding */
+      border-radius: 10px;
+      width: 100%;
+      max-width: 400px; /* Adjusted for smaller screens */
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    /* ===== HEADER ===== */
+    h1 {
+      margin-bottom: 10px;
+      font-size: 1.5rem; /* Adjusted font size */
+    }
+
+    .total {
+      font-size: 2.5rem; /* Slightly increased font size */
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    /* ===== MODE TOGGLE BUTTON ===== */
+    .mode-toggle {
+      background: #2e7d32;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+      width: 100%; /* Full width on small screens */
+    }
+
+    .mode-toggle:hover {
+      background: #276c29;
+    }
+
+    /* ===== COOKIE GRID ===== */
+    .cookie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin: 15px 0;
+    }
+
+    .cookie-card {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      height: 120px; /* Fixed height for uniformity */
+    }
+
+    .cookie-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+
+    .color-rectangle {
+      width: 100%;
+      height: 60px;
+      background-color: #ccc;
+      margin-bottom: 5px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* Removed static text color and text-shadow */
+      /* color: limegreen; */
+      /* text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); */
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .cookie-name {
+      font-size: 1rem;
+      margin-bottom: 3px;
+      text-align: center;
+    }
+
+    .cookie-price {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    .quantity-display {
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+
+    /* ===== DISABLED CARD ===== */
+    .cookie-card.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* ===== INSTRUCTIONS BUTTON ===== */
+    .instructions-btn {
+      background: #2e7d32;
+      color: white;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      transition: background 0.3s;
+      width: 100%; /* Full width on small screens */
+    }
+
+    .instructions-btn:hover {
+      background: #276c29;
+    }
+
+    /* ===== MODAL ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: left;
+      max-width: 350px;
+      width: 90%;
+      position: relative;
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .close-btn {
+      color: #333;
+      cursor: pointer;
+      position: absolute;
+      top: 8px;
+      right: 12px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    /* ===== RESPONSIVE DESIGN ===== */
+    @media (max-width: 480px) {
+      .cookie-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3x3 grid */
+        gap: 8px;
+      }
+
+      .cookie-card {
+        height: 100px; /* Adjusted height */
+        padding: 5px;
+      }
+
+      .color-rectangle {
+        height: 50px;
+        font-size: 0.8rem;
+      }
+
+      .cookie-name {
+        font-size: 0.9rem;
+      }
+
+      .cookie-price {
+        font-size: 0.8rem;
+      }
+
+      .quantity-display {
+        background-color: blanchedalmond;
+        color: green;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Thank You!</h1>
+    <div class="total">Your Total is $<span id="totalCost">0.00</span></div>
+    <button class="mode-toggle" id="modeButton">Switch to Subtract Mode</button>
+    
+    <div class="cookie-grid" id="cookieGrid"></div>
+      
+    <button class="instructions-btn" id="showInstructions">Instructions</button>
+  </div>
+
+  <!-- Instructions Modal -->
+  <div class="modal" id="instructionsModal">
+    <div class="modal-content">
+      <span class="close-btn" id="closeInstructions">&times;</span>
+      <h2>Instructions</h2>
+      <p>Use the "Switch to Subtract Mode" button to toggle between adding and subtracting cookies.</p>
+      <ul>
+        <li><strong>Add Mode:</strong> Click on a cookie card to add it to the total.</li>
+        <li><strong>Subtract Mode:</strong> Click on a cookie card to remove it from the total.</li>
+        <li>Items with zero quantity will be unavailable in subtract mode.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // ===== COOKIE DATA =====
+    const cookies = [
+      { name: "Adventurefuls", price: 6, color: "#cfc9a2", quantity: 0 },
+      { name: "Thin Mints", price: 6, color: "#00a850", quantity: 0 },
+      { name: "Samoas", price: 6, color: "#6e2a8d", quantity: 0 },
+      { name: "Tagalongs", price: 6, color: "#ee2a24", quantity: 0 },
+      { name: "Do-si-dos", price: 6, color: "#f8971d", quantity: 0 },
+      { name: "Trefoils", price: 6, color: "#0081c6", quantity: 0 },
+      { name: "Lemon-Ups", price: 6, color: "#ffdd00", quantity: 0 },
+      { name: "S'mores", price: 7, color: "#90492d", quantity: 0 },
+      { name: "Toffee-tastic", price: 7, color: "#00b2ba", quantity: 0 }
+    ];
+
+    const cookieGrid = document.getElementById("cookieGrid");
+    const totalCostElem = document.getElementById("totalCost");
+    const modeButton = document.getElementById("modeButton");
+    const instructionsBtn = document.getElementById("showInstructions");
+    const instructionsModal = document.getElementById("instructionsModal");
+    const closeInstructions = document.getElementById("closeInstructions");
+
+    let totalCost = 0;
+    let isAddMode = true; // Starts in Add Mode
+
+    // ===== FUNCTION TO DARKEN A HEX COLOR USING HSL =====
+    /**
+     * Darkens a HEX color by a specified percentage using HSL.
+     * @param {string} hex - The HEX color code (e.g., "#ffcc00").
+     * @param {number} percent - The percentage to darken the color (0-100).
+     * @returns {string} - The darkened HEX color code.
+     */
+    function darkenColor(hex, percent) {
+      // Convert HEX to HSL
+      let { h, s, l } = hexToHSL(hex);
+
+      // Decrease the lightness by the specified percentage
+      l = l - (percent / 100) * l;
+      l = l < 0 ? 0 : l;
+
+      // Convert HSL back to HEX
+      return hslToHex(h, s, l);
+    }
+
+    /**
+     * Converts a HEX color to HSL.
+     * @param {string} hex - The HEX color code.
+     * @returns {object} - An object containing h, s, and l.
+     */
+    function hexToHSL(hex) {
+      // Remove the hash symbol if present
+      hex = hex.replace('#', '');
+
+      // Parse the r, g, b values
+      let r = parseInt(hex.substring(0,2), 16) / 255;
+      let g = parseInt(hex.substring(2,4), 16) / 255;
+      let b = parseInt(hex.substring(4,6), 16) / 255;
+
+      let max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if(max === min){
+        h = s = 0; // achromatic
+      } else {
+        let d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch(max){
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+          case g: h = ((b - r) / d + 2); break;
+          case b: h = ((r - g) / d + 4); break;
+        }
+        h /= 6;
+      }
+
+      return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+
+    /**
+     * Converts HSL color values to HEX.
+     * @param {number} h - Hue (0-360).
+     * @param {number} s - Saturation (0-100).
+     * @param {number} l - Lightness (0-100).
+     * @returns {string} - The HEX color code.
+     */
+    function hslToHex(h, s, l) {
+      s /= 100;
+      l /= 100;
+
+      let c = (1 - Math.abs(2*l - 1)) * s;
+      let x = c * (1 - Math.abs((h / 60) % 2 - 1));
+      let m = l - c/2;
+      let r_, g_, b_;
+
+      if (0 <= h && h < 60) {
+        r_ = c; g_ = x; b_ = 0;
+      } else if (60 <= h && h < 120) {
+        r_ = x; g_ = c; b_ = 0;
+      } else if (120 <= h && h < 180) {
+        r_ = 0; g_ = c; b_ = x;
+      } else if (180 <= h && h < 240) {
+        r_ = 0; g_ = x; b_ = c;
+      } else if (240 <= h && h < 300) {
+        r_ = x; g_ = 0; b_ = c;
+      } else {
+        r_ = c; g_ = 0; b_ = x;
+      }
+
+      let r = Math.round((r_ + m) * 255).toString(16).padStart(2, '0');
+      let g = Math.round((g_ + m) * 255).toString(16).padStart(2, '0');
+      let b = Math.round((b_ + m) * 255).toString(16).padStart(2, '0');
+
+      return `#${r}${g}${b}`;
+    }
+
+    // ===== FUNCTION TO UPDATE TOTAL COST =====
+    function updateTotalCost() {
+      totalCost = cookies.reduce((acc, cookie) => acc + (cookie.price * cookie.quantity), 0);
+      totalCostElem.textContent = totalCost.toFixed(2);
+    }
+
+    // ===== FUNCTION TO UPDATE CARD STATES =====
+    function updateCardStates() {
+      cookies.forEach((cookie, index) => {
+        const card = document.getElementById(`cookie-card-${index}`);
+        const quantityDisplay = document.getElementById(`quantity-${index}`);
+        if (!isAddMode && cookie.quantity === 0) {
+          card.classList.add("disabled");
+        } else {
+          card.classList.remove("disabled");
+        }
+        quantityDisplay.textContent = cookie.quantity;
+      });
+    }
+
+    // ===== FUNCTION TO HANDLE CARD CLICK =====
+    function handleCardClick(index) {
+      if (isAddMode) {
+        cookies[index].quantity += 1;
+      } else {
+        if (cookies[index].quantity > 0) {
+          cookies[index].quantity -= 1;
+        }
+      }
+      updateTotalCost();
+      updateCardStates();
+    }
+
+    // ===== INITIALIZE COOKIE CARDS =====
+    cookies.forEach((cookie, index) => {
+      const card = document.createElement("div");
+      card.classList.add("cookie-card");
+      card.id = `cookie-card-${index}`;
+      card.style.backgroundColor = cookie.color;
+
+      // Determine the darkened color for the text (e.g., darken by 30%)
+      const textColor = darkenColor(cookie.color, 30);
+
+      // Set the text color dynamically using inline style
+      card.innerHTML = `
+        <div class="color-rectangle" style="color: ${textColor};">${cookie.name}</div>
+        <div class="quantity-display"><span id="quantity-${index}">0</span></div>
+      `;
+
+      card.addEventListener("click", () => handleCardClick(index));
+
+      cookieGrid.appendChild(card);
+    });
+
+    // ===== MODE TOGGLE BUTTON EVENT =====
+    modeButton.addEventListener("click", () => {
+      isAddMode = !isAddMode;
+      modeButton.textContent = isAddMode ? "Switch to Subtract Mode" : "Switch to Add Mode";
+      updateCardStates();
+    });
+
+    // ===== INSTRUCTIONS MODAL CONTROL =====
+    instructionsBtn.addEventListener("click", () => {
+      instructionsModal.classList.add("show");
+    });
+
+    closeInstructions.addEventListener("click", () => {
+      instructionsModal.classList.remove("show");
+    });
+
+    // Close modal when clicking outside the content
+    window.addEventListener("click", (e) => {
+      if (e.target === instructionsModal) {
+        instructionsModal.classList.remove("show");
+      }
+    });
+
+    // ===== INITIAL CALLS =====
+    updateTotalCost();
+    updateCardStates();
+  </script>
+</body>
+</html>
