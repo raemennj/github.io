@@ -5,37 +5,42 @@ body {
     height: 100vh;
     overflow: hidden;
     perspective: 800px;
-    background: linear-gradient(#87CEEB, #E0FFFF);
+    background: #000;
 }
 
 .cityscape {
     position: relative;
     width: 100%;
     height: 100%;
-    background:
-        linear-gradient(#ccc, #999) 0 80% / 20% 20% repeat-x,
-        linear-gradient(#aaa, #777) 10% 85% / 15% 15% repeat-x,
-        linear-gradient(#bbb, #888) 20% 90% / 25% 25% repeat-x;
+    background: url('images/bgcity01.png') no-repeat center/cover;
 }
 
 .billboard {
     position: absolute;
-    bottom: 30%;
-    left: 50%;
-    transform: translateX(-50%) rotateX(15deg);
-    width: 60%;
-    height: 30%;
+    width: 22%;
+    height: 15%;
     background: #222;
     color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.5rem;
     box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     border: 4px solid #555;
+    transform: rotateX(10deg);
 }
 
-#billboard-text {
+#billboard-left {
+    bottom: 22%;
+    left: 20%;
+}
+
+#billboard-right {
+    bottom: 26%;
+    left: 68%;
+}
+
+.billboard-text {
     padding: 10px;
     text-align: center;
 }

@@ -1,5 +1,5 @@
 window.addEventListener('DOMContentLoaded', function() {
-    const billboard = document.getElementById('billboard-text');
+    const billboards = document.querySelectorAll('.billboard-text');
 
     const url = 'https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto';
 
@@ -10,11 +10,15 @@ window.addEventListener('DOMContentLoaded', function() {
             const tMin = Math.round(data.daily.temperature_2m_min[0]);
             const tMax = Math.round(data.daily.temperature_2m_max[0]);
             const desc = codeToDescription(code);
-            billboard.textContent = `${desc}, ${tMin}\u00B0C - ${tMax}\u00B0C`;
+            billboards.forEach(el => {
+                el.textContent = `${desc}, ${tMin}\u00B0C - ${tMax}\u00B0C`;
+            });
         })
         .catch(err => {
             console.error(err);
-            billboard.textContent = 'Weather unavailable';
+            billboards.forEach(el => {
+                el.textContent = 'Weather unavailable';
+            });
         });
 
     function codeToDescription(code) {
