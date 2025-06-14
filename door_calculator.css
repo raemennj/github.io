@@ -1,0 +1,143 @@
+        /* CSS Styles */
+        body {
+            font-size: 18px;
+            margin: 0;
+            padding: 5px;
+            background-color: darkslategrey;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+            font-family: "dunbar-tall", sans-serif;
+        }
+        .tab-container {
+            display: flex;
+            width: 100%;
+        }
+        .tab {
+            flex: 1;
+            padding: 15px; 
+            font-size: 19px;
+            cursor: pointer;
+            border-left: 1px solid #363636;
+            border-right: 1px solid #363636;
+            border-bottom: 1px solid #363636;
+            text-align: center;
+            background-color: lightyellow;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            margin-top: 5px;
+        }
+        .tab.active {
+            border-bottom: 0px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            margin-top: 0px;
+        }
+        /* Active tab styles */
+        #smallDoorTab.active {
+            background-color: lightblue;
+        }
+        #bigDoorTab.active {
+            background-color: lightgreen;
+        }
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        .input-container div {
+            flex: 1;
+            text-align: center;
+        }
+        input {
+            font-size: 18px;
+            max-width: 100%;
+            text-align: center;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: lightyellow;
+            width: 70%;
+            font-family: "dunbar-tall", sans-serif;
+            cursor: pointer;
+        }
+        .length, .burn, .segmentType {
+            width: 33%;
+            float: left;
+            text-align: center;
+            padding-top: 15px;
+            padding-bottom: 14px;
+            background-color: lightblue;
+            border-bottom: 1px solid #363636;
+        }
+        /* Change background color when Big Door is active */
+        .big-door-active .length,
+        .big-door-active .burn,
+        .big-door-active .segmentType {
+            background-color: lightgreen;
+        }
+        .resultsBG {
+            text-align: center;
+            background-color: lightyellow;
+            width: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        .readme-container {      
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            width: 100%;
+            border: none;
+        }
+        .readme-container button {
+            flex: 1;
+            text-align: center;
+            text-decoration: underline;
+            background-color: lightyellow;
+            border: none;
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            font-size: 18px;
+            padding-bottom: 10px;
+            font-family: "dunbar-tall", sans-serif;
+        }
+        .close-btn {
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        #showModalBtn {
+            color: black;
+            cursor: pointer;
+        }
+        .modal-content {
+            background-color: lightyellow;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 14px;
+            border: 1px solid #888;
+            width: 80%;
+            max-height: calc(100vh - 40px); 
+            overflow-y: auto; 
+        }
+        @media screen and (orientation:landscape) {
+            .modal-content {
+                max-height: calc(100vh - 80px); 
+            }
+        }
+        @media (min-width: 601px) {
+            body {
+                margin: 0 auto; 
+                max-width: 600px; 
+            }
+        }
