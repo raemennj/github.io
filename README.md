@@ -1,19 +1,14 @@
 # Web Demos
 
-This repository collects simple HTML, CSS and JavaScript projects. Each demo is self-contained and can be opened directly in a browser.
+This repository previously hosted simple HTML, CSS and JavaScript demos. The demo pages have been removed.
 
 ## Viewing locally
 
-Open `index.html` in any modern web browser to access the landing page. From there you can navigate to available demos.
+Open `index.html` in any modern web browser to view the placeholder landing page.
 
 ## GitHub Pages
 
-You can enable GitHub Pages in your repository settings to host these demos publicly.
-
-## Assets
-
-The `billboard_weather` page displays a city backdrop loaded from `images/bgcity01.png`.
-Replace this file or update the CSS if you want to use a different background image.
+You can enable GitHub Pages in your repository settings to host static content publicly.
 
 ## License
 
