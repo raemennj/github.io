@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "itemName": "Vintage Clock",
+    "currentBid": 50,
+    "endTime": "2024-07-01T12:00:00Z"
+  },
+  {
+    "id": 2,
+    "itemName": "Antique Vase",
+    "currentBid": 75,
+    "endTime": "2024-06-30T18:00:00Z"
+  }
+]
