@@ -1,0 +1,40 @@
+name: Update Bid Monitor
+
+on:
+  schedule:
+    - cron:  '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "\U0001F4E5 Check out repo"
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: "\U0001F40D Set up Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: "\U0001F4E6 Install deps"
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: "\U0001F680 Generate monitor page"
+        run: python build_monitor.py
+
+      - name: "\U0001F527 Commit & push if changed"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: update bid monitor"
+            git push
+          else
+            echo "No changes to docs/index.html"
+          fi
