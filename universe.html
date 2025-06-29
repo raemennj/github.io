@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Universe Today</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Georgia, serif;
+      background: radial-gradient(ellipse at bottom, #0d1b2a 0%, #000 100%);
+      color: #f8f8f8;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 1rem 0;
+      font-size: 2.5rem;
+      color: #ffdd80;
+      text-shadow: 0 0 4px #fff3cc;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 0 10px rgba(255, 223, 120, 0.2);
+      backdrop-filter: blur(4px);
+    }
+
+    .card h2 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: #ffdd80;
+    }
+
+    .card p, .card div {
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .more-button {
+      margin-top: 0.5rem;
+      color: #ffdd80;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>Our Universe Today</h1>
+  <div class="dashboard">
+    <div class="card" id="astro-data">
+      <h2>Sun & Moon Times</h2>
+      <p>Loading astronomy data...</p>
+    </div>
+    <div class="card" id="planet-visibility">
+      <h2>Planet Visibility</h2>
+      <p>Checking planets...</p>
+    </div>
+    <div class="card" id="iss-pass">
+      <h2>ISS Flyover</h2>
+      <div id="iss-info">
+        <p>Fetching ISS data...</p>
+      </div>
+      <div class="more-button" onclick="toggleISSDetails()">Show More Passes</div>
+    </div>
+    <div class="card" id="apod">
+      <h2>Astronomy Picture of the Day</h2>
+      <p>Loading picture...</p>
+    </div>
+    <div class="card" id="space-history">
+      <h2>Today in Space History</h2>
+      <p>Digging up history...</p>
+    </div>
+    <div class="card" id="mars-photo">
+      <h2>Mars Rover Photo</h2>
+      <p>Loading Mars photo...</p>
+    </div>
+    <div class="card" id="neo">
+      <h2>Near Earth Objects Today</h2>
+      <div id="neo-content">
+        <p>Checking asteroid activity...</p>
+      </div>
+      <div class="more-button" onclick="toggleNEODetails()">Show More</div>
+    </div>
+    <div class="card" id="epic">
+      <h2>Earth Image (EPIC)</h2>
+      <p>Fetching Earth imagery...</p>
+    </div>
+    <div class="card" id="next-launch">
+      <h2>Next Space Launch</h2>
+      <p>Loading next mission...</p>
+    </div>
+    <div class="card" id="nasa-image">
+      <h2>NASA Image Search</h2>
+      <p>Fetching a random image...</p>
+    </div>
+  </div>
+
+<script>
+const nasaKey = 'wGccK4m3WdDpI0QcnrBcf16QPKpVATEf0EeurWTT';
+const geoKey = 'b078daa381714951aba0a8fefeb38ca2';
+const LAT = 38.5816;
+const LON = -121.4944;
+
+async function fetchAstronomyData() {
+  try {
+    const res = await fetch(`https://api.ipgeolocation.io/astronomy?apiKey=${geoKey}&lat=${LAT}&long=${LON}`);
+    const d = await res.json();
+    document.querySelector('#astro-data p').innerHTML = `
+      <strong>Sun:</strong><br>
+      • Sunrise: ${d.sunrise}<br>
+      • Sunset: ${d.sunset}<br>
+      <strong>Moon:</strong><br>
+      • Moonrise: ${d.moonrise}<br>
+      • Moonset: ${d.moonset}<br>
+      • Phase: ${d.moon_phase}<br>
+      • Illumination: ${d.moon_illumination}%<br>
+      <strong>Location:</strong><br>
+      • Latitude: ${d.latitude}<br>
+      • Longitude: ${d.longitude}
+    `;
+  } catch {
+    document.querySelector('#astro-data p').textContent = 'Unable to load astronomy data.';
+  }
+}
+
+async function fetchPlanetVisibility() {
+  const planets = [
+    { name: "Mercury", visible: false, notes: "Best at twilight in spring" },
+    { name: "Venus", visible: true, notes: "Evening star — western sky" },
+    { name: "Mars", visible: true, notes: "Faint red — visible just after sunset" },
+    { name: "Jupiter", visible: true, notes: "Bright in southeast late evening" },
+    { name: "Saturn", visible: true, notes: "Low on the horizon after midnight" },
+    { name: "Uranus", visible: false, notes: "Not currently visible to the eye" },
+    { name: "Neptune", visible: false, notes: "Only with telescope before dawn" }
+  ];
+  const visible = planets.filter(p => p.visible).map(p => `• <strong>${p.name}</strong>: ${p.notes}`).join('<br>');
+  document.querySelector('#planet-visibility p').innerHTML = `Visible Tonight:<br>${visible}`;
+}
+
+async function fetchISSPass() {
+  try {
+    const res = await fetch(`https://api.open-notify.org/iss-pass.json?lat=${LAT}&lon=${LON}`);
+    const passes = (await res.json()).response.slice(0, 5);
+    const out = passes.map((p, i) => {
+      const dt = new Date(p.risetime * 1000).toLocaleString();
+      return `<div class="iss-pass-detail${i > 0 ? ' hidden' : ''}">
+        ${i === 0 ? '<strong>Next pass:</strong>' : `Pass ${i + 1}:`} ${dt} for ${p.duration} seconds
+      </div>`;
+    }).join('');
+    document.querySelector('#iss-info').innerHTML = out;
+    if (passes.length < 2) {
+      document.querySelector('#iss-pass .more-button').style.display = 'none';
+    }
+  } catch {
+    document.querySelector('#iss-info').textContent = 'Could not load ISS pass data.';
+  }
+}
+function toggleISSDetails() {
+  document.querySelectorAll('.iss-pass-detail.hidden').forEach(el => el.classList.remove('hidden'));
+  document.querySelector('#iss-pass .more-button').style.display = 'none';
+}
+
+async function fetchAPOD() {
+  try {
+    const res = await fetch(`https://api.nasa.gov/planetary/apod?api_key=${nasaKey}`);
+    const d = await res.json();
+    document.querySelector('#apod p').innerHTML = `<strong>${d.title}</strong><br><img src="${d.url}" width="100%" alt="APOD image"><br>${d.explanation.slice(0, 200)}...`;
+  } catch {
+    document.querySelector('#apod p').textContent = 'Unable to load image.';
+  }
+}
+
+function loadSpaceHistory() {
+  const events = {
+    '06-29': [
+      "1995: Atlantis docks with Mir.",
+      "1971: Soyuz 11 depressurizes — 3 cosmonauts lost."
+    ]
+  };
+  const today = new Date().toISOString().slice(5, 10);
+  document.querySelector('#space-history p').textContent = events[today]?.join(' ') || 'No major events found.';
+}
+
+async function fetchMarsPhoto() {
+  const today = new Date().toISOString().split('T')[0];
+  const res = await fetch(`https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos?earth_date=${today}&api_key=${nasaKey}`);
+  const data = await res.json();
+  if (data.photos.length > 0) {
+    const p = data.photos[0];
+    document.querySelector('#mars-photo p').innerHTML = `Rover: ${p.rover.name}, Camera: ${p.camera.full_name}<br><img src="${p.img_src}" width="100%" alt="Mars rover photo">`;
+  } else {
+    document.querySelector('#mars-photo p').textContent = 'No photos for today.';
+  }
+}
+
+async function fetchNEO() {
+  const today = new Date().toISOString().split('T')[0];
+  const res = await fetch(`https://api.nasa.gov/neo/rest/v1/feed?start_date=${today}&end_date=${today}&api_key=${nasaKey}`);
+  const neos = Object.values((await res.json()).near_earth_objects)[0];
+  const topFive = neos.sort((a, b) => a.close_approach_data[0].miss_distance.kilometers - b.close_approach_data[0].miss_distance.kilometers).slice(0, 5);
+  const content = topFive.map((n, i) => `
+    <div class="neo-detail${i > 2 ? ' hidden' : ''}">
+      <strong>${n.name}</strong><br>
+      • Approach: ${n.close_approach_data[0].close_approach_date_full}<br>
+      • Diameter: ${n.estimated_diameter.meters.estimated_diameter_min.toFixed(1)}–${n.estimated_diameter.meters.estimated_diameter_max.toFixed(1)} m<br>
+      • Speed: ${parseFloat(n.close_approach_data[0].relative_velocity.kilometers_per_second).toFixed(2)} km/s<br>
+      • Miss: ${parseFloat(n.close_approach_data[0].miss_distance.lunar).toFixed(2)} LD<br>
+      • Hazardous: ${n.is_potentially_hazardous_asteroid ? 'Yes' : 'No'}
+    </div>
+  `).join('');
+  document.querySelector('#neo-content').innerHTML = `<p>${neos.length} NEOs today:</p>${content}`;
+  if (topFive.length <= 3) {
+    document.querySelector('#neo .more-button').style.display = 'none';
+  }
+}
+function toggleNEODetails() {
+  document.querySelectorAll('.neo-detail.hidden').forEach(el => el.classList.remove('hidden'));
+  document.querySelector('#neo .more-button').style.display = 'none';
+}
+
+async function fetchEPIC() {
+  const res = await fetch(`https://api.nasa.gov/EPIC/api/natural?api_key=${nasaKey}`);
+  const data = await res.json();
+  if (data.length) {
+    const d = data[0];
+    const datePath = d.date.split(' ')[0].replaceAll('-', '/');
+    const url = `https://epic.gsfc.nasa.gov/archive/natural/${datePath}/jpg/${d.image}.jpg`;
+    document.querySelector('#epic p').innerHTML = `Date: ${d.date}<br><img src="${url}" width="100%" alt="EPIC image">`;
+  } else {
+    document.querySelector('#epic p').textContent = 'No Earth imagery today.';
+  }
+}
+
+async function fetchNextLaunch() {
+  try {
+    const res = await fetch("https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=1");
+    const launch = (await res.json()).results[0];
+    document.querySelector('#next-launch p').innerHTML = `
+      <strong>${launch.name}</strong><br>
+      Provider: ${launch.launch_service_provider.name}<br>
+      Window: ${new Date(launch.net).toLocaleString()}<br>
+      Location: ${launch.pad.name}
+    `;
+  } catch {
+    document.querySelector('#next-launch p').textContent = 'Unable to load launch info.';
+  }
+}
+
+async function fetchNASAImageSearch() {
+  try {
+    const res = await fetch("https://images-api.nasa.gov/search?q=galaxy&media_type=image");
+    const items = (await res.json()).collection.items;
+    const rand = items[Math.floor(Math.random() * items.length)];
+    document.querySelector('#nasa-image p').innerHTML = `<strong>${rand.data[0].title}</strong><br><img src="${rand.links[0].href}" width="100%" alt="NASA search result">`;
+  } catch {
+    document.querySelector('#nasa-image p').textContent = 'Image search failed.';
+  }
+}
+
+// Run all fetch functions
+fetchAstronomyData();
+fetchPlanetVisibility();
+fetchISSPass();
+fetchAPOD();
+loadSpaceHistory();
+fetchMarsPhoto();
+fetchNEO();
+fetchEPIC();
+fetchNextLaunch();
+fetchNASAImageSearch();
+</script>
+
+</body>
+</html>
