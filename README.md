@@ -11,6 +11,7 @@ Open `index.html` in any modern web browser to view the list of demos.
 * `auction.html` – simple auction tracker demo
 * `moon.html` – whimsical moon advice generator
 * `universe.html` – space data dashboard powered by public APIs
+* `sky.html` – shows visible planets drifting across your screen
 
 ## GitHub Pages
 
