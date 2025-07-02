@@ -157,8 +157,15 @@ function timeToPercent(startStr, endStr) {
   const [startH, startM] = startStr.split(':').map(Number);
   const [endH, endM] = endStr.split(':').map(Number);
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM);
-  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
-  return (now - start) / (end - start);
+  let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
+
+  // If the end time is earlier than the start, the period crosses midnight.
+  // Add 24 hours so the range spans into the next day.
+  if (end < start) end.setHours(end.getHours() + 24);
+
+  // Calculate fraction of the period that has elapsed and clamp between 0 and 1.
+  const pct = (now - start) / (end - start);
+  return Math.min(Math.max(pct, 0), 1);
 }
 
 // Render sun, moon, background, and stars based on cached data
