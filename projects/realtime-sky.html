@@ -93,11 +93,30 @@
       border: none;
       border-radius: 4px;
     }
+
+    #info {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px;
+      z-index: 10;
+      background: rgba(255,255,255,0.8);
+      color: #000;
+      border-radius: 4px;
+      font-family: sans-serif;
+      text-align: right;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
 <div id="sky">
   <input type="text" id="zipInput" placeholder="Enter ZIP code">
+  <div id="info">
+    <div id="currentTime"></div>
+    <div id="sunTimes"></div>
+    <div id="moonTimes"></div>
+  </div>
   <div id="sun"></div>
   <div id="moon"></div>
   <div id="stars"></div>
@@ -123,6 +142,14 @@ function generateStars(count = 100) {
 }
 
 generateStars();
+
+function updateInfo() {
+  const astronomyData = JSON.parse(localStorage.getItem('astronomyData') || '{}');
+  const now = new Date();
+  document.getElementById('currentTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('sunTimes').textContent = `Sunrise: ${astronomyData.sunrise || '--'}  Sunset: ${astronomyData.sunset || '--'}`;
+  document.getElementById('moonTimes').textContent = `Moonrise: ${astronomyData.moonrise || '--'}  Moonset: ${astronomyData.moonset || '--'}`;
+}
 
 // Fetch location, weather, and astronomy data
 async function fetchData(zip) {
@@ -177,6 +204,8 @@ function renderSky() {
   const sky = document.getElementById('sky');
   const stars = document.getElementById('stars');
 
+  updateInfo();
+
   const sunPct = timeToPercent(astronomyData.sunrise, astronomyData.sunset);
   const moonPct = timeToPercent(astronomyData.moonrise, astronomyData.moonset);
 
@@ -215,6 +244,7 @@ function checkData() {
     fetchData(loc.zip);
   } else if (loc.zip) {
     renderSky();
+    updateInfo();
   }
 }
 
@@ -229,7 +259,9 @@ function checkData() {
 
   // Initialize
   checkData();
+  updateInfo();
   setInterval(renderSky, 30000);
+  setInterval(updateInfo, 1000);
 </script>
 </body>
 </html>
