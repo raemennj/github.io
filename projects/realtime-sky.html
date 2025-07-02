@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Sky Animation</title>
+  <style>
+    body, html {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      background: #001a33;
+    }
+
+    #sky {
+      position: relative;
+      width: 100%;
+      height: calc(100% - 15px);
+      overflow: hidden;
+      transition: background 1s linear;
+    }
+
+    #sun, #moon {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      bottom: 15px;
+    }
+
+    #sun {
+      background: yellow;
+      box-shadow: 0 0 30px rgba(255,223,0,0.6);
+    }
+
+    #moon {
+      background: white;
+      overflow: hidden;
+    }
+
+    /* mask for the dark portion of the moon */
+    #moon::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      width: 50%;
+      background: #001a33;
+      border-radius: 50%;
+    }
+
+    /* Container for procedural stars */
+    #stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.5;
+      animation: twinkle 2s infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.3; }
+      to   { opacity: 0.8; }
+    }
+
+    #ocean {
+      width: 100%;
+      height: 15px;
+      background: #003;
+      position: absolute;
+      bottom: 0;
+    }
+
+    #zipInput {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 5px;
+      z-index: 10;
+      background: rgba(255,255,255,0.8);
+      border: none;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+<div id="sky">
+  <input type="text" id="zipInput" placeholder="Enter ZIP code">
+  <div id="sun"></div>
+  <div id="moon"></div>
+  <div id="stars"></div>
+</div>
+<div id="ocean"></div>
+
+<script>
+const OPENWEATHER_API_KEY = '823479bdeb60abad9b8bf6d709ccac92';
+const IPGEOLOCATION_API_KEY = 'b078daa381714951aba0a8fefeb38ca2';
+
+// Generate procedural stars
+function generateStars(count = 100) {
+  const starsContainer = document.getElementById('stars');
+  starsContainer.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 2 + 's';
+    starsContainer.appendChild(star);
+  }
+}
+
+generateStars();
+
+// Fetch location, weather, and astronomy data
+async function fetchData(zip) {
+  try {
+    const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/zip?zip=${zip}&appid=${OPENWEATHER_API_KEY}`);
+    const geoData = await geoRes.json();
+
+    const [weatherRes, astroRes] = await Promise.all([
+      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${geoData.lat}&lon=${geoData.lon}&appid=${OPENWEATHER_API_KEY}&units=imperial`),
+      fetch(`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEOLOCATION_API_KEY}&lat=${geoData.lat}&long=${geoData.lon}`)
+    ]);
+
+    const weatherData = await weatherRes.json();
+    const astronomyData = await astroRes.json();
+
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.setItem('locationData', JSON.stringify({ zip, ...geoData }));
+    localStorage.setItem('weatherData', JSON.stringify(weatherData));
+    localStorage.setItem('astronomyData', JSON.stringify(astronomyData));
+    localStorage.setItem('lastUpdated', today);
+
+    renderSky();
+  } catch (err) {
+    console.error('Data fetch error:', err);
+    renderSky(); // fallback to cached data if available
+  }
+}
+
+// Convert a time string (HH:MM) to a percentage through the period
+function timeToPercent(startStr, endStr) {
+  const now = new Date();
+  const [startH, startM] = startStr.split(':').map(Number);
+  const [endH, endM] = endStr.split(':').map(Number);
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM);
+  const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
+  return (now - start) / (end - start);
+}
+
+// Render sun, moon, background, and stars based on cached data
+function renderSky() {
+  const weatherData = JSON.parse(localStorage.getItem('weatherData') || '{}');
+  const astronomyData = JSON.parse(localStorage.getItem('astronomyData') || '{}');
+  const sun = document.getElementById('sun');
+  const moon = document.getElementById('moon');
+  const sky = document.getElementById('sky');
+  const stars = document.getElementById('stars');
+
+  const sunPct = timeToPercent(astronomyData.sunrise, astronomyData.sunset);
+  const moonPct = timeToPercent(astronomyData.moonrise, astronomyData.moonset);
+
+  // Sun rendering
+  if (sunPct >= 0 && sunPct <= 1) {
+    sun.style.display = 'block';
+    sun.style.left = `${sunPct * 100}%`;
+    sun.style.bottom = `${Math.sin(sunPct * Math.PI) * 60 + 15}%`;
+    // Day background
+    sky.style.background = `linear-gradient(to top, #87ceeb, #001a33)`;
+    stars.style.opacity = 0;
+  } else {
+    sun.style.display = 'none';
+    // Night background
+    sky.style.background = `linear-gradient(to top, #001a33, #000)`;
+    stars.style.opacity = 1;
+  }
+
+  // Moon rendering
+  if (moonPct >= 0 && moonPct <= 1) {
+    moon.style.display = 'block';
+    moon.style.left = `${moonPct * 100}%`;
+    moon.style.bottom = `${Math.sin(moonPct * Math.PI) * 60 + 15}%`;
+  } else {
+    moon.style.display = 'none';
+  }
+}
+
+// Check if data is fresh or needs re-fetching
+function checkData() {
+  const today = new Date().toISOString().split('T')[0];
+  const last = localStorage.getItem('lastUpdated');
+  const loc = JSON.parse(localStorage.getItem('locationData') || '{}');
+
+  if (loc.zip && last !== today) {
+    fetchData(loc.zip);
+  } else if (loc.zip) {
+    renderSky();
+  }
+}
+
+// ZIP input handler
+</script>
+<script>
+  document.getElementById('zipInput').addEventListener('change', (e) => {
+    const zip = e.target.value.trim();
+    if (/^\d{5}$/.test(zip)) fetchData(zip);
+    else alert('Please enter a valid 5-digit ZIP code.');
+  });
+
+  // Initialize
+  checkData();
+  setInterval(renderSky, 30000);
+</script>
+</body>
+</html>
