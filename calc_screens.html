@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Inch Calc — Uniform Grid (420)</title>
+<link href="https://use.typekit.net/iwc3riw.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js" defer></script>
+<link rel="icon" type="image/png" />
+<link rel="apple-touch-icon" href="apple-touch-icon.png" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Inch Calc" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="theme-color" content="#1f4d4d" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0e2a2a" media="(prefers-color-scheme: dark)" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="application-name" content="Inch Calc" />
+<style>
+  /* ---------- Reset ---------- */
+  *,*::before,*::after{ box-sizing:border-box }
+  html,body{ height:100% }
+
+  /* Global: disable selection everywhere... */
+  html, body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  body{
+    margin:0; background:#1f4d4d; color:#111;
+    font-family:"aktiv-grotesk",-apple-system,system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex; justify-content:center; align-items:stretch; /* fill the viewport */
+    padding:
+      calc(env(safe-area-inset-top) + 10px)
+      calc(env(safe-area-inset-right) + 10px)
+      calc(env(safe-area-inset-bottom) + 10px)
+      calc(env(safe-area-inset-left) + 10px);
+    overflow:hidden; /* page never scrolls */
+  }
+
+  :root{
+    --card-max: 420px;     /* designed scale cap */
+    --gap: 8px;            /* unified spacing, set by JS */
+    --tile: 56px;          /* unified button height, set by JS */
+    --pad: var(--gap);
+
+    --tape-min: 100px;
+    --results-min: 140px;  /* minimum results height (computed precisely by JS) */
+    --history-min: 40px;   /* minimum history window (computed precisely by JS) */
+
+    /* theme tokens */
+    --card:#fff; --display-bg:#222; --display-text:#0f0;
+
+    /* legacy role colors as defaults */
+    --num:khaki; --op:gold; --frac:#64b5f6; --dec:darkkhaki;
+    --clear:lightcoral; --mem:lightskyblue;
+  }
+
+  /* ---------- Card (stacked zones) ---------- */
+  .card{
+    width: clamp(320px, 100%, var(--card-max));
+    height:100%;
+    display:grid; gap:var(--gap);
+    grid-template-rows:
+      minmax(var(--tape-min), auto)      /* tape stays at top */
+      minmax(var(--results-min), 1fr)    /* results flex row */
+      auto                                /* memory */
+      auto                                /* console */
+      auto;                               /* fractions */
+    grid-template-areas:
+      "tape" "results" "memory" "console" "fractions";
+  }
+  .panel{
+    background:var(--card);
+    border-radius:8px;
+    background-color: darkslategrey;
+    box-shadow:0 8px 24px rgba(0,0,0,.15);
+    overflow:hidden;
+  }
+  .pad{ padding:var(--pad) }
+
+  /* ---------- Tape ---------- */
+  .tape{ grid-area:tape; position:relative; min-height:var(--tape-min); }
+  .tape-inner{ position:absolute; inset:0; border:1px solid #000;
+    background:linear-gradient(to bottom,
+      rgba(189,183,107,.3) 0%,
+      rgba(255,215,0,.6) 6%,
+      #ff0 25%,
+      #ff0 75%,
+      rgba(189,183,107,.6) 98%,
+      rgba(255,215,0,.8) 100%); }
+  .center-line{ position:absolute; top:29%; left:50.1%; width:5px; height:75%; background:red; transform:translateX(-50%); }
+  .tick{ position:absolute; bottom:0; width:3px; background:#000; }
+  .tick.small{height:15px} .tick.med{height:30px} .tick.lg{height:50px} .tick.num{height:70px}
+  .tick-label{ position:absolute; bottom:70px; width:50px; text-align:center; transform:translateX(-50%); font-size:1.05em; }
+  .sweep{ position:absolute; inset:0; pointer-events:none; }
+  .sweep::before{ content:""; position:absolute; left:100%; top:0; width:100%; height:100%;
+    background:linear-gradient(120deg, rgba(0,0,0,.08), rgba(0,0,0,.28) 50%, rgba(0,0,0,.08));
+    transform:skewX(20deg); opacity:0; }
+  @keyframes sweep { 0%{left:100%;opacity:.6} 100%{left:-100%;opacity:0} }
+  .sweep.animate::before{ animation:sweep .8s ease-in-out forwards; }
+
+  /* ---------- Results ---------- */
+  .results{ grid-area:results; background:var(--display-bg); color:var(--display-text); min-height:0; }
+  .results .pad{ display:flex; flex-direction:column; gap:8px; height:100%; }
+  .history{
+    /* was height:var(--history-fixed); */
+    min-height: var(--history-min);
+    flex: 1 1 auto;
+    max-height: 100%;
+    overflow:auto; padding-right:4px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .row.input{ letter-spacing:.04em; font-size:clamp(14px,1.9vw,18px); opacity:.9; }
+  #inputLine{ display:block; }
+  .output{ display:flex; justify-content:space-between; gap:8px; font-size:clamp(22px,3.1vw,32px); color:#bdfcb7; padding-top:6px; border-top:1px solid rgba(255,255,255,.1); }
+
+  /* Re-enable selection for history and outputs */
+  .history, .output, .output * {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* ---------- Memory ---------- */
+  .memory{ grid-area:memory }
+  .memory-grid{ display:grid; gap:var(--gap);
+    grid-template-columns:repeat(5, 1fr);
+    grid-template-rows:repeat(1, var(--tile));
+  }
+
+  /* ---------- Console (5×4) ---------- */
+  .console{ grid-area:console }
+  .console-grid{
+    margin-top: 8px;
+    display:grid; gap:var(--gap);
+    grid-template-columns:repeat(5, 1fr);
+    grid-template-rows:repeat(4, var(--tile));
+  }
+  .r1{grid-row:1}.r2{grid-row:2}.r3{grid-row:3}.r4{grid-row:4}
+  .c1{grid-column:1}.c2{grid-column:2}.c3{grid-column:3}.c4{grid-column:4}.c5{grid-column:5}
+
+  /* ---------- Fractions (5×3) ---------- */
+  .fractions{ grid-area:fractions }
+  .fract-grid{
+    margin-top: 8px;
+    display:grid; gap:var(--gap);
+    grid-template-columns:repeat(5, 1fr);
+    grid-template-rows:repeat(3, var(--tile));
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    --btn-bg: var(--_btn-bg, var(--num));
+    --btn-fg: var(--_btn-fg, currentColor);
+    --btn-img: var(--_btn-img, none);
+
+    width:100%; height:100%;
+    display:grid; place-items:center;
+    border:0; border-radius:5px;
+    font-weight:600; font-size:clamp(14px, calc(var(--tile)*.42), 20px);
+    color:var(--btn-fg);
+    background-image: var(--btn-img), linear-gradient(var(--btn-bg), var(--btn-bg));
+    background-repeat:no-repeat;
+    background-size:cover, auto;
+    box-shadow:0 2px 4px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.12);
+    -webkit-tap-highlight-color:transparent;
+    transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
+    position: relative; overflow: hidden;     /* for ripples */
+    touch-action: manipulation;                /* snappier taps */
+  }
+  .btn:active{ transform:scale(.98) } /* older press effect (will be overridden below) */
+
+  .btn.operator{ --_btn-bg: var(--op);  --_btn-fg:#111; }
+  .btn.frac    { --_btn-bg: var(--frac);--_btn-fg:#063c67; }
+  .btn.dec     { --_btn-bg: var(--dec); --_btn-fg:#0c3a10; }
+  .btn.clear,
+  .btn.back    { --_btn-bg: var(--clear); --_btn-fg:#fff; }
+  .btn.mem     { --_btn-bg: var(--mem); --_btn-fg:#083f3f; }
+
+  .btn.frac:hover{ --btn-bg: var(--btn-hover-bg, color-mix(in oklab, var(--btn-bg), white 12%)); }
+  .btn.frac:active{ --btn-bg: var(--btn-active-bg, color-mix(in oklab, var(--btn-bg), black 10%)); }
+  .btn[disabled]{ opacity:.5; filter:saturate(.15) }
+
+  /* Button text should never select / show callout */
+  .btn, .btn .btn-label{
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .btn .btn-label{ line-height: 1; filter: url(#textInnerShadow); }
+  .btn .btn-label::selection{ background: transparent; color: inherit; }
+
+  @media (prefers-reduced-motion: reduce){
+    .sweep::before{ animation:none !important; opacity:0 !important; }
+    .btn:active{ transform:none }
+  }
+  .btn:focus-visible{
+    outline:2px solid #0ea5a5;
+    outline-offset:2px;
+  }
+
+  /* --- Press ripple --- */
+  .ripple {
+    position: absolute;
+    border-radius: 999px;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: .35;
+    background: rgba(255,255,255,.65);
+    animation: ripple .45s ease-out forwards;
+  }
+  @keyframes ripple {
+    to { transform: translate(-50%, -50%) scale(14); opacity: 0; }
+  }
+
+  /* --- Hold arming pulse --- */
+  .btn.hold {
+    box-shadow: 0 0 0 0 rgba(14,165,165,.55);
+    animation: pulseRing 1s ease-out infinite;
+  }
+  @keyframes pulseRing {
+    0%   { box-shadow: 0 0 0 0   rgba(14,165,165,.55); }
+    100% { box-shadow: 0 0 0 12px rgba(14,165,165,0); }
+  }
+
+  /* Feet peek visual */
+  #feetBtn.peek {
+    box-shadow: 0 0 0 2px #0ea5a5 inset, 0 2px 8px rgba(0,0,0,.3);
+  }
+
+  /* Memory “saved” confirmation flash */
+  .btn.mem.saved {
+    --btn-bg: color-mix(in oklab, var(--mem), #22c55e 46%);
+    box-shadow: 0 0 0 2px #22c55e inset, 0 0 16px rgba(34,197,94,.35);
+    animation: pop .16s ease;
+  }
+  .btn.mem.saved::after {
+    content: "✓";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 800;
+    font-size: 1.1em;
+    color: #063;
+    opacity: .95;
+    pointer-events: none;
+  }
+  @keyframes pop { from { transform: scale(.97); } to { transform: scale(1); } }
+
+  /* Copy toast */
+  #copyToast {
+    position:fixed; left:50%; transform:translateX(-50%);
+    bottom:12px; background:#111; color:#fff;
+    padding:8px 12px; border-radius:8px; display:none;
+    gap:8px; align-items:center; z-index:45;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    font-size:14px;
+  }
+
+  /* ========== NEW implied motion block ========== */
+  :root{
+    --hover-lift: 24%;
+    --active-shade: 16%;
+    --press-translate: 1px;
+  }
+
+  .btn:hover{
+    background-image:
+      var(--btn-img),
+      linear-gradient(
+        color-mix(in oklab, var(--btn-bg), white var(--hover-lift)),
+        color-mix(in oklab, var(--btn-bg), white var(--hover-lift))
+      );
+    box-shadow:
+      0 4px 10px rgba(0,0,0,.25),
+      inset 0 1px 0 rgba(255,255,255,.14);
+    transform: translateY(-0.5px);
+  }
+
+  .btn:active,
+  .btn.pressed{
+    background-image:
+      var(--btn-img),
+      linear-gradient(
+        color-mix(in oklab, var(--btn-bg), black var(--active-shade)),
+        color-mix(in oklab, var(--btn-bg), black var(--active-shade))
+      );
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,.35),
+      inset 0 -1px 0 rgba(255,255,255,.06);
+    transform: translateY(var(--press-translate)) scale(.985);
+  }
+
+  .btn[disabled]:hover,
+  .btn[disabled].pressed{
+    background-image: var(--btn-img), linear-gradient(var(--btn-bg), var(--btn-bg));
+    box-shadow: 0 2px 4px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.12);
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .btn:hover{ transform:none }
+    .btn:active, .btn.pressed{ transform:none }
+  }
+  /* ========== /NEW block ========== */
+</style>
+</head>
+<body>
+
+  <!-- Hidden SVG filter that creates a true inner shadow inside glyphs -->
+  <svg width="0" height="0" style="position:absolute">
+    <filter id="textInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur"/>
+      <feOffset dy="1" result="offset"/>
+      <feComposite in="offset" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="inner"/>
+      <feFlood flood-color="black" flood-opacity="0.45" result="shade"/>
+      <feComposite in="shade" in2="inner" operator="in" result="shadow"/>
+      <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
+    </filter>
+  </svg>
+
+  <div id="card" class="card">
+
+    <!-- Tape -->
+    <div class="panel tape">
+      <div class="tape-inner" id="tape">
+        <div class="center-line"></div>
+        <div class="sweep" id="sweep"></div>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="panel results">
+      <div class="pad">
+        <div class="history" id="history"><div class="row input" id="inputLine"></div></div>
+        <div class="output"><div id="fractionLine" title="Tap to copy"></div><div id="decimalLine" title="Tap to copy"></div></div>
+      </div>
+    </div>
+
+    <!-- Memory (5×1) -->
+    <div class="panel memory pad">
+      <div class="memory-grid">
+        <button class="btn clear" data-action="mc"><span class="btn-label">MC</span></button>
+        <button class="btn mem" data-mem="0"><span class="btn-label">M1</span></button>
+        <button class="btn mem" data-mem="1"><span class="btn-label">M2</span></button>
+        <button class="btn mem" data-mem="2"><span class="btn-label">M3</span></button>
+        <button class="btn mem" data-mem="3"><span class="btn-label">M4</span></button>
+      </div>
+
+      <div class="console-grid">
+        <!-- Utility rail (col 1) -->
+        <button class="btn back r1 c1" data-action="back"><span class="btn-label">←</span></button>
+        <button class="btn clear  r2 c1" data-action="clear"><span class="btn-label">C</span></button>
+        <button class="btn       r3 c1" id="menuBtn"><span class="btn-label">menu</span></button>
+        <button class="btn operator r4 c1" id="feetBtn"><span class="btn-label">Ft</span></button>
+
+        <!-- Numbers (cols 2–4) -->
+        <button class="btn r1 c2" data-val="7"><span class="btn-label">7</span></button>
+        <button class="btn r1 c3" data-val="8"><span class="btn-label">8</span></button>
+        <button class="btn r1 c4" data-val="9"><span class="btn-label">9</span></button>
+
+        <button class="btn r2 c2" data-val="4"><span class="btn-label">4</span></button>
+        <button class="btn r2 c3" data-val="5"><span class="btn-label">5</span></button>
+        <button class="btn r2 c4" data-val="6"><span class="btn-label">6</span></button>
+
+        <button class="btn r3 c2" data-val="1"><span class="btn-label">1</span></button>
+        <button class="btn r3 c3" data-val="2"><span class="btn-label">2</span></button>
+        <button class="btn r3 c4" data-val="3"><span class="btn-label">3</span></button>
+
+        <!-- Repeat button in the formerly empty slot -->
+        <button class="btn operator r4 c2" id="repeatBtn" title="Repeat last op+term" disabled>
+          <span class="btn-label">↻</span>
+        </button>
+
+        <button class="btn r4 c3" data-val="0"><span class="btn-label">0</span></button>
+        <button class="btn dec r4 c4" data-val="."><span class="btn-label">.</span></button>
+
+        <!-- Operator rail (col 5) -->
+        <button class="btn operator r1 c5" data-op="+"><span class="btn-label">+</span></button>
+        <button class="btn operator r2 c5" data-op="-"><span class="btn-label">−</span></button>
+        <button class="btn operator r3 c5" data-op="*"><span class="btn-label">×</span></button>
+        <button class="btn operator r4 c5" data-op="/"><span class="btn-label">÷</span></button>
+      </div>
+
+      <div class="fract-grid">
+        <button class="btn frac" data-frac="1/16"><span class="btn-label">1/16</span></button>
+        <button class="btn frac" data-frac="1/8"><span class="btn-label">1/8</span></button>
+        <button class="btn frac" data-frac="3/16"><span class="btn-label">3/16</span></button>
+        <button class="btn frac" data-frac="1/4"><span class="btn-label">1/4</span></button>
+        <button class="btn frac" data-frac="5/16"><span class="btn-label">5/16</span></button>
+
+        <button class="btn frac" data-frac="3/8"><span class="btn-label">3/8</span></button>
+        <button class="btn frac" data-frac="7/16"><span class="btn-label">7/16</span></button>
+        <button class="btn frac" data-frac="1/2"><span class="btn-label">1/2</span></button>
+        <button class="btn frac" data-frac="9/16"><span class="btn-label">9/16</span></button>
+        <button class="btn frac" data-frac="5/8"><span class="btn-label">5/8</span></button>
+
+        <button class="btn frac" data-frac="11/16"><span class="btn-label">11/16</span></button>
+        <button class="btn frac" data-frac="3/4"><span class="btn-label">3/4</span></button>
+        <button class="btn frac" data-frac="13/16"><span class="btn-label">13/16</span></button>
+        <button class="btn frac" data-frac="7/8"><span class="btn-label">7/8</span></button>
+        <button class="btn frac" data-frac="15/16"><span class="btn-label">15/16</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Minimal modal -->
+  <div id="modal" style="position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:30;">
+    <div style="background:#fffdee; color:#222; max-width:min(680px, 92vw); max-height:min(80vh, 700px); overflow:auto; border-radius:12px; padding:16px 18px; box-shadow:0 12px 40px rgba(0,0,0,.45);">
+
+  <h2 class="cm-title">A tape-measure calculator for my friends.</h2>
+  <ul class="cm-list">
+    <li>
+      <div class="cm-sub">Combine inches, decimals, and fractions in a single calculation.</div>
+      <div class="cm-eg">42 1/4 + 2.375 + 9/16 = 45 3/16</div>
+    </li>
+
+    <li><div class="cm-head">Add, subtract, multiply, divide. Chain multiple operations.</div></li>
+    <li><div class="cm-head">One-Tap Fractions From 1/16 thru 15/16.</div></li>
+
+    <li>
+      <div class="cm-head">Results are solved and displayed automatically, in three ways:</div>
+      <ul class="cm-bullets">
+        <li>Red line on tape measure visually accurate in decimal</li>
+        <li>Left results window, rounded to the nearest 1/16″</li>
+        <li>Right results window, precise in decimal 00.000″</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="cm-head">Memory slot stores four clearly labeled values:</div>
+      <ul class="cm-bullets">
+        <li>Long press to store new value as well as to replace an existing value</li>
+        <li>CM = Clear Memory, M1–M4 = Memory Slots</li>
+      </ul>
+    </li>
+
+    <li>
+      <div class="cm-head">Undo / Clear</div>
+      <ul class="cm-bullets">
+        <li>&larr; Undo numbers, fractions, and operators one character at a time</li>
+        <li><b>C</b> Clear entire results screen</li>
+      </ul>
+    </li>
+
+    <li><div class="cm-head"><a href="segment_tape.html">Segment Calculator</a></div></li>
+  </ul>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+        <button id="installBtn" style="background:#0ea5a5; color:#111; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; display:none;">Install</button>
+        <button id="closeModal" style="background:#111; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="updateToast" style="position:fixed; left:50%; transform:translateX(-50%); bottom:48px; background:#111; color:#fff; padding:8px 12px; border-radius:8px; display:none; gap:8px; align-items:center; z-index:40;">
+    <span>Update available</span>
+    <button id="updateReload" style="background:#0ea5a5; color:#111; border:none; border-radius:6px; padding:6px 10px; cursor:pointer;">Refresh</button>
+  </div>
+
+  <div id="copyToast"><span>Copied</span></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ====== Uniform tile/gap solver ====== */
+  const MIN_TAP = 44;
+  const MIN_GAP = 6, MAX_GAP = 12;
+
+  const setVar = (k,v) => document.documentElement.style.setProperty(k,v);
+  const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+  const cssNum = (name, fallback) => {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const n = parseFloat(v); return Number.isFinite(n) ? n : fallback;
+  };
+
+  function computeTile(){
+    const card = document.getElementById('card');
+    const { width: W, height: H } = card.getBoundingClientRect();
+
+    let gap = clamp(Math.floor(Math.min(W,H) * 0.02), MIN_GAP, MAX_GAP);
+    setVar('--gap', gap + 'px');
+
+    const tapeMin = cssNum('--tape-min', 100);
+
+    // Measure minimum results height = padding*2 + 2 input lines + gap + 1 output line (+1px border)
+    const pad = gap;
+    const inputEl = document.getElementById('inputLine');
+    const outputEl = document.querySelector('.output');
+    const getLineHeightPx = (el) => {
+      const cs = getComputedStyle(el);
+      const lh = cs.lineHeight;
+      if (lh.endsWith && lh.endsWith('px')) return parseFloat(lh);
+      const fs = parseFloat(cs.fontSize) || 16;
+      const mult = parseFloat(lh) || 1.2;
+      return fs * mult;
+    };
+    const inputLH = getLineHeightPx(inputEl);
+    const outputLH = getLineHeightPx(outputEl);
+    const historyMin = Math.ceil(inputLH * 2);
+    setVar('--history-min', historyMin + 'px');
+    const resultsMin = Math.ceil(pad*2 + historyMin + 8 + outputLH + 1);
+    setVar('--results-min', resultsMin + 'px');
+
+    // Keypad composition (8 rows total: 1 mem + 4 console + 3 fractions)
+    const ROWS = 8;
+    const GAP_BUDGET = (3 + 2 + 2 + 6) * gap; // 13*gap
+    const W_inside = W - 2*gap;
+
+    // Available height for keypad if results uses only its MIN
+    const H_for_keypad = Math.max(0, H - tapeMin - resultsMin - 2*gap);
+
+    const tileFromH = Math.floor((H_for_keypad - GAP_BUDGET) / ROWS);
+    const tileFromW = Math.floor((W_inside - (5 - 1) * gap) / 5);
+    const tile = Math.max(MIN_TAP, Math.min(tileFromH, tileFromW));
+    setVar('--tile', tile + 'px');
+  }
+
+  const ro = new ResizeObserver(computeTile);
+  ro.observe(document.getElementById('card'));
+  window.addEventListener('resize', computeTile);
+  window.addEventListener('orientationchange', () => setTimeout(computeTile, 60));
+
+  /* ====== Calculator logic (Feet behavior + safe eval) ====== */
+  const tape = document.getElementById('tape');
+  const sweep = document.getElementById('sweep');
+  const inputLine = document.getElementById('inputLine');
+  const fractionLine = document.getElementById('fractionLine');
+  const decimalLine = document.getElementById('decimalLine');
+
+  const MEMORY_KEY = 'calcMemorySlots_uniform420';
+  let memorySlots = [null,null,null,null];
+
+  let tokens = [];                 // raw tokens for math
+  let tokenDisplays = [];          // pretty display for measurement tokens
+  let currentEntry = '';           // normal numeric entry (non-measure)
+  let tmr = null;
+  const PPI = 160;
+
+  // Keep last good output so UI never blanks mid-entry
+  let lastGood = { value: 0, fraction: '', decimal: '' };
+
+  // Feet-builder state (active until finalized by an operator)
+  let measure = { active:false, feet:0, inches:0, inEntry:'' };
+
+  // Display mode: 'inch' (default) or 'feet' during peek
+  let displayMode = 'inch';
+
+  const gcd = (a,b)=> (b?gcd(b,a%b):Math.abs(a));
+  const isOp = t => ['+','-','*','/'].includes(t);
+  const isWhole = s => /^-?\d+$/.test(s);
+  const isDec = s => /^-?\d+\.\d+$/.test(s);
+  const splitDec = s => { const [w, d='0'] = s.split('.'); return [parseInt(w,10), parseFloat('0.'+d)]; };
+  const fracFromDec = d => { const D=16; let n=Math.round(d*D), g=gcd(n,D); return `${n/g}/${D/g}`; };
+  const prettyOp = (op) => ({ '*':'×', '/':'÷', '-':'−', '+':'+' }[op] || op);
+  const roundToSixteenth = (x)=> Math.round(x*16)/16;
+
+  // ---------- Result formatters ----------
+  function formatResultInch(value){
+    const r = roundToSixteenth(value);
+    const sign = r<0 ? '-' : '';
+    const abs = Math.abs(r);
+    const w = Math.floor(abs);
+    const f = abs - w;
+    let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
+    let s = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
+    return { fraction: sign + s, decimal: `${r.toFixed(4)}″` };
+  }
+
+  function formatResultFeet(value){
+    const r = roundToSixteenth(value);
+    const sign = r<0 ? '-' : '';
+    let abs = Math.abs(r);
+    let feet = Math.floor(abs / 12);
+    let inchesR = roundToSixteenth(abs - feet*12);
+    let wholeIn = Math.floor(inchesR);
+    let fracIn = inchesR - wholeIn;
+    let n = Math.round(fracIn*16), d = 16, g = gcd(n,d); n/=g; d/=g;
+
+    if (n === 16){ wholeIn += 1; n = 0; d = 16; }
+    if (wholeIn >= 12){ feet += 1; wholeIn -= 12; }
+
+    let inchStr = '';
+    if (wholeIn === 0 && n === 0) inchStr = '';
+    else if (n === 0)            inchStr = ` ${wholeIn}″`;
+    else if (wholeIn === 0)      inchStr = ` ${n}/${d}″`;
+    else                         inchStr = ` ${wholeIn} ${n}/${d}″`;
+
+    const left = `${sign}${feet}′${inchStr}`;
+    const right = `${(sign ? -1 : 1) * (abs/12).toFixed(4)}′`;
+    return { fraction: left, decimal: right };
+  }
+
+  function formatResult(value){
+    return displayMode === 'feet' ? formatResultFeet(value) : formatResultInch(value);
+  }
+
+  function measureTotal(){
+    const scratchIn = measure.inEntry ? parseFloat(measure.inEntry) : 0;
+    return measure.feet*12 + measure.inches + scratchIn;
+  }
+
+  function measureDisplay(){
+    const inVal = (measure.inEntry ? parseFloat(measure.inEntry) : 0) + measure.inches;
+    const hasInches = inVal > 0;
+    const feetStr = `${measure.feet}\u2032`;
+    if (!hasInches) return feetStr;
+    const r = roundToSixteenth(inVal);
+    const w = Math.floor(r);
+    const f = r - w;
+    let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
+    const inchStr = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
+    return `${feetStr} ${inchStr}`;
+  }
+
+  function finalizeMeasureToken(){
+    if (!measure.active) return;
+    const total = measureTotal();
+    const disp = measureDisplay();
+    tokens.push(String(total));
+    tokenDisplays.push(disp);
+    measure = { active:false, feet:0, inches:0, inEntry:'' };
+  }
+
+  /* --- Pretty history with precedence parentheses + inch marks when feet appear --- */
+  function tokenDisplayAt(idx, tok){
+    if (tokenDisplays[idx]) return tokenDisplays[idx];
+    if (isDec(tok)){
+      const [w,f] = splitDec(tok);
+      return f>0 ? `${w} ${fracFromDec(f)}` : `${w}`;
+    }
+    return `${tok}`;
+  }
+
+  function buildDisplayArr(){
+    const arr = [];
+    for (let i=0;i<tokens.length;i++){
+      const t = tokens[i];
+      if (isOp(t)) arr.push({type:'op', value:t});
+      else arr.push({type:'num', value:t, display: tokenDisplayAt(i,t)});
+    }
+
+    // Append the live entry (measure or number)
+    if (measure.active){
+      arr.push({type:'num', value: String(measureTotal()), display: measureDisplay()});
+    } else if (currentEntry){
+      const t = currentEntry;
+      const display = isDec(t)
+        ? (()=>{ const [w,f]=splitDec(t); return f>0 ? `${w} ${fracFromDec(f)}` : `${w}`; })()
+        : t;
+      arr.push({type:'num', value:t, display});
+    }
+
+    // Keep trailing operator visible, but don’t include it in grouping
+    let trailingOp = null;
+    if (arr.length && arr[arr.length-1].type==='op'){
+      trailingOp = arr.pop().value;
+    }
+
+    // Unary leading minus → merge into first number for display
+    if (arr.length>=2 && arr[0].type==='op' && arr[0].value==='-' && arr[1].type==='num'){
+      arr.shift();
+      arr[0].display = '−' + arr[0].display;
+    }
+
+    return {arr, trailingOp};
+  }
+
+  function renderHistory(){
+    const {arr, trailingOp} = buildDisplayArr();
+    if (!arr.length){
+      inputLine.textContent = trailingOp ? prettyOp(trailingOp) : '';
+      return;
+    }
+
+    // If ANY feet are present in the expression, show explicit inches (″) on inch-only terms
+    const feetPresent = arr.some(n => n.type==='num' && typeof n.display==='string' && n.display.includes('′'));
+    const markInches = (txt) => {
+      if (!feetPresent) return txt;
+      if (!txt) return txt;
+      if (txt.includes('′') || txt.includes('″')) return txt;
+      return txt + '″';
+    };
+
+    const hasHigh = arr.some(n => n.type==='op' && (n.value==='*' || n.value==='/'));
+    const hasLow  = arr.some(n => n.type==='op' && (n.value==='+' || n.value==='-'));
+    const mixed   = hasHigh && hasLow;
+
+    // Build with minimal parentheses around ×/÷ runs when mixed
+    let s = '';
+    for (let i=0;i<arr.length;){
+      const node = arr[i];
+      if (node.type==='num'){
+        let part = markInches(node.display);
+        let j=i;
+        let hasHighInGroup = false;
+        while (j+1<arr.length && arr[j+1].type==='op' && (arr[j+1].value==='*' || arr[j+1].value==='/') && j+2<arr.length && arr[j+2].type==='num'){
+          part += ' ' + prettyOp(arr[j+1].value) + ' ' + markInches(arr[j+2].display);
+          hasHighInGroup = true;
+          j += 2;
+        }
+        if (mixed && hasHighInGroup) part = '(' + part + ')';
+        s += part;
+        i = j+1;
+      } else {
+        s += ' ' + prettyOp(node.value) + ' ';
+        i += 1;
+      }
+    }
+
+    if (trailingOp) s = (s ? s + ' ' : '') + prettyOp(trailingOp);
+
+    inputLine.textContent = s.trim();
+
+    requestAnimationFrame(()=>{
+      const hist=document.getElementById('history');
+      if(hist) hist.scrollTop = hist.scrollHeight;
+    });
+
+    // Keep repeat button state fresh
+    setRepeatEnabled(canRepeat());
+  }
+
+  function updateInput(){ renderHistory(); }
+
+  // ====== Fixed evaluator: applies pending operator to live entry/measure ======
+  function evaluate(){
+    // Start with raw tokens and maybe a trailing operator
+    let exprTokens = [...tokens];
+    let pendingOp = null;
+    if (exprTokens.length && isOp(exprTokens.at(-1))) {
+      pendingOp = exprTokens.pop(); // hold the trailing op
+    }
+
+    const left = exprTokens.join(' ');
+    const liveMeasure = measure.active ? String(measureTotal()) : null;
+    const liveEntry   = (!measure.active && currentEntry) ? currentEntry : null;
+
+    let preview = '';
+
+    if (pendingOp && (liveMeasure || liveEntry)) {
+      // correct: "... A <op> <live>"
+      preview = (left ? left + ' ' : '') + pendingOp + ' ' + (liveMeasure ?? liveEntry);
+    } else if (liveMeasure) {
+      // nice preview when only a measure is being typed
+      preview = left ? `${left} + ${liveMeasure}` : liveMeasure;
+
+    } else if (liveEntry) {
+      preview = left ? `${left} ${liveEntry}` : liveEntry;
+    } else {
+      preview = left;
+    }
+
+    try{
+      let val = preview.trim() ? math.evaluate(preview) : 0;
+      let num = (typeof val === 'number') ? val : val.toNumber();
+
+      const out = formatResult(num);
+      lastGood = { value: num, fraction: out.fraction, decimal: out.decimal };
+
+      fractionLine.textContent = out.fraction;
+      decimalLine.textContent  = out.decimal;
+      drawTape(num);
+    } catch {
+      // Fallbacks
+      if (measure.active && !left){
+        const m = measureTotal();
+        const out = formatResult(m);
+        fractionLine.textContent = out.fraction;
+        decimalLine.textContent  = out.decimal;
+        drawTape(m);
+        return;
+      }
+      if (lastGood.decimal){
+        fractionLine.textContent = lastGood.fraction;
+        decimalLine.textContent  = lastGood.decimal;
+        drawTape(lastGood.value);
+      } else {
+        fractionLine.textContent = '';
+        decimalLine.textContent  = '';
+      }
+    }
+  }
+
+  const qEval = () => { clearTimeout(tmr); tmr = setTimeout(evaluate, 120); };
+
+  // Tape rendering
+  function drawTape(center){
+    if (center<0) center=0;
+    [...tape.querySelectorAll('.tick,.tick-label')].forEach(n=>n.remove());
+    const rect = tape.getBoundingClientRect();
+    const mid = rect.width/2;
+    const range = 3;
+    const start = Math.max(center - range/2, 0), end = center + range/2;
+    const a = Math.floor(start*16), b = Math.ceil(end*16);
+    for (let i=a;i<=b;i++){
+      const inches = i/16;
+      const x = (inches - center)*PPI + mid - 1.5;
+      const el = document.createElement('div'); el.className='tick'; el.style.left = x+'px';
+      if (i%16===0){ el.classList.add('num'); const lbl=document.createElement('div'); lbl.className='tick-label'; lbl.textContent=inches.toFixed(0); lbl.style.left=(x+1.5)+'px'; tape.appendChild(lbl); }
+      else if (i%8===0) el.classList.add('lg'); else if (i%4===0) el.classList.add('med'); else el.classList.add('small');
+      tape.appendChild(el);
+    }
+    sweep.classList.remove('animate'); void sweep.offsetWidth; sweep.classList.add('animate');
+  }
+
+  // Memory helpers
+  function loadMemory(){ try{ const s=localStorage.getItem(MEMORY_KEY); if (s) memorySlots = JSON.parse(s);}catch{} refreshMemLabels(); }
+  function saveMemory(){ localStorage.setItem(MEMORY_KEY, JSON.stringify(memorySlots)); }
+
+  function ensureLabelSpan(btn){
+    let span = btn.querySelector('.btn-label');
+    if (!span){
+      span = document.createElement('span');
+      span.className = 'btn-label';
+      span.textContent = btn.textContent;
+      btn.replaceChildren(span);
+    }
+    return span;
+  }
+
+  function formatResultInchOnlyLabel(v){
+    return formatResultInch(v).fraction.replace('"','');
+  }
+
+  function refreshMemLabels(){
+    document.querySelectorAll('.btn.mem').forEach(btn=>{
+      const i=+btn.dataset.mem, v=memorySlots[i];
+      const text = v==null ? `M${i+1}` : formatResultInchOnlyLabel(v);
+      const span = ensureLabelSpan(btn);
+      span.textContent = text;
+    });
+  }
+
+  // ===== Number / decimal entry =====
+  document.querySelectorAll('.btn[data-val]').forEach(b=>b.addEventListener('click',()=>{
+    const val = b.dataset.val;
+    if (measure.active){
+      measure.inEntry += val;
+      updateInput(); qEval();
+      return;
+    }
+    currentEntry += val; updateInput(); qEval();
+  }));
+
+  document.querySelector('.btn.dec[data-val="."]').addEventListener('click',()=>{
+    if (measure.active){
+      if (!measure.inEntry.includes('.')) measure.inEntry = measure.inEntry ? (measure.inEntry + '.') : '0.';
+      updateInput(); qEval();
+      return;
+    }
+    if (currentEntry.includes('.')) return;
+    currentEntry = currentEntry ? currentEntry+'.' : '0.';
+    updateInput(); qEval();
+  });
+
+  // ===== Operators =====
+  document.querySelectorAll('.btn.operator[data-op]').forEach(b=>b.addEventListener('click',()=>{
+    const op = b.dataset.op;
+    if (measure.active) finalizeMeasureToken();
+
+    if (currentEntry){
+      tokens.push(currentEntry);
+      tokenDisplays.push(undefined);
+      currentEntry='';
+    }
+    if (!tokens.length && op !== '-') { updateInput(); qEval(); return; }
+
+    if (isOp(tokens.at(-1))){
+      tokens[tokens.length-1] = op;
+    } else {
+      tokens.push(op);
+      tokenDisplays.push(undefined);
+    }
+    updateInput(); qEval();
+  }));
+
+  /* ===== Backspace: tap = 1 char. Hold 750ms = remove last number + preceding op ===== */
+  const backBtn = document.querySelector('.btn.back');
+  let backHoldTimer = null;
+  let backHoldTriggered = false;
+
+  function backspaceChar(){
+    if (measure.active){
+      if (measure.inEntry){
+        measure.inEntry = measure.inEntry.slice(0,-1);
+      } else if (measure.inches > 0){
+        measure.inches = 0;
+      } else {
+        measure = { active:false, feet:0, inches:0, inEntry:'' };
+      }
+      updateInput(); evaluate(); return;
+    }
+
+    if (currentEntry){
+      currentEntry = currentEntry.slice(0,-1);
+    } else if (tokens.length){
+      let last = tokens.at(-1);
+      if (isOp(last)) {
+        tokens.pop(); tokenDisplays.pop();
+      } else {
+        last = last.slice(0,-1);
+        if (last) tokens[tokens.length-1]=last;
+        else { tokens.pop(); tokenDisplays.pop(); }
+      }
+    }
+    updateInput(); evaluate();
+  }
+
+  function removeLastTermPair(){
+    // If building a measure or typing, drop it and the operator just before it (if any)
+    if (measure.active){
+      measure = { active:false, feet:0, inches:0, inEntry:'' };
+      if (tokens.length && isOp(tokens.at(-1))) { tokens.pop(); tokenDisplays.pop(); }
+      updateInput(); evaluate(); return;
+    }
+    if (currentEntry){
+      currentEntry = '';
+      if (tokens.length && isOp(tokens.at(-1))) { tokens.pop(); tokenDisplays.pop(); }
+      updateInput(); evaluate(); return;
+    }
+    if (!tokens.length){ updateInput(); evaluate(); return; }
+
+    // Find last numeric token
+    let idx = tokens.length - 1;
+    while (idx >= 0 && isOp(tokens[idx])) idx--;
+    if (idx < 0){ updateInput(); evaluate(); return; }
+
+    // Remove the number
+    tokens.splice(idx, 1);
+    tokenDisplays.splice(idx, 1);
+
+    // Remove the operator immediately before it, if present
+    if (idx - 1 >= 0 && isOp(tokens[idx - 1])){
+      tokens.splice(idx - 1, 1);
+      tokenDisplays.splice(idx - 1, 1);
+    }
+    updateInput(); evaluate();
+  }
+
+  // Short tap
+  backBtn.addEventListener('click', (e)=>{
+    if (backHoldTriggered){ backHoldTriggered = false; e.preventDefault(); return; }
+    backspaceChar();
+  });
+
+  // Long-hold (750ms)
+  function clearBackHold(){
+    clearTimeout(backHoldTimer);
+    setHoldVisual(backBtn, false);
+  }
+  backBtn.addEventListener('pointerdown', ()=>{
+    setHoldVisual(backBtn, true);
+    clearTimeout(backHoldTimer);
+    backHoldTimer = setTimeout(()=>{
+      setHoldVisual(backBtn, false);
+      backHoldTriggered = true;     // block subsequent click
+      removeLastTermPair();
+    }, 750);
+  });
+  backBtn.addEventListener('pointerup', clearBackHold);
+  backBtn.addEventListener('pointercancel', clearBackHold);
+  backBtn.addEventListener('mouseleave', clearBackHold);
+
+  // ===== Clear =====
+  document.querySelector('.btn.clear[data-action="clear"]').addEventListener('click',()=>{
+    tokens=[]; tokenDisplays=[]; currentEntry=''; measure = { active:false, feet:0, inches:0, inEntry:'' };
+    inputLine.textContent=''; fractionLine.textContent=''; decimalLine.textContent='';
+    drawTape(0);
+    setRepeatEnabled(false);
+  });
+
+  // ===== Feet behavior (tap) =====
+  const feetBtn = document.getElementById('feetBtn');
+  feetBtn.addEventListener('click',()=>{
+    if (isDec(currentEntry)){
+      const ft = parseFloat(currentEntry);
+      const total = ft * 12;
+      tokens.push(String(total));
+      tokenDisplays.push(`${ft}\u2032`);
+      currentEntry='';
+      updateInput(); qEval();
+      return;
+    }
+    if (isWhole(currentEntry)){
+      measure = { active:true, feet: parseInt(currentEntry,10), inches:0, inEntry:'' };
+      currentEntry='';
+      updateInput(); qEval();
+      return;
+    }
+    if (!currentEntry) return;
+
+    const ft = parseFloat(currentEntry);
+    if (!Number.isNaN(ft)){
+      const total = ft * 12;
+      tokens.push(String(total));
+      tokenDisplays.push(`${ft}\u2032`);
+      currentEntry='';
+      updateInput(); qEval();
+    }
+  });
+
+  // ===== Memory buttons =====
+  document.querySelectorAll('.btn.mem').forEach(btn=>{
+    // Insert on tap
+    btn.addEventListener('click',()=>{
+      const i=+btn.dataset.mem, v=memorySlots[i]; if (v==null) return;
+      if (measure.active) finalizeMeasureToken();
+      if (currentEntry) tokens.push(currentEntry), tokenDisplays.push(undefined);
+      currentEntry = String(v);
+      updateInput(); evaluate();
+    });
+
+    // Store on double-click (or long-press)
+    btn.addEventListener('dblclick',()=>{
+      let expr=[...tokens];
+      if (currentEntry) expr.push(currentEntry);
+      while (expr.length && isOp(expr.at(-1))) expr.pop();
+      let base = expr.length ? math.evaluate(expr.join(' ')) : 0;
+      let valNum = (typeof base==='number' ? base : base.toNumber()) + (measure.active ? measureTotal() : 0);
+
+      const i=+btn.dataset.mem;
+      const confirmReplace = memorySlots[i]!=null ? confirm(`M${i+1} has ${formatResultInchOnlyLabel(memorySlots[i])}. Replace?`) : true;
+      if (!confirmReplace) return;
+      memorySlots[i]= valNum;
+      saveMemory(); refreshMemLabels();
+
+      // Saved flash
+      btn.classList.add('saved');
+      setTimeout(() => btn.classList.remove('saved'), 480);
+    });
+
+    // Long-press → store (touch)
+    let lpTimer = null;
+    btn.addEventListener('touchstart', () => {
+      setHoldVisual(btn, true);
+      lpTimer = setTimeout(() => {
+        btn.dispatchEvent(new Event('dblclick'));
+      }, 600);
+    }, { passive: true });
+
+    function clearLP() {
+      clearTimeout(lpTimer);
+      setHoldVisual(btn, false);
+    }
+    btn.addEventListener('touchend', clearLP, { passive: true });
+    btn.addEventListener('touchcancel', clearLP, { passive: true });
+  });
+
+  document.querySelector('.btn.clear[data-action="mc"]').addEventListener('click',()=>{
+    if (!confirm('Clear all memory slots?')) return;
+    memorySlots=[null,null,null,null]; saveMemory(); refreshMemLabels();
+  });
+
+  /* ===== FRACTION BUTTON PALETTES ===== */
+  const FRACTION_PALETTES = {
+     '1/16': { bg: '#003d99', fg:'#fff' },
+     '1/8': { bg: '#005ce6', fg:'#fff' },
+     '3/16': { bg: '#1a75ff', fg:'#fff' },
+     '1/4': { bg: '#66a3ff', fg:'#fff' },
+     '5/16': { bg: '#1a75ff', fg:'#fff' },
+     '3/8': { bg: '#005ce6', fg:'#fff' },
+     '7/16': { bg: '#1a75ff', fg:'#fff' },
+     '1/2': { bg: '#66a3ff', fg:'#fff' },
+     '9/16': { bg: '#1a75ff', fg:'#fff' },
+     '5/8': { bg: '#005ce6', fg:'#fff' },
+     '11/16': { bg: '#1a75ff', fg:'#fff' },
+     '3/4': { bg: '#66a3ff', fg:'#fff' },
+     '13/16': { bg: '#1a75ff', fg:'#fff' },
+     '7/8': { bg: '#005ce6', fg:'#fff' },
+     '15/16': { bg: '#003d99', fg:'#fff' },
+  };
+
+  function fallbackFor(frac){
+    const [n,d] = frac.split('/').map(Number);
+    if (!n || !d) return { bg: 'hsl(210 70% 50%)', fg:'#fff' };
+    const t = Math.max(0, Math.min(1, n/d));
+    const h = 210 + t * 120; /* blue → magenta */
+    const s = 70, l = 50;
+    return { bg: `hsl(${h} ${s}% ${l}%)`, fg:'#fff' };
+  }
+
+  function applyFractionPalettes(){
+    document.querySelectorAll('.btn.frac[data-frac]').forEach(el=>{
+      const key = el.getAttribute('data-frac');
+      const conf = { ...fallbackFor(key), ...(FRACTION_PALETTES[key]||{}) };
+      if (conf.bg) el.style.setProperty('--btn-bg', conf.bg);
+      if (conf.fg) el.style.setProperty('--btn-fg', conf.fg);
+      if (conf.img) el.style.setProperty('--btn-img', conf.img);
+      if (conf.hoverBg) el.style.setProperty('--btn-hover-bg', conf.hoverBg);
+      if (conf.activeBg) el.style.setProperty('--btn-active-bg', conf.activeBg);
+    });
+  }
+
+  // ===== Fractions input handling =====
+  document.querySelectorAll('.btn.frac').forEach(b=>b.addEventListener('click',()=>{
+    const f=b.dataset.frac;
+    const [n,d]=f.split('/').map(Number);
+    const fVal = n/d;
+
+    if (measure.active){
+      if (!measure.inEntry){
+        measure.inches += fVal;
+      } else {
+        const base = parseFloat(measure.inEntry);
+        measure.inches += base + fVal;
+        measure.inEntry = '';
+      }
+      updateInput(); qEval();
+      return;
+    }
+
+    if (!currentEntry) {
+      currentEntry = f;
+    } else if (isWhole(currentEntry)) {
+      const whole = parseInt(currentEntry,10);
+      const combined = whole + fVal;
+      tokens.push(String(combined)); tokenDisplays.push(undefined); currentEntry='';
+    } else {
+      tokens.push(currentEntry); tokenDisplays.push(undefined);
+      tokens.push('+');         tokenDisplays.push(undefined);
+      currentEntry=f;
+    }
+    updateInput(); qEval();
+  }));
+
+  // ---- UI helpers: ripples / hold visuals / copy-to-clipboard / toasts
+  function attachRipples() {
+    document.querySelectorAll('.btn').forEach(btn => {
+      btn.addEventListener('pointerdown', (e) => {
+        const rect = btn.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        const maxDim = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = maxDim * 1.2 + 'px';
+        ripple.style.left = x + 'px';
+        ripple.style.top = y + 'px';
+        btn.appendChild(ripple);
+        ripple.addEventListener('animationend', () => ripple.remove());
+      });
+    });
+  }
+
+  /* ===== NEW: touch-friendly pressed state ===== */
+  function attachPressState(){
+    document.querySelectorAll('.btn').forEach(btn=>{
+      const set = on => { if (!btn.disabled) btn.classList.toggle('pressed', !!on); };
+      btn.addEventListener('pointerdown', ()=> set(true));
+      btn.addEventListener('pointerup',   ()=> set(false));
+      btn.addEventListener('pointercancel',()=> set(false));
+      btn.addEventListener('mouseleave',  ()=> set(false));
+    });
+  }
+
+  function setHoldVisual(btn, on) { if (btn) btn.classList.toggle('hold', !!on); }
+
+  function showToast(msg='Copied', ms=900){
+    const toast = document.getElementById('copyToast');
+    if (!toast) return;
+    toast.querySelector('span').textContent = msg;
+    toast.style.display='flex';
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(()=>{ toast.style.display='none'; }, ms);
+  }
+  function enableClickCopy(selector){
+    document.querySelectorAll(selector).forEach(el=>{
+      el.style.cursor='pointer';
+      el.addEventListener('click', () => {
+        const sel = window.getSelection();
+        if (sel && sel.toString().length > 0) return; // let manual selection win
+        const text = (el.textContent || '').trim();
+        if (!text) return;
+        if (navigator.clipboard?.writeText){
+          navigator.clipboard.writeText(text).then(()=> showToast('Copied'));
+        } else {
+          // fallback
+          const ta = document.createElement('textarea');
+          ta.value = text; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); showToast('Copied'); } catch {}
+          ta.remove();
+        }
+      });
+    });
+  }
+
+  // Block selection/callout on buttons only (not outputs/history)
+  document.addEventListener('selectstart', (e) => {
+    if (e.target.closest('.btn')) e.preventDefault();
+  }, { capture: true });
+  document.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.btn')) e.preventDefault();
+  }, { capture: true });
+
+  // Modal
+  const modal=document.getElementById('modal');
+  document.getElementById('menuBtn').addEventListener('click',()=>{ modal.style.display='flex'; });
+  document.getElementById('closeModal').addEventListener('click',()=>{ modal.style.display='none'; });
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.style.display='none'; });
+
+  // Prevent body scroll, allow results/history/modal/output scroll/selection
+  document.addEventListener('touchmove', e=>{
+    if (e.target.closest('.history') || e.target.closest('.output') || e.target.closest('#modal')) return;
+    e.preventDefault();
+  }, {passive:false});
+
+  // === Feet Peek (hold) ===
+  (function enableFeetPeek(){
+    const DELAY_MS = 1000; // 1s hold
+    let holdTimer = null;
+    let peeking = false;
+    let suppressNextClick = false;
+
+    const start = () => {
+      clearTimeout(holdTimer);
+      setHoldVisual(feetBtn, true);
+      holdTimer = setTimeout(()=>{
+        peeking = true;
+        suppressNextClick = true;
+        displayMode = 'feet';
+        feetBtn.classList.add('peek');
+        evaluate();
+      }, DELAY_MS);
+    };
+    const end = () => {
+      clearTimeout(holdTimer);
+      setHoldVisual(feetBtn, false);
+      if (peeking){
+        peeking = false;
+        displayMode = 'inch';
+        feetBtn.classList.remove('peek');
+        evaluate();
+      }
+    };
+
+    feetBtn.addEventListener('pointerdown', start);
+    feetBtn.addEventListener('pointerup', end);
+    feetBtn.addEventListener('pointercancel', end);
+    feetBtn.addEventListener('mouseleave', end);
+
+    feetBtn.addEventListener('click', (e)=>{
+      if (suppressNextClick){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        suppressNextClick = false;
+      }
+    }, true);
+  })();
+
+  /* ====== REPEAT BUTTON ====== */
+  const repeatBtn = document.getElementById('repeatBtn');
+
+  function canRepeat(){
+    // If measure in progress and there is an operator before it, allow
+    if (measure.active){
+      const hasOpBefore = tokens.length && isOp(tokens.at(-1));
+      const hasSomeMeasure = (measure.feet || measure.inches || measure.inEntry);
+      return hasOpBefore && hasSomeMeasure;
+    }
+    // If currently typing a number/fraction and last token is an operator
+    if (currentEntry){
+      return tokens.length && isOp(tokens.at(-1));
+    }
+    // Otherwise need ... op term as the last two tokens
+    const n = tokens.length;
+    return n >= 2 && isOp(tokens[n-2]) && !isOp(tokens[n-1]);
+  }
+
+  function setRepeatEnabled(on){
+    if (!repeatBtn) return;
+    repeatBtn.disabled = !on;
+  }
+
+  function commitPendingIfPair(){
+    // If measure active with an operator before it, finalize into tokens
+    if (measure.active && tokens.length && isOp(tokens.at(-1))){
+      finalizeMeasureToken();
+    }
+    // If currently typing and last token is an operator, commit the entry
+    if (currentEntry && tokens.length && isOp(tokens.at(-1))){
+      tokens.push(currentEntry);
+      tokenDisplays.push(undefined);
+      currentEntry = '';
+    }
+  }
+
+  function findLastPair(){
+    const n = tokens.length;
+    if (n >= 2 && isOp(tokens[n-2]) && !isOp(tokens[n-1])){
+      return { opIdx: n-2, termIdx: n-1 };
+    }
+    return null;
+  }
+
+  function doRepeat(){
+    if (!canRepeat()){
+      return;
+    }
+    commitPendingIfPair();
+
+    const pair = findLastPair();
+    if (!pair) { setRepeatEnabled(false); updateInput(); qEval(); return; }
+
+    const op = tokens[pair.opIdx];
+    const term = tokens[pair.termIdx];
+    const disp = tokenDisplays[pair.termIdx];
+
+    tokens.push(op);            tokenDisplays.push(undefined);
+    tokens.push(term);          tokenDisplays.push(disp);
+
+    updateInput(); qEval();
+  }
+
+  repeatBtn.addEventListener('click', doRepeat);
+
+  // Init
+  function initTape(){ const r=tape.getBoundingClientRect(); if(!r.width){ requestAnimationFrame(initTape); return; } drawTape(0); }
+  computeTile();
+  initTape();
+  loadMemory();
+
+  attachRipples();
+  attachPressState();          // NEW: enable touch pressed-state
+  applyFractionPalettes();
+  enableClickCopy('#fractionLine, #decimalLine');
+
+  /* PWA: Service Worker + Install */
+  let deferredPrompt = null;
+  if ('serviceWorker' in navigator){
+    window.addEventListener('load', async () => {
+      try{
+        const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW && newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller){
+              const toast = document.getElementById('updateToast'); if (toast) toast.style.display='flex';
+            }
+          });
+        });
+        navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+      }catch(e){ console.warn('SW registration failed', e); }
+    });
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('installBtn'); if (btn) btn.style.display='inline-block';
+    });
+  }
+
+  const installBtn = document.getElementById('installBtn');
+  if (installBtn) installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display='none';
+  });
+
+  document.getElementById('updateReload')?.addEventListener('click', async () => {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (reg?.waiting){ reg.waiting.postMessage('skipWaiting'); }
+  });
+
+})();
+</script>
+</body>
+
+<!-- ===== manifest.webmanifest (create this file alongside) ===== -->
+<!--
+{
+  "name": "Inch Calc",
+  "short_name": "Inch Calc",
+  "start_url": ".",
+  "scope": ".",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#1f4d4d",
+  "theme_color": "#1f4d4d",
+  "description": "Tape & Memory calculator with inch fractions.",
+  "icons": [
+    {"src": "calcicon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "calcicon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any"}
+  ]
+}
+-->
+
+<!-- ===== sw.js (create this file alongside) ===== -->
+<!--
+const CACHE_NAME = 'inch-calc-v1-2025-08-23';
+const ASSETS = [
+  './',
+  './tapemeasurememory.html',
+  './manifest.webmanifest',
+  './sw.js',
+  './calcicon.png',
+  './apple-touch-icon.png'
+];
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+    )).then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  const accept = req.headers.get('accept') || '';
+
+  // HTML (navigation): network-first
+  if (req.mode === 'navigate' || accept.includes('text/html')){
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  const sameOrigin = new URL(req.url).origin === self.location.origin;
+
+  // Same-origin assets: cache-first
+  if (sameOrigin){
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(req, copy));
+        return res;
+      }))
+    );
+    return;
+  }
+
+  // Cross-origin (e.g., CDN): network, fallback to cache
+  event.respondWith(
+    fetch(req).then((res) => {
+      const copy = res.clone();
+      caches.open(CACHE_NAME).then(c => c.put(req, copy));
+      return res;
+    }).catch(() => caches.match(req))
+  );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data === 'skipWaiting') self.skipWaiting();
+});
+-->
+</html>
