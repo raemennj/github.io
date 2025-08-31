@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Edge Mark Layout Calculator — Pickets & Dental</title>
+<link href="https://use.typekit.net/iwc3riw.css" rel="stylesheet"/>
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Edge Marks" />
+<meta name="theme-color" content="#1f4d4d" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0e2a2a" media="(prefers-color-scheme: dark)" />
+<style>
+  :root{
+    --card-max: 420px; --gap: 10px; --pad: 10px;
+    --bg:#0e2a2a; --card:#142f2f; --ink:#e6f3f3; --muted:#9ababa; --ring:#6ad5b9;
+    --btn:#1f4d4d; --btn-ink:#e6f3f3; --accent:#6ad5b9;
+    --bad:#e86a6a; --ok:#6ad56a; --warn:#e0a84d;
+  }
+  *,*::before,*::after{ box-sizing:border-box }
+  html,body{ height:100% }
+  html, body{ margin:0; background:var(--bg); color:var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  .wrap{ display:grid; place-items:start center; padding: var(--pad); }
+  .card{ width:100%; max-width:var(--card-max); background:var(--card); border-radius:16px; padding:var(--pad); box-shadow: 0 8px 24px rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.06); }
+  h1{ margin:0 0 6px; font-weight:800; font-size:20px }
+  .sub{ color:var(--muted); font-size:12px; margin-bottom:8px }
+  fieldset{ border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px; margin:0 0 var(--gap); }
+  legend{ padding:0 6px; color:var(--muted); font-size:12px }
+  .row{ display:grid; grid-template-columns: 1fr 1fr; gap:var(--gap); }
+  .row3{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:var(--gap); }
+  .row4{ display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:var(--gap); }
+  label{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px }
+  input[type="text"], select{ width:100%; padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,.12); background:#0e2424; color:var(--ink); outline:none; }
+  input[type="text"]::placeholder{ color:#6f9090 }
+  .btns{ display:flex; gap:8px; flex-wrap:wrap }
+  button{ appearance:none; border:none; background:var(--btn); color:var(--btn-ink); padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700; box-shadow: 0 3px 0 rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.06) inset; user-select:none; }
+  button:hover{ filter: brightness(1.15); }
+  button:active{ filter: brightness(1.28); transform: translateY(1px); box-shadow: inset 0 2px 6px rgba(0,0,0,.5); }
+  .ghost{ background:#0f2020; color:var(--muted) }
+  .accent{ background:var(--accent); color:#042b23 }
+  .bad{ background:var(--bad) }
+  .ok{ background:var(--ok); color:#05220a }
+  .muted{ color:var(--muted) }
+  .k{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+  .grid{ display:grid; gap:var(--gap) }
+  .note{ font-size:12px; color:var(--muted) }
+  .summary{ background:#0e2424; border-radius:12px; padding:10px; border:1px dashed rgba(255,255,255,.1) }
+  .summary b{ color:var(--accent) }
+  .warn{ color:var(--warn) }
+  .err{ color:var(--bad) }
+
+  /* Results table */
+  table{ width:100%; border-collapse: collapse; font-size:13px; }
+  th, td{ text-align:left; padding:6px 8px; border-bottom: 1px solid rgba(255,255,255,.08) }
+  th{ color:var(--muted); font-weight:600 }
+  tbody tr:hover{ background: rgba(255,255,255,.03) }
+  .scroll{ max-height: 220px; overflow:auto; border:1px solid rgba(255,255,255,.08); border-radius:12px }
+
+  /* Tape */
+  .tapeWrap{ background:#0e2424; border-radius:12px; padding:10px; border:1px solid rgba(255,255,255,.08) }
+  .tapeBar{ display:flex; align-items:center; gap:8px; margin-bottom:8px }
+  .tape{ width:100%; height:140px; background:#0a1919; border-radius:12px; border:1px solid rgba(255,255,255,.1); position:relative; overflow:hidden; touch-action: pan-x; }
+  .markline{ position:absolute; top:0; bottom:0; width:2px; background: var(--accent); }
+  .markline.active{ width:3px; background:#e8f9f3 }
+  .tick{ position:absolute; bottom:0; width:1px; background:#98bcbc; opacity:.8 }
+  .tick.big{ height:28px }
+  .tick.med{ height:20px }
+  .tick.small{ height:12px }
+  .tickLabel{ position:absolute; bottom:32px; transform: translateX(-50%); font-size:11px; color:#b9dede }
+
+  /* selection rules */
+  .noselect, button{ -webkit-user-select:none; user-select:none }
+  .selectable{ -webkit-user-select:text; user-select:text }
+
+  /* helper */
+  .split{ display:flex; justify-content:space-between; gap:8px; align-items:center }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card grid">
+    $1
+
+    
+
+    <fieldset>
+      <legend>Project</legend>
+      <div class="row">
+        <div>
+          <label>Total span</label>
+          <input id="total" type="text" placeholder="e.g. 11' 10 1/4&quot; or 142.5"/>
+        </div>
+        <div>
+          <label>Rounding (display)</label>
+          <select id="round">
+            <option value="1">1&quot; (no fractions)</option>
+            <option value="2">1/2&quot;</option>
+            <option value="4">1/4&quot;</option>
+            <option value="8">1/8&quot;</option>
+            <option value="16" selected>1/16&quot;</option>
+            <option value="32">1/32&quot;</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Ends mode</label>
+          <select id="endsMode">
+            <option value="equal">Equal ends (auto)</option>
+            <option value="left">Left anchored (all extra on right)</option>
+            <option value="right">Right anchored (all extra on left)</option>
+            <option value="custom">Custom ends (preserve)</option>
+          </select>
+        </div>
+        <div class="split">
+          <div style="flex:1">
+            <label>Left end preserve</label>
+            <input id="endLeft" type="text" placeholder="0"/>
+          </div>
+          <div style="flex:1">
+            <label>Right end preserve</label>
+            <input id="endRight" type="text" placeholder="0"/>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Solve Mode</legend>
+      <div class="row">
+        <div>
+          <label>Mode</label>
+          <select id="mode">
+            <option value="solveN">Solve N (given picket & gap)</option>
+            <option value="solveGap">Solve gap (given N & picket)</option>
+            <option value="solvePicket">Solve picket (given N & gap)</option>
+            <option value="allGiven">All given (report ends)</option>
+          </select>
+        </div>
+        <div>
+          <label>Number of pickets (N)</label>
+          <input id="N" type="text" placeholder="e.g. 12"/>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Picket width (each)</label>
+          <input id="picketW" type="text" placeholder="e.g. 5 3/8&quot;"/>
+        </div>
+        <div>
+          <label>Gap width (between)</label>
+          <input id="gapW" type="text" placeholder="e.g. 1 1/4&quot;"/>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>First picket (optional override)</label>
+          <input id="firstW" type="text" placeholder="blank = same as others"/>
+        </div>
+        <div>
+          <label>Last picket (optional override)</label>
+          <input id="lastW" type="text" placeholder="blank = same as others"/>
+        </div>
+      </div>
+      <div class="btns">
+        <button id="compute">Compute</button>
+        <button class="ghost" id="reset">Reset</button>
+      </div>
+      <div class="note">Tip: inputs accept <span class="k">5' 2 1/4"</span>, <span class="k">96</span>, <span class="k">8ft</span>, <span class="k">11.5in</span>, etc.</div>
+    </fieldset>
+
+    $1
+
+    <fieldset>
+      <legend>Presets & Memory</legend>
+      <div class="grid">
+        <div class="row">
+          <div>
+            <label>Preset list</label>
+            <select id="presetSelect"></select>
+          </div>
+          <div>
+            <label>Name</label>
+            <input id="presetName" type="text" placeholder="e.g. 12×3-1/2 + 1-1/4 @ 10ft"/>
+          </div>
+        </div>
+        <div class="btns">
+          <button id="presetLoad">Load</button>
+          <button id="presetSaveNew" class="ok">Save new</button>
+          <button id="presetUpdate" class="accent">Update</button>
+          <button id="presetDelete" class="bad">Delete</button>
+        </div>
+        <div class="note">Tip: <b>Tap</b> a quick slot to load. <b>Long‑press</b> to save current inputs.</div>
+        <div class="btns">
+          <button id="mem1">M1</button>
+          <button id="mem2">M2</button>
+          <button id="mem3">M3</button>
+          <button id="mem4">M4</button>
+        </div>
+      </div>
+    </fieldset>
+
+
+    <fieldset>
+      <legend>Marks</legend>
+      <div class="btns" style="margin-bottom:8px">
+        <button id="copyList" class="accent">Copy all marks</button>
+        <button id="copyCSV" class="ghost">Copy CSV</button>
+      </div>
+      <div class="scroll selectable">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Left edge</th>
+              <th>Right edge</th>
+              <th>Width</th>
+              <th>Gap after</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Tape</legend>
+      <div class="tapeWrap">
+        <div class="tapeBar">
+          <div class="btns">
+            <button id="prevMark">◀ Prev</button>
+            <button id="nextMark">Next ▶</button>
+          </div>
+          <div class="split" style="flex:1">
+            <div class="muted" id="where"></div>
+            <div>
+              <label style="display:block; margin:0 0 2px">Zoom (inches)</label>
+              <select id="zoom">
+                <option>6</option>
+                <option selected>12</option>
+                <option>24</option>
+                <option>36</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="tape" class="tape noselect"></div>
+      </div>
+    </fieldset>
+
+    <div class="note">Prototype A — Designed to echo your <b>calc_screens</b> feel and the <b>segment_tape</b> interactions (prev/next marks, zoomable viewport, swipe on tape). Buttons use a subtle press + brightness lift for tactile feedback.</div>
+  </div>
+</div>
+
+<script>
+// ---------- Utilities: parsing & formatting ----------
+const PRIME = "'", QUOTE='"';
+function cleanUnits(s){
+  return s
+    .replace(/[\u2032\u2019]/g, PRIME) // prime / curly apostrophe
+    .replace(/[\u2033]/g, QUOTE)
+    .replace(/\bfeet\b|\bfoot\b|\bft\b/gi, PRIME)
+    .replace(/\binch(?:es)?\b|\bin\b/gi, QUOTE)
+    .trim();
+}
+function parseLen(input){
+  if(!input) return NaN; let s = cleanUnits(String(input));
+  if(s==="") return NaN;
+  // If pure number, treat as inches
+  if(/^[+-]?\d+(?:\.\d+)?$/.test(s)) return parseFloat(s);
+  // Extract feet and remove
+  let feet = 0; const feetMatch = s.match(/([+-]?\d+(?:\.\d+)?)\s*'/);
+  if(feetMatch){ feet = parseFloat(feetMatch[1]); s = s.replace(feetMatch[0], " "); }
+  // Extract inches-number with optional quote
+  let inches = 0; let inchPart = 0; let fractionPart = 0;
+  // handle patterns like: 2 1/4" or 1/4" or 2.5" or 2 1/4 (without quote)
+  // First, capture a standalone fraction
+  const fracMatch = s.match(/([+-]?\d+)\s*\/(\s*\d+)/);
+  if(fracMatch){
+    const num = parseFloat(fracMatch[1]);
+    const den = parseFloat(fracMatch[2]);
+    if(den!==0) fractionPart = num/den;
+    s = s.replace(fracMatch[0], ' '); // remove fraction text
+  }
+  // Now any remaining number as inchPart
+  const inchMatch = s.match(/([+-]?\d+(?:\.\d+)?)/);
+  if(inchMatch){ inchPart = parseFloat(inchMatch[1]); }
+  inches = inchPart + fractionPart;
+  return feet*12 + inches;
+}
+
+function toFrac(inches, denom){
+  // inches: number (can be fractional). denom: 1,2,4,8,16,32
+  const sign = inches<0 ? -1 : 1; inches = Math.abs(inches);
+  const whole = Math.floor(inches);
+  let frac = inches - whole;
+  const n = Math.round(frac * denom);
+  if(n===0) return {whole: sign*whole, num:0, den:denom};
+  if(n===denom) return {whole: sign*(whole+1), num:0, den:denom};
+  const g = gcd(n, denom); return {whole: sign*whole, num: n/g, den: denom/g};
+}
+function gcd(a,b){ return b ? gcd(b, a%b) : a }
+function fmtIn(inches, denom=16){
+  const sign = inches<0 ? '-' : '';
+  inches = Math.abs(inches);
+  const feet = Math.floor(inches/12);
+  const rem = inches - feet*12;
+  const f = toFrac(rem, denom);
+  const parts=[];
+  if(feet>0) parts.push(`${feet}${PRIME}`);
+  if(f.whole>0 || (feet===0)) parts.push(`${f.whole}${f.num?"":QUOTE}`);
+  if(f.num){ parts[parts.length-1] = `${f.whole} ${f.num}/${f.den}${QUOTE}`; }
+  // tidy: if zero inches and have feet only
+  if(feet>0 && f.whole===0 && f.num===0) return `${feet}${PRIME}`;
+  return sign + parts.join(' ');
+}
+function fmtInRaw(inches){ return `${inches.toFixed(4)} in`; }
+
+// ---------- Core solver ----------
+function computeLayout({total, mode, N, picketW, gapW, firstW, lastW, endsMode, endLeft, endRight}){
+  // total, picketW, gapW, firstW, lastW, endLeft, endRight in INCHES
+  // returns {ok, msg[], result: {N, picketW, gapW, endL, endR, items:[{i,left,right,width,gapAfter}], marks:[...]} }
+  const msgs=[];
+  if(!(total>0)) return {ok:false, msgs:["Enter a valid total span." ]};
+
+  // normalize optional
+  firstW = (firstW>0)? firstW : null;
+  lastW  = (lastW>0)? lastW  : null;
+
+  const preserveLeft = (endsMode==='custom') ? (endLeft||0) : 0;
+  const preserveRight= (endsMode==='custom') ? (endRight||0) : 0;
+  if(preserveLeft+preserveRight >= total) return {ok:false, msgs:["Preserved ends exceed or equal total span."]};
+
+  const interior = total - preserveLeft - preserveRight;
+  let outN = null, outP = null, outG = null, endL=0, endR=0;
+
+  const small = 1e-6;
+
+  if(mode==='solveN'){
+    if(!(picketW>0) || !(gapW>=0)) return {ok:false, msgs:["Provide picket width and gap width to solve N."]};
+    // Fit as many as possible
+    outN = Math.max(1, Math.floor((interior + gapW) / (picketW + gapW)));
+    const first = (firstW ?? picketW); const last = (lastW ?? picketW);
+    const interiorForMids = interior - first - last;
+    if(outN===1){ // single picket
+      const leftover = interior - first;
+      ({endL,endR} = distributeEnds(endsMode, preserveLeft, preserveRight, leftover));
+      outP = picketW; outG = gapW;
+    } else if(outN===2){
+      const leftover = interior - first - last - gapW; // 2 pickets means 1 gap
+      ({endL,endR} = distributeEnds(endsMode, preserveLeft, preserveRight, leftover));
+      outP = picketW; outG = gapW;
+    } else {
+      // outN>=3, compute leftover with (outN-2) interior pickets of width picketW and (outN-1) gaps
+      const leftover = interiorForMids - (outN-2)*picketW - (outN-1)*gapW;
+      if(leftover < -small){
+        // Too tight including first/last overrides; reduce N until fits
+        while(outN>2){
+          outN--;
+          const lf = interior - (first) - (last) - (outN-2)*picketW - (outN-1)*gapW;
+          if(lf>=-small) break;
+        }
+      }
+      const computedLeftover = interior - (first) - (last) - (outN-2)*picketW - (outN-1)*gapW;
+      ({endL,endR} = distributeEnds(endsMode, preserveLeft, preserveRight, computedLeftover));
+      outP = picketW; outG = gapW;
+    }
+    msgs.push(`Solved N = ${outN}`);
+  }
+
+  if(mode==='solveGap'){
+    if(!(N>0) || !(picketW>0)) return {ok:false, msgs:["Provide N and picket width to solve gap."]};
+    const first = (firstW ?? picketW); const last = (lastW ?? picketW);
+    if(N===1){
+      outG = 0;
+      const leftover = interior - first;
+      ({endL,endR} = distributeEnds(endsMode, preserveLeft, preserveRight, leftover));
+    } else {
+      const mids = Math.max(0, N-2);
+      const gapCount = N-1;
+      const leftover = interior - first - last - mids*picketW; // this must equal gapCount*outG
+      outG = leftover / gapCount;
+      if(outG < -small) return {ok:false, msgs:["Not enough room for the requested N and picket width."]};
+      ({endL,endR} = distributeEnds(endsMode, preserveLeft, preserveRight, 0));
+    }
+    outN = N; outP = picketW; msgs.push(`Solved gap = ${outG.toFixed(4)} in`);
+  }
+
+  if(mode==='solvePicket'){
+    if(!(N>0) || !(gapW>=0)) return {ok:false, msgs:["Provide N and gap width to solve picket."]};
+    if(firstW || lastW){ msgs.push("Note: special first/last widths ignored in picket-solve mode."); }
+    const gapCount = Math.max(0, N-1);
+    const leftover = interior - gapCount*gapW;
+    outP = leftover / N;
+    if(outP < -small) return {ok:false, msgs:["Not enough room for the requested N and gap width."]};
+    outN = N; outG = gapW; ({endL,endR} = distributeEnds(endsMode, preserveLeft, preserveRight, 0));
+    msgs.push(`Solved picket = ${outP.toFixed(4)} in`);
+  }
+
+  if(mode==='allGiven'){
+    if(!(N>0) || !(picketW>0) || !(gapW>=0)) return {ok:false, msgs:["Provide N, picket width and gap width."]};
+    const first = (firstW ?? picketW); const last = (lastW ?? picketW);
+    const need = first + last + Math.max(0,N-2)*picketW + Math.max(0,N-1)*gapW;
+    const leftover = interior - need;
+    outN = N; outP = picketW; outG = gapW;
+    ({endL,endR} = distributeEnds(endsMode, preserveLeft, preserveRight, leftover));
+    if(Math.abs(leftover)>small){
+      if(leftover<0) msgs.push(`⚠ Too tight by ${(-leftover).toFixed(4)} in. Ends went negative if forced.`);
+      else msgs.push(`Info: leftover ${leftover.toFixed(4)} in absorbed into ends per mode.`);
+    }
+  }
+
+  // Build items, marks
+  const items=[]; const marks=[];
+  let cursor = endL; // start at left edge after left end
+  for(let i=1;i<=outN;i++){
+    const w = (i===1 && firstW) ? firstW : (i===outN && lastW) ? lastW : outP;
+    const left = cursor;
+    const right = left + w;
+    items.push({i,left,right,width:w});
+    marks.push(left,right);
+    cursor = right + ((i<outN)? outG : 0);
+  }
+  // after placing, cursor should be ~ total - endR
+  const err = (total - endR) - cursor;
+  if(Math.abs(err)>1e-4) msgs.push(`Note: accumulated error ${err.toFixed(4)} in (should be ~0).`);
+
+  return {ok:true, msgs, result:{N:outN, picketW:outP, gapW:outG, endL, endR, items, marks}};
+}
+function distributeEnds(mode, preserveLeft, preserveRight, leftover){
+  let endL = preserveLeft, endR = preserveRight;
+  if(mode==='equal'){
+    const half = leftover/2; endL += half; endR += half;
+  } else if(mode==='left'){
+    endL += 0; endR += leftover;
+  } else if(mode==='right'){
+    endL += leftover; endR += 0;
+  } else { // custom, already included preserves; leftover added equally to keep symmetry unless negative
+    const half = leftover/2; endL += half; endR += half;
+  }
+  return {endL,endR};
+}
+
+// ---------- UI Wiring ----------
+const el = id => document.getElementById(id);
+const rows = el('rows');
+const messages = el('messages');
+const tape = el('tape');
+let state = { layout:null, activeMarkIndex:0 };
+
+function getInputs(){
+  return {
+    total: parseLen(el('total').value),
+    mode: el('mode').value,
+    N: parseInt(el('N').value, 10),
+    picketW: parseLen(el('picketW').value),
+    gapW: parseLen(el('gapW').value),
+    firstW: parseLen(el('firstW').value),
+    lastW: parseLen(el('lastW').value),
+    endsMode: el('endsMode').value,
+    endLeft: parseLen(el('endLeft').value),
+    endRight: parseLen(el('endRight').value),
+    denom: parseInt(el('round').value, 10)
+  };
+}
+
+$1
+  persistLast();
+
+function drawTape(){
+  const L = state.layout; if(!L) return;
+  const zoomInches = parseFloat(el('zoom').value)||12; // width of viewport in inches
+  const pxPerIn = 20; // scale
+  const W = Math.min( Math.floor(pxPerIn*zoomInches), 10000 );
+  tape.style.height = '140px';
+  tape.innerHTML = '';
+
+  // find center mark by index
+  const idx = Math.max(0, Math.min(state.activeMarkIndex, L.marks.length-1));
+  const centerIn = L.marks[idx];
+  el('where').textContent = `Mark ${idx+1} of ${L.marks.length} — ${fmtIn(centerIn, L.denom)} (${centerIn.toFixed(3)} in)`;
+
+  // build a local coordinate range
+  const startIn = centerIn - zoomInches/2;
+  const endIn = centerIn + zoomInches/2;
+
+  // ticks every 1/16", 1/8", 1/4", 1", and foot labels
+  const frag = document.createDocumentFragment();
+  // bg scale baseline — we draw ticks for the visible window only
+  const step = 1/16; // fine ticks
+  for(let x = Math.floor(startIn/step)*step; x <= endIn + 1e-9; x += step){
+    const px = (x - startIn) * pxPerIn;
+    const tick = document.createElement('div');
+    tick.className = 'tick small';
+    if(Math.abs((x*8) - Math.round(x*8))<1e-6) tick.className = 'tick med'; // 1/8
+    if(Math.abs((x*4) - Math.round(x*4))<1e-6) tick.className = 'tick med'; // 1/4
+    if(Math.abs((x) - Math.round(x))<1e-6) tick.className = 'tick big'; // 1"
+    tick.style.left = px+ 'px';
+    frag.appendChild(tick);
+
+    if(Math.abs(x - Math.round(x))<1e-6){
+      // label inches, and feet where applicable
+      const lbl = document.createElement('div');
+      lbl.className = 'tickLabel';
+      const absIn = x;
+      const feet = Math.floor(absIn/12); const inch = Math.round(absIn - feet*12);
+      lbl.textContent = feet>0 ? `${feet}${PRIME} ${inch}${QUOTE}` : `${inch}${QUOTE}`;
+      lbl.style.left = px + 'px';
+      frag.appendChild(lbl);
+    }
+  }
+  tape.appendChild(frag);
+
+  // marks in view
+  for(let i=0;i<L.marks.length;i++){
+    const m = L.marks[i];
+    if(m>=startIn && m<=endIn){
+      const line = document.createElement('div');
+      line.className = 'markline' + (i===idx? ' active':'' );
+      line.style.left = ((m - startIn)*pxPerIn) + 'px';
+      tape.appendChild(line);
+    }
+  }
+
+  // swipe handling
+  let startX=null; let moved=false;
+  tape.onpointerdown = (ev)=>{ startX = ev.clientX; moved=false; tape.setPointerCapture(ev.pointerId); };
+  tape.onpointermove = (ev)=>{ if(startX!=null && Math.abs(ev.clientX-startX)>18){ moved=true; } };
+  tape.onpointerup = (ev)=>{
+    if(startX!=null){
+      const dx = ev.clientX - startX;
+      if(Math.abs(dx)>22){ if(dx<0) nextMark(); else prevMark(); }
+      startX=null; moved=false; tape.releasePointerCapture(ev.pointerId);
+    }
+  };
+}
+
+function prevMark(){ if(!state.layout) return; state.activeMarkIndex = Math.max(0, state.activeMarkIndex-1); drawTape(); }
+function nextMark(){ if(!state.layout) return; state.activeMarkIndex = Math.min(state.layout.marks.length-1, state.activeMarkIndex+1); drawTape(); }
+
+$1
+
+// -------- Presets (named) & Quick Memory (M1–M4) --------
+const PRESET_KEY = 'edgeMarkPresets_v1';
+const LAST_KEY   = 'edgeMarkLast_v1';
+const QUICK_KEY  = 'edgeMarkQuick_v1';
+
+function snapshotInputsRaw(){
+  return {
+    total: el('total').value,
+    mode: el('mode').value,
+    N: el('N').value,
+    picketW: el('picketW').value,
+    gapW: el('gapW').value,
+    firstW: el('firstW').value,
+    lastW: el('lastW').value,
+    endsMode: el('endsMode').value,
+    endLeft: el('endLeft').value,
+    endRight: el('endRight').value,
+    round: el('round').value
+  };
+}
+function applyInputsRaw(cfg){
+  if(!cfg) return;
+  el('total').value   = cfg.total ?? '';
+  el('mode').value    = cfg.mode ?? 'solveN';
+  el('N').value       = cfg.N ?? '';
+  el('picketW').value = cfg.picketW ?? '';
+  el('gapW').value    = cfg.gapW ?? '';
+  el('firstW').value  = cfg.firstW ?? '';
+  el('lastW').value   = cfg.lastW ?? '';
+  el('endsMode').value= cfg.endsMode ?? 'equal';
+  el('endLeft').value = cfg.endLeft ?? '';
+  el('endRight').value= cfg.endRight ?? '';
+  el('round').value   = cfg.round ?? '16';
+}
+
+function loadPresetStore(){
+  try{ return JSON.parse(localStorage.getItem(PRESET_KEY)) || []; }catch(e){ return []; }
+}
+function savePresetStore(list){ localStorage.setItem(PRESET_KEY, JSON.stringify(list)); }
+function refreshPresetSelect(){
+  const sel = el('presetSelect');
+  const list = loadPresetStore();
+  sel.innerHTML = '';
+  list.forEach(p=>{
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.name; sel.appendChild(opt);
+  });
+}
+function summarizeName(){
+  const inp = getInputs();
+  const res = computeLayout(inp);
+  if(res.ok){
+    const {N,picketW,gapW} = res.result;
+    return `${N}×${fmtIn(picketW, inp.denom)} + ${fmtIn(gapW, inp.denom)} @ ${fmtIn(inp.total, inp.denom)}`;
+  }
+  return `Preset ${new Date().toLocaleString()}`;
+}
+
+function presetSaveNew(){
+  const list = loadPresetStore();
+  const id = String(Date.now());
+  let name = el('presetName').value.trim();
+  if(!name) name = summarizeName();
+  const cfg = snapshotInputsRaw();
+  list.push({id,name,cfg,ts:Date.now()});
+  savePresetStore(list);
+  refreshPresetSelect();
+  el('presetName').value = '';
+  toast(`Saved preset “${name}”.`);
+}
+function presetUpdate(){
+  const selId = el('presetSelect').value; if(!selId){ toast('No preset selected.'); return; }
+  const list = loadPresetStore();
+  const idx = list.findIndex(p=>p.id===selId);
+  if(idx<0){ toast('Preset missing.'); return; }
+  list[idx].cfg = snapshotInputsRaw();
+  const name = el('presetName').value.trim();
+  if(name) list[idx].name = name;
+  list[idx].ts = Date.now();
+  savePresetStore(list); refreshPresetSelect();
+  toast('Preset updated.');
+}
+function presetDelete(){
+  const selId = el('presetSelect').value; if(!selId){ toast('No preset selected.'); return; }
+  let list = loadPresetStore();
+  const item = list.find(p=>p.id===selId);
+  list = list.filter(p=>p.id!==selId);
+  savePresetStore(list); refreshPresetSelect();
+  toast(`Deleted “${item?item.name:'preset'}”.`);
+}
+function presetLoad(){
+  const selId = el('presetSelect').value; if(!selId){ toast('No preset selected.'); return; }
+  const list = loadPresetStore();
+  const p = list.find(x=>x.id===selId); if(!p){ toast('Preset missing.'); return; }
+  applyInputsRaw(p.cfg); render();
+}
+
+function toast(msg){
+  const t = document.createElement('div');
+  t.textContent = msg; t.className = 'note';
+  messages.appendChild(t);
+  setTimeout(()=>t.remove(), 2200);
+}
+
+// Quick memory M1–M4 (tap=load, long‑press=save)
+function loadQuickStore(){ try{ return JSON.parse(localStorage.getItem(QUICK_KEY)) || {}; }catch(e){ return {}; } }
+function saveQuickStore(obj){ localStorage.setItem(QUICK_KEY, JSON.stringify(obj)); }
+function quickSave(slot){ const store = loadQuickStore(); store[slot] = snapshotInputsRaw(); saveQuickStore(store); toast(`Saved to M${slot}.`); }
+function quickLoad(slot){ const store = loadQuickStore(); if(store[slot]){ applyInputsRaw(store[slot]); render(); toast(`Loaded M${slot}.`);} else { toast(`M${slot} is empty (long‑press to save).`);} }
+function attachMem(btnId, slot){
+  const btn = el(btnId); let held=false; let timer=null;
+  btn.addEventListener('pointerdown', ()=>{ held=false; timer=setTimeout(()=>{ held=true; quickSave(slot); }, 550); });
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=> btn.addEventListener(ev, ()=>{ if(timer){ clearTimeout(timer); timer=null; } if(!held) quickLoad(slot); }));
+}
+
+// Auto‑persist last used inputs on each render
+function persistLast(){ localStorage.setItem(LAST_KEY, JSON.stringify(snapshotInputsRaw())); }
+
+$1
+// Preset & memory wiring
+refreshPresetSelect();
+el('presetSaveNew').addEventListener('click', presetSaveNew);
+el('presetUpdate').addEventListener('click', presetUpdate);
+el('presetDelete').addEventListener('click', presetDelete);
+el('presetLoad').addEventListener('click', presetLoad);
+attachMem('mem1',1); attachMem('mem2',2); attachMem('mem3',3); attachMem('mem4',4);
+
+// Hotkeys
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='ArrowLeft') prevMark();
+  if(e.key==='ArrowRight') nextMark();
+});
+
+$1
+
+// Restore last session if available
+(function restore(){ try{ const last = JSON.parse(localStorage.getItem(LAST_KEY)); if(last){ applyInputsRaw(last); render(); } }catch(e){} })();
+</script>
+</body>
+</html>
