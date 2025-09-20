@@ -107,6 +107,41 @@
       text-align: right;
       font-size: 14px;
     }
+
+    #configNotice {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      max-width: 320px;
+      padding: 16px;
+      background: rgba(0, 26, 51, 0.9);
+      color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      font-family: sans-serif;
+      text-align: left;
+      z-index: 20;
+    }
+
+    #configNotice.hidden {
+      display: none;
+    }
+
+    #configNotice button {
+      margin-top: 12px;
+      padding: 8px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      background: #ffd166;
+      cursor: pointer;
+    }
+
+    #configNotice p {
+      margin: 8px 0;
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
@@ -117,6 +152,14 @@
     <div id="sunTimes"></div>
     <div id="moonTimes"></div>
   </div>
+  <div id="configNotice" class="hidden">
+    <h3>API keys required</h3>
+    <p>
+      To generate live sky data, store your OpenWeather and IPGeolocation keys in
+      this browser. Click below to enter them (kept in <code>localStorage</code> only).
+    </p>
+    <button id="configureKeysBtn" type="button">Configure API keys</button>
+  </div>
   <div id="sun"></div>
   <div id="moon"></div>
   <div id="stars"></div>
@@ -124,8 +167,64 @@
 <div id="ocean"></div>
 
 <script>
-const OPENWEATHER_API_KEY = '823479bdeb60abad9b8bf6d709ccac92';
-const IPGEOLOCATION_API_KEY = 'b078daa381714951aba0a8fefeb38ca2';
+const CONFIG_STORAGE_KEY = 'realtimeSkyApiConfig';
+
+function loadApiConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(CONFIG_STORAGE_KEY) || '{}');
+  } catch (err) {
+    console.warn('Unable to parse stored API configuration', err);
+    return {};
+  }
+}
+
+function saveApiConfig(config) {
+  localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+}
+
+function hasValidConfig(config) {
+  return Boolean(config?.openWeatherKey && config?.ipGeolocationKey);
+}
+
+function showConfigNotice() {
+  document.getElementById('configNotice').classList.remove('hidden');
+}
+
+function hideConfigNotice() {
+  document.getElementById('configNotice').classList.add('hidden');
+}
+
+function requestApiKeys() {
+  const existing = loadApiConfig();
+  const openWeatherKey = prompt('Enter your OpenWeather API key:', existing.openWeatherKey || '');
+  if (openWeatherKey === null) return null;
+  const ipGeolocationKey = prompt('Enter your IPGeolocation API key:', existing.ipGeolocationKey || '');
+  if (ipGeolocationKey === null) return null;
+
+  const trimmed = {
+    openWeatherKey: openWeatherKey.trim(),
+    ipGeolocationKey: ipGeolocationKey.trim()
+  };
+
+  if (!hasValidConfig(trimmed)) {
+    alert('Both API keys are required.');
+    return null;
+  }
+
+  saveApiConfig(trimmed);
+  return trimmed;
+}
+
+function ensureApiConfig() {
+  const config = loadApiConfig();
+  if (hasValidConfig(config)) {
+    hideConfigNotice();
+    return config;
+  }
+
+  showConfigNotice();
+  return null;
+}
 
 // Generate procedural stars
 function generateStars(count = 100) {
@@ -153,13 +252,16 @@ function updateInfo() {
 
 // Fetch location, weather, and astronomy data
 async function fetchData(zip) {
+  const config = ensureApiConfig();
+  if (!config) return;
+
   try {
-    const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/zip?zip=${zip}&appid=${OPENWEATHER_API_KEY}`);
+    const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/zip?zip=${zip}&appid=${config.openWeatherKey}`);
     const geoData = await geoRes.json();
 
     const [weatherRes, astroRes] = await Promise.all([
-      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${geoData.lat}&lon=${geoData.lon}&appid=${OPENWEATHER_API_KEY}&units=imperial`),
-      fetch(`https://api.ipgeolocation.io/astronomy?apiKey=${IPGEOLOCATION_API_KEY}&lat=${geoData.lat}&long=${geoData.lon}`)
+      fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${geoData.lat}&lon=${geoData.lon}&appid=${config.openWeatherKey}&units=imperial`),
+      fetch(`https://api.ipgeolocation.io/astronomy?apiKey=${config.ipGeolocationKey}&lat=${geoData.lat}&long=${geoData.lon}`)
     ]);
 
     const weatherData = await weatherRes.json();
@@ -236,6 +338,9 @@ function renderSky() {
 
 // Check if data is fresh or needs re-fetching
 function checkData() {
+  const config = ensureApiConfig();
+  if (!config) return;
+
   const today = new Date().toISOString().split('T')[0];
   const last = localStorage.getItem('lastUpdated');
   const loc = JSON.parse(localStorage.getItem('locationData') || '{}');
@@ -255,6 +360,14 @@ function checkData() {
     const zip = e.target.value.trim();
     if (/^\d{5}$/.test(zip)) fetchData(zip);
     else alert('Please enter a valid 5-digit ZIP code.');
+  });
+
+  document.getElementById('configureKeysBtn').addEventListener('click', () => {
+    const config = requestApiKeys();
+    if (config) {
+      hideConfigNotice();
+      checkData();
+    }
   });
 
   // Initialize
