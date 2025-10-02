@@ -1107,6 +1107,16 @@ function parseMixedInchString(s){
     num = parseInt(fracMatch[1],10);
     den = parseInt(fracMatch[2],10) || 1;
   }
+/* ---- Render helper for arrow span (left side only) ---- */
+function renderOutputs(leftFractionText, rightDecimalText){
+  const m = /^(▴ |▾ )(.+)$/.exec(leftFractionText || '');
+  if (m){
+    fractionLine.innerHTML = `<span class="arrow">${m[1].trim()}</span>${m[2]}`;
+  } else {
+    fractionLine.textContent = leftFractionText || '';
+  }
+  decimalLine.textContent = rightDecimalText || '';
+}
 
   // If we saw *only* a fraction like "3/16" with no whole number
   if (!wholeMatch && fracMatch) whole = 0;
@@ -1247,16 +1257,13 @@ function parseMixedInchString(s){
 
       const out = formatResult(num);
       lastGood = { value: num, fraction: out.fraction, decimal: out.decimal };
-
-      fractionLine.textContent = out.fraction;
-      decimalLine.textContent  = out.decimal;
+      renderOutputs(out.fraction, out.decimal);
       drawTape(num);
     } catch {
       if (measure.active && !left){
         const m = measureTotal();
         const out = formatResult(m);
-        fractionLine.textContent = out.fraction;
-        decimalLine.textContent  = out.decimal;
+        renderOutputs(out.fraction, out.decimal);
         drawTape(m);
         return;
       }
@@ -1863,7 +1870,9 @@ function doRenameLabel(el){
   // ===== Clear =====
   document.querySelector('.btn.clear[data-action="clear"]').addEventListener('click',()=>{
     tokens=[]; tokenDisplays=[]; currentEntry=''; measure = { active:false, feet:0, inches:0, inEntry:'' };
-    inputLine.textContent=''; fractionLine.textContent=''; decimalLine.textContent='';
+    inputLine.textContent='';
+renderOutputs('', '');
+
     drawTape(0);
     setRepeatEnabled(false);
   });
