@@ -997,6 +997,21 @@ function formatResultInch(value){
   return { fraction, decimal };
 }
 
+/* ---- Render helper for arrow span ---- */
+function renderOutputs(leftFractionText, rightDecimalText){
+  const txt = leftFractionText || '';
+
+  // Detect optional minus sign + arrow + rest
+  const m = txt.match(/^(-?)(▴ |▾ )(.+)$/);
+  if (m){
+    const [, sign, arrow, rest] = m;
+    fractionLine.innerHTML = `${sign}<span class="arrow">${arrow.trim()}</span>${rest}`;
+  } else {
+    fractionLine.textContent = txt;
+  }
+
+  decimalLine.textContent = rightDecimalText || '';
+}
 
 function formatResultFeet(value){
   // Arrow computed against INCH value rounded to 1/16″
@@ -1107,24 +1122,7 @@ function parseMixedInchString(s){
     num = parseInt(fracMatch[1],10);
     den = parseInt(fracMatch[2],10) || 1;
   }
-/* ---- Render helper for arrow span (left side only) ---- */
-function renderOutputs(leftFractionText, rightDecimalText){
-  const txt = leftFractionText || '';
 
-  // Match optional leading sign, then the arrow, then the rest
-  // groups: [1]=sign ('' or '-'), [2]=arrow ('▴ ' or '▾ '), [3]=rest
-  const m = /^(-?\s*)(▴ |▾ )(.+)$/.exec(txt);
-
-  if (m){
-    const sign = m[1] || '';
-    const arrow = m[2].trim();
-    const rest = m[3];
-    fractionLine.innerHTML = `${sign}<span class="arrow">${arrow}</span>${rest}`;
-  } else {
-    fractionLine.textContent = txt;
-  }
-  decimalLine.textContent = rightDecimalText || '';
-}
 
 
   // If we saw *only* a fraction like "3/16" with no whole number
