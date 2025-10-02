@@ -1,142 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-<title>Inch Calc — Uniform Grid (420)</title>
-<link href="https://use.typekit.net/iwc3riw.css" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js" defer></script>
-<link rel="icon" type="image/png" />
-<link rel="apple-touch-icon" href="apple-touch-icon.png" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-title" content="Inch Calc" />
-<link rel="manifest" href="manifest.webmanifest" />
-<meta name="theme-color" content="#1f4d4d" media="(prefers-color-scheme: light)" />
-<meta name="theme-color" content="#0e2a2a" media="(prefers-color-scheme: dark)" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="application-name" content="Inch Calc" />
-<style>
-  /* ---------- Reset ---------- */
-  *,*::before,*::after{ box-sizing:border-box }
-  html,body{ height:100% }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <title>Inch Calc</title>
 
-  /* Global: disable selection everywhere... */
-  html, body {
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
-  }
+  <!-- Fonts & CSS -->
+  <link href="https://use.typekit.net/iwc3riw.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="layout-landscape.css">
+
+  <!-- Libs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js" defer></script>
+
+  <!-- Icons / PWA -->
+  <link rel="icon" type="image/png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest?v=portr-2025-09-01">
+  <meta name="application-name" content="Inch Calc" />
+  <meta name="apple-mobile-web-app-title" content="Inch Calc" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="theme-color" content="#1f4d4d" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0e2a2a" media="(prefers-color-scheme: dark)" />
+
+  <style>
+  /* ---------- Reset ---------- */
+  *, *::before, *::after { box-sizing: border-box }
+  html, body { height: 100% }
+  html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 
   body{
     margin:0; background:#1f4d4d; color:#111;
     font-family:"aktiv-grotesk",-apple-system,system-ui,"Segoe UI",Roboto,Arial,sans-serif;
     -webkit-font-smoothing:antialiased;
-    display:flex; justify-content:center; align-items:stretch; /* fill the viewport */
-    padding:
-      calc(env(safe-area-inset-top) + 10px)
-      calc(env(safe-area-inset-right) + 10px)
-      calc(env(safe-area-inset-bottom) + 10px)
-      calc(env(safe-area-inset-left) + 10px);
-    overflow:hidden; /* page never scrolls */
+    display:flex; justify-content:center; align-items:stretch;
+    padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 10px) 10px;
+    min-height: 100dvh; overflow:hidden;
   }
 
   :root{
-    --card-max: 420px;     /* designed scale cap */
-    --gap: 8px;            /* unified spacing, set by JS */
-    --tile: 56px;          /* unified button height, set by JS */
-    --pad: var(--gap);
+    --card-max:420px; --gap:8px; --tile:56px; --pad:var(--gap);
+    --tape-min:120px; --results-min:140px; --history-min:40px; --output-min:40px;
 
-    --tape-min: 100px;
-    --results-min: 140px;  /* minimum results height (computed precisely by JS) */
-    --history-min: 40px;   /* minimum history window (computed precisely by JS) */
+    /* theme */
+    --card:#fff; --display-bg:#02210a; --display-text:#0f0;
 
-    /* theme tokens */
-    --card:#fff; --display-bg:#222; --display-text:#0f0;
+    /* legacy role defaults */
+    --num:khaki; --op:gold; --frac:#64b5f6; --dec:darkkhaki; --clear:lightcoral; --mem:lightskyblue;
 
-    /* legacy role colors as defaults */
-    --num:khaki; --op:gold; --frac:#64b5f6; --dec:darkkhaki;
-    --clear:lightcoral; --mem:lightskyblue;
+    /* Bezel */
+    --bezel-radius:22px; --bezel-rim-radius:16px; --bezel-pad:6px;
+    --bezel-outer:#1a1f1f; --bezel-inner:#0f1515;
+    --bezel-hi:rgba(255,255,255,.07); --bezel-lo:rgba(0,0,0,.65); --bezel-divider:rgba(255,255,255,.08);
+  }
+
+  /* Center line positioned by JS */
+  .center-line{
+    position:absolute; top:29%; height:75%; width:4px; background:red;
   }
 
   /* ---------- Card (stacked zones) ---------- */
   .card{
-    width: clamp(320px, 100%, var(--card-max));
-    height:100%;
+    width:clamp(320px,100%,var(--card-max)); height:100%;
     display:grid; gap:var(--gap);
-    grid-template-rows:
-      minmax(var(--tape-min), auto)      /* tape stays at top */
-      minmax(var(--results-min), 1fr)    /* results flex row */
-      auto                                /* memory */
-      auto                                /* console */
-      auto;                               /* fractions */
-    grid-template-areas:
-      "tape" "results" "memory" "console" "fractions";
+    grid-template-rows:auto auto auto auto;
+    grid-template-areas:"bezel" "memory" "console" "fractions";
   }
   .panel{
-    background:var(--card);
-    border-radius:8px;
-    background-color: darkslategrey;
-    box-shadow:0 8px 24px rgba(0,0,0,.15);
-    overflow:hidden;
+    background:var(--card); border-radius:8px; background-color:darkslategrey;
+    box-shadow:0 8px 24px rgba(0,0,0,.15); overflow:hidden;
   }
   .pad{ padding:var(--pad) }
+  .bezel .tape .center-line { left: var(--center-line-left, 50.1%) !important; }
+
+  /* ===== Bezel ===== */
+  .bezel{ grid-area:bezel }
+  .bezel{
+    background:linear-gradient(#2a2f2f,darkslategray);
+    border-radius:calc(var(--bezel-radius) + 6px);
+    padding:11px;
+    box-shadow: 0 18px 40px rgba(0,0,0,.55), inset 0 2px 6px rgba(255,255,255,.03);
+  }
+  .bezel__rim{
+    background:var(--bezel-inner); border-radius:var(--bezel-rim-radius); padding:var(--bezel-pad);
+    box-shadow: inset 0 2px 0 var(--bezel-hi), inset 0 -2px 0 var(--bezel-lo), 0 0 0 1px #000;
+    overflow:hidden;
+    display:grid; grid-template-rows: minmax(var(--tape-min), auto) minmax(var(--results-min), 1fr);
+  }
+  .bezel .panel{ border-radius:0; box-shadow:none; background:transparent; }
+  .bezel .tape{ border-top-left-radius:16px; border-top-right-radius:16px; border-bottom-left-radius:11px; border-bottom-right-radius:11px;}
+  .bezel .results{ border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
+  .bezel .results .output{ border-top:1px solid var(--bezel-divider); }
+  .tape-inner{ box-shadow: inset 0 0 0 2px rgba(0,0,0,.55); }
 
   /* ---------- Tape ---------- */
-  .tape{ grid-area:tape; position:relative; min-height:var(--tape-min); }
-  .tape-inner{ position:absolute; inset:0; border:1px solid #000;
+  .tape{ position:relative; min-height:var(--tape-min); }
+  .tape-inner{
+    position:absolute; inset:0; border:1px solid #000;
     background:linear-gradient(to bottom,
-      rgba(189,183,107,.3) 0%,
-      rgba(255,215,0,.6) 6%,
-      #ff0 25%,
-      #ff0 75%,
-      rgba(189,183,107,.6) 98%,
-      rgba(255,215,0,.8) 100%); }
+      rgba(189,183,107,.3) 0%, rgba(255,215,0,.6) 6%, #ff0 25%, #ff0 75%,
+      rgba(189,183,107,.6) 98%, rgba(255,215,0,.8) 100%);
+  }
   .center-line{ position:absolute; top:29%; left:50.1%; width:5px; height:75%; background:red; transform:translateX(-50%); }
   .tick{ position:absolute; bottom:0; width:3px; background:#000; }
-  .tick.small{height:15px} .tick.med{height:30px} .tick.lg{height:50px} .tick.num{height:70px}
-  .tick-label{ position:absolute; bottom:70px; width:50px; text-align:center; transform:translateX(-50%); font-size:1.05em; }
+  .tick.small{ height:19px } .tick.med{ height:39px } .tick.lg{ height:60px } .tick.num{ height:80px }
+  .tick-label{
+    position:absolute; bottom:85px; width:50px; text-align:center; transform:translateX(-50%);
+    font-size:22px; font-weight:600; line-height:1; letter-spacing:.02em;
+    font-feature-settings:"tnum" 1; font-variant-numeric:tabular-nums;
+    filter:url(#textInnerShadow);
+  }
   .sweep{ position:absolute; inset:0; pointer-events:none; }
-  .sweep::before{ content:""; position:absolute; left:100%; top:0; width:100%; height:100%;
+  .sweep::before{
+    content:""; position:absolute; left:100%; top:0; width:100%; height:100%;
     background:linear-gradient(120deg, rgba(0,0,0,.08), rgba(0,0,0,.28) 50%, rgba(0,0,0,.08));
-    transform:skewX(20deg); opacity:0; }
-  @keyframes sweep { 0%{left:100%;opacity:.6} 100%{left:-100%;opacity:0} }
+    transform:skewX(20deg); opacity:0;
+  }
+  @keyframes sweep{ 0%{left:100%;opacity:.6} 100%{left:-100%;opacity:0} }
   .sweep.animate::before{ animation:sweep .8s ease-in-out forwards; }
 
   /* ---------- Results ---------- */
-  .results{ grid-area:results; background:var(--display-bg); color:var(--display-text); min-height:0; }
+  .results{ background:var(--display-bg); color:var(--display-text); min-height:0; }
   .results .pad{ display:flex; flex-direction:column; gap:8px; height:100%; }
   .history{
-    /* was height:var(--history-fixed); */
-    min-height: var(--history-min);
-    flex: 1 1 auto;
-    max-height: 100%;
+    min-height:var(--history-min); flex:1 1 auto; max-height:100%;
     overflow:auto; padding-right:4px;
+    font-size:clamp(24px, 3.1vw, 26px);
     display:flex; flex-direction:column; gap:4px;
   }
-  .row.input{ letter-spacing:.04em; font-size:clamp(14px,1.9vw,18px); opacity:.9; }
+  .row.input{ letter-spacing:.04em; font-size:clamp(20px, 25.8vw, 26px); opacity:.9; }
   #inputLine{ display:block; }
-  .output{ display:flex; justify-content:space-between; gap:8px; font-size:clamp(22px,3.1vw,32px); color:#bdfcb7; padding-top:6px; border-top:1px solid rgba(255,255,255,.1); }
-
-  /* Re-enable selection for history and outputs */
-  .history, .output, .output * {
-    -webkit-user-select: text;
-    user-select: text;
+  .output{
+    display:flex; justify-content:space-between; gap:8px;
+    font-size:clamp(24px, 3.1vw, 26px);
+    color:#bdfcb7; padding-top:6px;
+    border-top:1px solid rgba(255,255,255,.1);
+    min-height:var(--output-min);
   }
+  /* Re-enable selection for history and outputs */
+  .history, .output, .output *{ -webkit-user-select:text; user-select:text; }
 
   /* ---------- Memory ---------- */
   .memory{ grid-area:memory }
-  .memory-grid{ display:grid; gap:var(--gap);
-    grid-template-columns:repeat(5, 1fr);
-    grid-template-rows:repeat(1, var(--tile));
-  }
+  .memory-grid{ display:grid; gap:var(--gap); grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(1,var(--tile)); }
 
   /* ---------- Console (5×4) ---------- */
   .console{ grid-area:console }
   .console-grid{
-    margin-top: 8px;
-    display:grid; gap:var(--gap);
-    grid-template-columns:repeat(5, 1fr);
-    grid-template-rows:repeat(4, var(--tile));
+    margin-top:-8px; display:grid; gap:var(--gap);
+    grid-template-columns:repeat(5,1fr);
+    grid-template-rows:repeat(4,var(--tile));
   }
   .r1{grid-row:1}.r2{grid-row:2}.r3{grid-row:3}.r4{grid-row:4}
   .c1{grid-column:1}.c2{grid-column:2}.c3{grid-column:3}.c4{grid-column:4}.c5{grid-column:5}
@@ -144,338 +158,731 @@
   /* ---------- Fractions (5×3) ---------- */
   .fractions{ grid-area:fractions }
   .fract-grid{
-    margin-top: 8px;
-    display:grid; gap:var(--gap);
-    grid-template-columns:repeat(5, 1fr);
-    grid-template-rows:repeat(3, var(--tile));
+    margin-top:8px; display:grid; gap:var(--gap);
+    grid-template-columns:repeat(5,1fr);
+    grid-template-rows:repeat(3,var(--tile));
   }
 
-  /* ---------- Buttons ---------- */
+  /* ---------- Buttons (updated) ---------- */
   .btn{
-    --btn-bg: var(--_btn-bg, var(--num));
-    --btn-fg: var(--_btn-fg, currentColor);
-    --btn-img: var(--_btn-img, none);
+    --btn-bg:var(--_btn-bg, var(--num));
+    --btn-fg:var(--_btn-fg, currentColor);
+    --btn-img:var(--_btn-img, none);
 
     width:100%; height:100%;
     display:grid; place-items:center;
-    border:0; border-radius:5px;
-    font-weight:600; font-size:clamp(14px, calc(var(--tile)*.42), 20px);
+    border:0; border-radius:5px; font-weight:600;
+    font-size:clamp(14px, calc(var(--tile)*.42), 20px);
     color:var(--btn-fg);
-    background-image: var(--btn-img), linear-gradient(var(--btn-bg), var(--btn-bg));
-    background-repeat:no-repeat;
-    background-size:cover, auto;
+
+    background-image:var(--btn-img), linear-gradient(var(--btn-bg), var(--btn-bg));
+    background-repeat:no-repeat; background-size:cover, auto;
     box-shadow:0 2px 4px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.12);
     -webkit-tap-highlight-color:transparent;
-    transition: transform .06s ease, box-shadow .15s ease, filter .15s ease;
-    position: relative; overflow: hidden;     /* for ripples */
-    touch-action: manipulation;                /* snappier taps */
-  }
-  .btn:active{ transform:scale(.98) } /* older press effect (will be overridden below) */
+    position:relative; overflow:hidden; touch-action:manipulation;
 
-  .btn.operator{ --_btn-bg: var(--op);  --_btn-fg:#111; }
-  .btn.frac    { --_btn-bg: var(--frac);--_btn-fg:#063c67; }
-  .btn.dec     { --_btn-bg: var(--dec); --_btn-fg:#0c3a10; }
+    /* Smooth fade back after release */
+    filter: brightness(1) saturate(1);
+    transition: filter .35s ease, transform .12s ease, box-shadow .2s ease;
+  }
+
+  /* Role variants */
+  .btn.operator{ --_btn-bg:var(--op);   --_btn-fg:#111; }
+  .btn.frac    { --_btn-bg:var(--frac); --_btn-fg:#063c67; }
+  .btn.dec     { --_btn-bg:var(--dec);  --_btn-fg:#0c3a10; }
   .btn.clear,
-  .btn.back    { --_btn-bg: var(--clear); --_btn-fg:#fff; }
-  .btn.mem     { --_btn-bg: var(--mem); --_btn-fg:#083f3f; }
+  .btn.back    { --_btn-bg:var(--clear);--_btn-fg:#fff; }
+  .btn.mem     { --_btn-bg:var(--mem);  --_btn-fg:#083f3f; }
 
-  .btn.frac:hover{ --btn-bg: var(--btn-hover-bg, color-mix(in oklab, var(--btn-bg), white 12%)); }
-  .btn.frac:active{ --btn-bg: var(--btn-active-bg, color-mix(in oklab, var(--btn-bg), black 10%)); }
-  .btn[disabled]{ opacity:.5; filter:saturate(.15) }
-
-  /* Button text should never select / show callout */
-  .btn, .btn .btn-label{
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-touch-callout: none;
+  /* Hover (only on devices that support hover) */
+  @media (hover:hover){
+    .btn:hover{
+      background-image:var(--btn-img), linear-gradient(
+        color-mix(in oklab, var(--btn-bg), white var(--hover-lift, 20%)),
+        color-mix(in oklab, var(--btn-bg), white var(--hover-lift, 20%))
+      );
+      box-shadow:0 4px 10px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.14);
+      transform: translateY(-0.5px);
+    }
+    .btn.frac:hover{ --btn-bg: color-mix(in oklab, var(--btn-bg), white 12%); }
   }
-  .btn .btn-label{ line-height: 1; filter: url(#textInnerShadow); }
-  .btn .btn-label::selection{ background: transparent; color: inherit; }
 
+  /* Pressed while finger is down — fades back via the base transition */
+  .btn:active{
+    filter: brightness(.82) saturate(1.05);
+    transform: translateY(1px) scale(.985);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.06);
+  }
+
+  /* Disabled */
+  .btn[disabled]{
+    opacity:.5; filter: saturate(.15) brightness(1); pointer-events:none;
+  }
+
+  /* Text/selection guards */
+  .btn, .btn .btn-label{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  .btn .btn-label{ line-height:1; filter:url(#textInnerShadow); }
+  .btn .btn-label::selection{ background:transparent; color:inherit; }
+
+  /* Reduced motion */
   @media (prefers-reduced-motion: reduce){
-    .sweep::before{ animation:none !important; opacity:0 !important; }
-    .btn:active{ transform:none }
+    .btn{ transition:none; }
   }
-  .btn:focus-visible{
-    outline:2px solid #0ea5a5;
-    outline-offset:2px;
-  }
+
+  /* Focus */
+  .btn:focus-visible{ outline:2px solid #0ea5a5; outline-offset:2px; }
 
   /* --- Press ripple --- */
-  .ripple {
-    position: absolute;
-    border-radius: 999px;
-    pointer-events: none;
-    transform: translate(-50%, -50%) scale(0);
-    opacity: .35;
-    background: rgba(255,255,255,.65);
-    animation: ripple .45s ease-out forwards;
+  .ripple{
+    position:absolute; border-radius:999px; pointer-events:none;
+    transform:translate(-50%,-50%) scale(0); opacity:.35; background:rgba(255,255,255,.65);
+    animation:ripple .45s ease-out forwards;
   }
-  @keyframes ripple {
-    to { transform: translate(-50%, -50%) scale(14); opacity: 0; }
-  }
+  @keyframes ripple{ to{ transform:translate(-50%,-50%) scale(14); opacity:0 } }
 
   /* --- Hold arming pulse --- */
-  .btn.hold {
-    box-shadow: 0 0 0 0 rgba(14,165,165,.55);
-    animation: pulseRing 1s ease-out infinite;
-  }
-  @keyframes pulseRing {
-    0%   { box-shadow: 0 0 0 0   rgba(14,165,165,.55); }
-    100% { box-shadow: 0 0 0 12px rgba(14,165,165,0); }
-  }
+  .btn.hold{ box-shadow:0 0 0 0 rgba(14,165,165,.55); animation:pulseRing 1s ease-out infinite; }
+  @keyframes pulseRing{ 0%{box-shadow:0 0 0 0 rgba(14,165,165,.55)} 100%{box-shadow:0 0 0 12px rgba(14,165,165,0)} }
 
-  /* Feet peek visual */
-  #feetBtn.peek {
-    box-shadow: 0 0 0 2px #0ea5a5 inset, 0 2px 8px rgba(0,0,0,.3);
-  }
-
-  /* Memory “saved” confirmation flash */
-  .btn.mem.saved {
+  /* Memory “saved” flash */
+  .btn.mem.saved{
     --btn-bg: color-mix(in oklab, var(--mem), #22c55e 46%);
-    box-shadow: 0 0 0 2px #22c55e inset, 0 0 16px rgba(34,197,94,.35);
-    animation: pop .16s ease;
+    box-shadow:0 0 0 2px #22c55e inset, 0 0 16px rgba(34,197,94,.35);
+    animation:pop .16s ease;
   }
-  .btn.mem.saved::after {
-    content: "✓";
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-weight: 800;
-    font-size: 1.1em;
-    color: #063;
-    opacity: .95;
-    pointer-events: none;
+  .btn.mem.saved::after{
+    content:"✓"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    font-weight:800; font-size:1.1em; color:#063; opacity:.95; pointer-events:none;
   }
-  @keyframes pop { from { transform: scale(.97); } to { transform: scale(1); } }
+  @keyframes pop{ from{transform:scale(.97)} to{transform:scale(1)} }
 
   /* Copy toast */
-  #copyToast {
-    position:fixed; left:50%; transform:translateX(-50%);
-    bottom:12px; background:#111; color:#fff;
-    padding:8px 12px; border-radius:8px; display:none;
-    gap:8px; align-items:center; z-index:45;
-    box-shadow:0 8px 24px rgba(0,0,0,.25);
+  #copyToast{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:12px;
+    background:#111; color:#fff; padding:8px 12px; border-radius:8px;
+    display:none; gap:8px; align-items:center; z-index:45; box-shadow:0 8px 24px rgba(0,0,0,.25);
     font-size:14px;
   }
+	  
+	  
+	  /* ===== Modal Carousel ===== */
+.modal {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: none;               /* toggled to 'flex' in JS */
+  align-items: center; justify-content: center;
+  z-index: 30;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.modal__sheet {
+  width: min(680px, 92vw);
+  height: min(80vh, 700px);
+  background: #0f1515;         /* matches your bezel tone */
+  color: #eefbf6;
+  border-radius: 14px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+}
+.modal__bar {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px; padding:10px 12px;
+  background: linear-gradient(#121b1b, #0f1515);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.modal__title { font-weight:700; letter-spacing:.02em }
+.modal__controls { display:flex; gap:8px }
+.modal__btn {
+  appearance:none; border:0; border-radius:10px; padding:8px 10px; font-weight:700;
+  background:#0ea5a5; color:#0b1515; cursor:pointer;
+}
+.modal__btn--ghost {
+  background:transparent; color:#aee; border:1px solid rgba(255,255,255,.12);
+}
 
-  /* ========== NEW implied motion block ========== */
-  :root{
-    --hover-lift: 24%;
-    --active-shade: 16%;
-    --press-translate: 1px;
-  }
+.carousel {
+  position: relative;
+  height: 100%;
+  --idx: 0; /* current slide index */
+}
+.car-track {
+  display: flex; height: 100%;
+  transition: transform .35s ease;
+  will-change: transform;
+}
+.carousel.dragging .car-track { transition: none; }
+.car-slide {
+  flex: 0 0 100%;
+  overflow: auto; /* content scrolls */
+  padding: 14px;
+}
+.car-slide h3 { margin: 6px 0 10px; font-size: 1.1rem }
+.car-slide p, .car-slide li { color:#d4efe7 }
 
-  .btn:hover{
-    background-image:
-      var(--btn-img),
-      linear-gradient(
-        color-mix(in oklab, var(--btn-bg), white var(--hover-lift)),
-        color-mix(in oklab, var(--btn-bg), white var(--hover-lift))
-      );
-    box-shadow:
-      0 4px 10px rgba(0,0,0,.25),
-      inset 0 1px 0 rgba(255,255,255,.14);
-    transform: translateY(-0.5px);
-  }
+.car-edge {
+  position: absolute; inset: 0;
+  pointer-events: none; /* only buttons are clickable */
+}
+.car-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  pointer-events: auto;
+  width: 34px; height: 34px; border: 0; border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  color: #eaffff; font-size: 18px; font-weight: 900;
+  display: grid; place-items: center; cursor: pointer;
+  opacity: .6; transition: opacity .2s ease, background .2s ease;
+}
+.car-nav:hover, .car-nav:focus-visible { opacity: 1; background: rgba(255,255,255,.12); outline:2px solid #0ea5a5; outline-offset:2px }
+.car-nav[disabled] { opacity: .25; cursor: default }
+.car-nav.prev { left: 8px }
+.car-nav.next { right: 8px }
 
-  .btn:active,
-  .btn.pressed{
-    background-image:
-      var(--btn-img),
-      linear-gradient(
-        color-mix(in oklab, var(--btn-bg), black var(--active-shade)),
-        color-mix(in oklab, var(--btn-bg), black var(--active-shade))
-      );
-    box-shadow:
-      inset 0 2px 6px rgba(0,0,0,.35),
-      inset 0 -1px 0 rgba(255,255,255,.06);
-    transform: translateY(var(--press-translate)) scale(.985);
-  }
+.car-dots {
+  display: flex; gap: 8px; align-items:center; justify-content:center;
+  padding: 8px 10px; border-top: 1px solid rgba(255,255,255,.06);
+  background: linear-gradient(#0f1515, #121b1b);
+}
+.car-dot {
+  width: 7px; height: 7px; border-radius: 999px; border: 0;
+  background: rgba(255,255,255,.25); cursor: pointer;
+}
+.car-dot[aria-current="true"] { background: #0ea5a5 }
 
-  .btn[disabled]:hover,
-  .btn[disabled].pressed{
-    background-image: var(--btn-img), linear-gradient(var(--btn-bg), var(--btn-bg));
-    box-shadow: 0 2px 4px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.12);
-    transform: none;
-  }
+/* Link tiles on the landing card */
+.link-grid {
+  display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;
+}
+.tile {
+  display:grid; align-content:center; gap:6px;
+  min-height: 86px; border-radius: 12px; padding: 10px;
+  background: linear-gradient(180deg, #162121, #0f1515);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 6px 18px rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.tile a { color:#aef; font-weight:700; text-decoration:none }
+.tile small { color:#9ed; opacity:.9 }
 
-  @media (prefers-reduced-motion: reduce){
-    .btn:hover{ transform:none }
-    .btn:active, .btn.pressed{ transform:none }
-  }
-  /* ========== /NEW block ========== */
-</style>
+/* Little inline pills for legends/icons */
+.pill {
+  display:inline-grid; place-items:center; padding:2px 8px; border-radius:999px;
+  background: rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
+  font-weight:700; font-size:.9em; color:#dff;
+}
+
+/* Keep your existing #installBtn look consistent inside slides */
+#installBtn { background:#0ea5a5; color:#111; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; display:none }
+
+/* ===== Carousel Modal ===== */
+/* Backdrop / container */
+.cm-backdrop{
+  position: fixed;
+  inset: 0;
+  display: none;                  /* toggled via aria-hidden */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.45);
+  z-index: 30;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.cm-backdrop[aria-hidden="false"]{ display:flex; }
+
+.cm-modal{
+  /* match app bezel aesthetics */
+  background: linear-gradient(#2a2f2f, darkslategray);
+  border-radius: calc(var(--bezel-radius, 22px));
+  box-shadow: 0 18px 40px rgba(0,0,0,.55), inset 0 2px 6px rgba(255,255,255,.03);
+  color: #e9f5f5;
+
+  width: min(94vw, 760px);
+  max-height: min(84vh, 720px);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Title bar */
+.cm-headbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bezel-inner, #0f1515);
+  border-bottom: 1px solid var(--bezel-divider, rgba(255,255,255,.08));
+}
+.cm-headbar h2{
+  margin: 0;
+  font-size: clamp(16px, 2.6vw, 18px);
+  letter-spacing: .02em;
+  color: #d7f0f0;
+}
+
+.cm-iconbtn{
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #d7f0f0;
+  font-size: 18px;
+  cursor: pointer;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+}
+.cm-iconbtn:hover{ background: rgba(255,255,255,.07); }
+.cm-iconbtn:focus-visible{ outline: 2px solid #0ea5a5; outline-offset: 2px; }
+
+/* Viewport / track */
+.cm-viewport{
+  position: relative;
+  overflow: hidden;               /* clip the sliding track */
+  background: linear-gradient(180deg, #0f1a1a, #0d1616);
+  padding: 10px;
+}
+
+.cm-track{
+  display: flex;
+  gap: 0;                         /* IMPORTANT: zero real gap; we fake gutters on cards */
+  transform: translate3d(0,0,0);
+  transition: transform .35s ease;
+  will-change: transform;
+}
+.cm-track.dragging{ transition: none; }
+
+/* Slides (cards) */
+.cm-card{
+  flex: 0 0 100%;
+  /* fake the 10px gutters without affecting slide math */
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  background-clip: padding-box;
+
+  background: #fffdee;
+  color: #222;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.12);
+  padding: 16px 18px;
+
+  overflow: auto;                 /* content scrolls within card */
+  max-height: calc(min(84vh, 720px) - 60px); /* leave room for headbar/dots */
+}
+@media (prefers-color-scheme: dark){
+  .cm-card{ background:#0f1717; color:#dbeef0; }
+}
+
+/* Card typography */
+.cm-card-head{
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: clamp(16px, 2.5vw, 18px);
+}
+.cm-card-sub{ margin: 0 0 10px 0; opacity: .85; }
+.cm-list{ padding-left: 16px; margin: 8px 0 12px 0; }
+.cm-list li{ margin: 6px 0; }
+.cm-note{ font-size: 13px; opacity: .8; }
+
+/* Tiles / links inside cards */
+.cm-tiles{
+  display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+}
+.cm-tile{
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 10px 12px; border-radius: 10px; text-decoration: none; cursor: pointer;
+  background: var(--mem, lightskyblue); color: #083f3f; font-weight: 700; border: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.cm-tile:hover{ filter: brightness(1.05); }
+
+/* Simple two-column grid in a card */
+.cm-grid2{ display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 640px){
+  .cm-grid2{ grid-template-columns: 1fr 1fr; }
+}
+
+/* Prev/Next controls */
+.cm-nav{
+  position: absolute;
+  top: 50%; transform: translateY(-50%);
+  width: 36px; height: 42px;
+  border-radius: 10px; border: 0; cursor: pointer;
+  background: rgba(255,255,255,.14);
+  color: #fff; font-weight: 800; font-size: 22px;
+}
+.cm-prev{ left: 12px; }
+.cm-next{ right: 12px; }
+.cm-nav:hover{ background: rgba(255,255,255,.22); }
+.cm-nav:disabled{ opacity: .35; cursor: default; }
+.cm-nav:focus-visible{ outline: 2px solid #0ea5a5; outline-offset: 2px; }
+
+/* Dots */
+.cm-dots{
+  display: flex; gap: 8px; justify-content: center; align-items: center;
+  padding: 10px 0 8px 0;
+  border-top: 1px solid var(--bezel-divider, rgba(255,255,255,.08));
+  background: linear-gradient(#0f1515, #121b1b);
+}
+.cm-dot{
+  width: 8px; height: 8px; border-radius: 999px; border: 0; cursor: pointer;
+  background: rgba(255,255,255,.35);
+}
+.cm-dot[aria-selected="true"]{ background: #0ea5a5; }
+.cm-dot:focus-visible{ outline: 2px solid #0ea5a5; outline-offset: 2px; }
+
+/* Memory preview grid (slide 3) */
+.cm-memgrid{ display: grid; gap: 8px; grid-template-columns: repeat(2, 1fr); }
+.cm-memcell{
+  background: #111; color: #d7f0f0;
+  border-radius: 10px; padding: 10px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+.cm-memcell .k{ opacity: .7; }
+.cm-memcell .v{ font-weight: 700; }
+
+	  /* Fraction rounding arrow polish */
+#fractionLine::first-letter {}
+#fractionLine {
+  letter-spacing: .01em;
+}
+#fractionLine:has(> .arrow) { /* optional if you wrap the arrow in a span */
+  gap: .25rem;
+}
+.arrow {
+  opacity: .85;
+  margin-right: .25rem;
+}
+
+	  
+	  
+/* Motion preferences */
+@media (prefers-reduced-motion: reduce){
+  .cm-track{ transition: none !important; }
+  .cm-nav, .cm-iconbtn, .cm-tile{ transition: none !important; }
+}
+	  
+	 .cm-groupgrid{
+  display:grid; gap:12px;
+  grid-template-columns:1fr;
+}
+@media (min-width:640px){ .cm-groupgrid{ grid-template-columns:1fr 1fr; } }
+
+.mc-card{
+  border-radius:12px; padding:12px; cursor:pointer;
+  background:linear-gradient(180deg,#162121,#0f1515);
+  color:#d7f0f0; border:1px solid rgba(255,255,255,.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 6px 18px rgba(0,0,0,.25);
+}
+.mc-title{ font-weight:800; margin-bottom:6px; font-size:clamp(14px,2.2vw,16px) }
+.mc-slots{
+  display:grid; gap:8px; grid-template-columns:repeat(2,1fr);
+}
+.mc-slot{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  background:#0f1515; border:1px solid rgba(255,255,255,.08); border-radius:10px; padding:8px 10px;
+}
+.mc-k{ opacity:.7; }
+.mc-v{ font-weight:800; }
+ 
+/* ===== Memory Groups mini-carousel ===== */
+.mg-viewport{
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0f1a1a, #0d1616);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.08);
+  min-height: 220px;
+}
+.mg-track{
+  display: flex;
+  gap: 0;
+  transform: translate3d(0,0,0);
+  transition: transform .3s ease;
+  will-change: transform;
+}
+.mg-track.dragging{ transition: none; }
+
+.mg-slide{
+  flex: 0 0 100%;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  background-clip: padding-box;
+
+  padding: 14px 16px;
+  color: #d7f0f0;
+}
+.mg-title{
+  font-weight: 800;
+  font-size: clamp(14px, 2.4vw, 16px);
+  margin-bottom: 8px;
+}
+.mg-subtle{ opacity:.8; font-size: 12px; margin-left:6px; }
+
+.mg-list{
+  display:grid; gap:8px;
+}
+.mg-row{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background:#0f1515; border:1px solid rgba(255,255,255,.08);
+  border-radius: 10px; padding: 10px 12px;
+}
+.mg-k{ opacity:.7 }
+.mg-v{ font-weight:800 }
+
+.mg-dots{
+  display:flex; gap:8px; justify-content:center; align-items:center;
+  padding: 10px 0;
+}
+.mg-dot{
+  width: 8px; height: 8px; border-radius: 999px; border: 0;
+  background: rgba(255,255,255,.35);
+}
+.mg-dot[aria-selected="true"]{ background: #0ea5a5; }
+
+	  
+	  
+	  
+  </style>
 </head>
 <body>
 
-  <!-- Hidden SVG filter that creates a true inner shadow inside glyphs -->
-  <svg width="0" height="0" style="position:absolute">
-    <filter id="textInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur"/>
-      <feOffset dy="1" result="offset"/>
-      <feComposite in="offset" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="inner"/>
-      <feFlood flood-color="black" flood-opacity="0.45" result="shade"/>
-      <feComposite in="shade" in2="inner" operator="in" result="shadow"/>
-      <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
-    </filter>
-  </svg>
+<!-- Hidden SVG filter that creates a true inner shadow inside glyphs -->
+<svg width="0" height="0" style="position:absolute">
+  <filter id="textInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="blur"/>
+    <feOffset dy="1" result="offset"/>
+    <feComposite in="offset" in2="SourceAlpha" operator="arithmetic" k2="-1" k3="1" result="inner"/>
+    <feFlood flood-color="black" flood-opacity="0.45" result="shade"/>
+    <feComposite in="shade" in2="inner" operator="in" result="shadow"/>
+    <feComposite in="SourceGraphic" in2="shadow" operator="over"/>
+  </filter>
+</svg>
 
-  <div id="card" class="card">
 
-    <!-- Tape -->
-    <div class="panel tape">
-      <div class="tape-inner" id="tape">
-        <div class="center-line"></div>
-        <div class="sweep" id="sweep"></div>
+<div id="card" class="card">
+
+  <!-- ===== Unified BEZEL: Tape + Results inside ===== -->
+  <div class="bezel panel">
+    <div class="bezel__rim">
+
+      <!-- Tape -->
+      <div class="panel tape">
+        <div class="tape-inner" id="tape">
+          <div class="center-line"></div>
+          <div class="sweep" id="sweep"></div>
+        </div>
       </div>
+
+      <!-- Results -->
+      <div class="panel results">
+        <div class="pad">
+          <div class="history" id="history">
+            <div class="row input" id="inputLine"></div>
+          </div>
+          <div class="output">
+            <div id="fractionLine" title="Tap to copy"></div>
+            <div id="decimalLine" title="Tap to copy"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <!-- ===== /BEZEL ===== -->
+
+  <!-- Memory (5×1) -->
+  <div class="panel memory pad">
+    <div class="memory-grid">
+      <button class="btn clear" data-action="mc"><span class="btn-label">MC</span></button>
+      <button class="btn mem" data-mem="0"><span class="btn-label">M1</span></button>
+      <button class="btn mem" data-mem="1"><span class="btn-label">M2</span></button>
+      <button class="btn mem" data-mem="2"><span class="btn-label">M3</span></button>
+      <button class="btn mem" data-mem="3"><span class="btn-label">M4</span></button>
+    </div>
+</div>
+
+<!-- RIGHT: Keypad (console + fractions) -->
+<div class="panel keypad pad">
+    <div class="console-grid">
+      <!-- Utility rail (col 1) -->
+      <button class="btn back r1 c1" data-action="back"><span class="btn-label">←</span></button>
+      <button class="btn clear r2 c1" data-action="clear"><span class="btn-label">C</span></button>
+      <button class="btn r3 c1" id="menuBtn"><span class="btn-label">menu</span></button>
+      <button class="btn operator r4 c1" id="feetBtn"><span class="btn-label">Ft</span></button>
+
+      <!-- Numbers (cols 2–4) -->
+      <button class="btn r1 c2" data-val="7"><span class="btn-label">7</span></button>
+      <button class="btn r1 c3" data-val="8"><span class="btn-label">8</span></button>
+      <button class="btn r1 c4" data-val="9"><span class="btn-label">9</span></button>
+      <button class="btn r2 c2" data-val="4"><span class="btn-label">4</span></button>
+      <button class="btn r2 c3" data-val="5"><span class="btn-label">5</span></button>
+      <button class="btn r2 c4" data-val="6"><span class="btn-label">6</span></button>
+      <button class="btn r3 c2" data-val="1"><span class="btn-label">1</span></button>
+      <button class="btn r3 c3" data-val="2"><span class="btn-label">2</span></button>
+      <button class="btn r3 c4" data-val="3"><span class="btn-label">3</span></button>
+
+      <!-- Repeat button -->
+      <button class="btn operator r4 c2" id="repeatBtn" title="Repeat last op+term" disabled><span class="btn-label">↻</span></button>
+      <button class="btn r4 c3" data-val="0"><span class="btn-label">0</span></button>
+      <button class="btn dec r4 c4" data-val="."><span class="btn-label">.</span></button>
+
+      <!-- Operator rail (col 5) -->
+      <button class="btn operator r1 c5" data-op="+"><span class="btn-label">+</span></button>
+      <button class="btn operator r2 c5" data-op="-"><span class="btn-label">−</span></button>
+      <button class="btn operator r3 c5" data-op="*"><span class="btn-label">×</span></button>
+      <button class="btn operator r4 c5" data-op="/"><span class="btn-label">÷</span></button>
     </div>
 
-    <!-- Results -->
-    <div class="panel results">
-      <div class="pad">
-        <div class="history" id="history"><div class="row input" id="inputLine"></div></div>
-        <div class="output"><div id="fractionLine" title="Tap to copy"></div><div id="decimalLine" title="Tap to copy"></div></div>
-      </div>
-    </div>
-
-    <!-- Memory (5×1) -->
-    <div class="panel memory pad">
-      <div class="memory-grid">
-        <button class="btn clear" data-action="mc"><span class="btn-label">MC</span></button>
-        <button class="btn mem" data-mem="0"><span class="btn-label">M1</span></button>
-        <button class="btn mem" data-mem="1"><span class="btn-label">M2</span></button>
-        <button class="btn mem" data-mem="2"><span class="btn-label">M3</span></button>
-        <button class="btn mem" data-mem="3"><span class="btn-label">M4</span></button>
-      </div>
-
-      <div class="console-grid">
-        <!-- Utility rail (col 1) -->
-        <button class="btn back r1 c1" data-action="back"><span class="btn-label">←</span></button>
-        <button class="btn clear  r2 c1" data-action="clear"><span class="btn-label">C</span></button>
-        <button class="btn       r3 c1" id="menuBtn"><span class="btn-label">menu</span></button>
-        <button class="btn operator r4 c1" id="feetBtn"><span class="btn-label">Ft</span></button>
-
-        <!-- Numbers (cols 2–4) -->
-        <button class="btn r1 c2" data-val="7"><span class="btn-label">7</span></button>
-        <button class="btn r1 c3" data-val="8"><span class="btn-label">8</span></button>
-        <button class="btn r1 c4" data-val="9"><span class="btn-label">9</span></button>
-
-        <button class="btn r2 c2" data-val="4"><span class="btn-label">4</span></button>
-        <button class="btn r2 c3" data-val="5"><span class="btn-label">5</span></button>
-        <button class="btn r2 c4" data-val="6"><span class="btn-label">6</span></button>
-
-        <button class="btn r3 c2" data-val="1"><span class="btn-label">1</span></button>
-        <button class="btn r3 c3" data-val="2"><span class="btn-label">2</span></button>
-        <button class="btn r3 c4" data-val="3"><span class="btn-label">3</span></button>
-
-        <!-- Repeat button in the formerly empty slot -->
-        <button class="btn operator r4 c2" id="repeatBtn" title="Repeat last op+term" disabled>
-          <span class="btn-label">↻</span>
-        </button>
-
-        <button class="btn r4 c3" data-val="0"><span class="btn-label">0</span></button>
-        <button class="btn dec r4 c4" data-val="."><span class="btn-label">.</span></button>
-
-        <!-- Operator rail (col 5) -->
-        <button class="btn operator r1 c5" data-op="+"><span class="btn-label">+</span></button>
-        <button class="btn operator r2 c5" data-op="-"><span class="btn-label">−</span></button>
-        <button class="btn operator r3 c5" data-op="*"><span class="btn-label">×</span></button>
-        <button class="btn operator r4 c5" data-op="/"><span class="btn-label">÷</span></button>
-      </div>
-
-      <div class="fract-grid">
-        <button class="btn frac" data-frac="1/16"><span class="btn-label">1/16</span></button>
-        <button class="btn frac" data-frac="1/8"><span class="btn-label">1/8</span></button>
-        <button class="btn frac" data-frac="3/16"><span class="btn-label">3/16</span></button>
-        <button class="btn frac" data-frac="1/4"><span class="btn-label">1/4</span></button>
-        <button class="btn frac" data-frac="5/16"><span class="btn-label">5/16</span></button>
-
-        <button class="btn frac" data-frac="3/8"><span class="btn-label">3/8</span></button>
-        <button class="btn frac" data-frac="7/16"><span class="btn-label">7/16</span></button>
-        <button class="btn frac" data-frac="1/2"><span class="btn-label">1/2</span></button>
-        <button class="btn frac" data-frac="9/16"><span class="btn-label">9/16</span></button>
-        <button class="btn frac" data-frac="5/8"><span class="btn-label">5/8</span></button>
-
-        <button class="btn frac" data-frac="11/16"><span class="btn-label">11/16</span></button>
-        <button class="btn frac" data-frac="3/4"><span class="btn-label">3/4</span></button>
-        <button class="btn frac" data-frac="13/16"><span class="btn-label">13/16</span></button>
-        <button class="btn frac" data-frac="7/8"><span class="btn-label">7/8</span></button>
-        <button class="btn frac" data-frac="15/16"><span class="btn-label">15/16</span></button>
-      </div>
+    <div class="fract-grid">
+      <button class="btn frac" data-frac="1/16"><span class="btn-label">1/16</span></button>
+      <button class="btn frac" data-frac="1/8"><span class="btn-label">1/8</span></button>
+      <button class="btn frac" data-frac="3/16"><span class="btn-label">3/16</span></button>
+      <button class="btn frac" data-frac="1/4"><span class="btn-label">1/4</span></button>
+      <button class="btn frac" data-frac="5/16"><span class="btn-label">5/16</span></button>
+      <button class="btn frac" data-frac="3/8"><span class="btn-label">3/8</span></button>
+      <button class="btn frac" data-frac="7/16"><span class="btn-label">7/16</span></button>
+      <button class="btn frac" data-frac="1/2"><span class="btn-label">1/2</span></button>
+      <button class="btn frac" data-frac="9/16"><span class="btn-label">9/16</span></button>
+      <button class="btn frac" data-frac="5/8"><span class="btn-label">5/8</span></button>
+      <button class="btn frac" data-frac="11/16"><span class="btn-label">11/16</span></button>
+      <button class="btn frac" data-frac="3/4"><span class="btn-label">3/4</span></button>
+      <button class="btn frac" data-frac="13/16"><span class="btn-label">13/16</span></button>
+      <button class="btn frac" data-frac="7/8"><span class="btn-label">7/8</span></button>
+      <button class="btn frac" data-frac="15/16"><span class="btn-label">15/16</span></button>
     </div>
   </div>
 
-  <!-- Minimal modal -->
-  <div id="modal" style="position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:30;">
-    <div style="background:#fffdee; color:#222; max-width:min(680px, 92vw); max-height:min(80vh, 700px); overflow:auto; border-radius:12px; padding:16px 18px; box-shadow:0 12px 40px rgba(0,0,0,.45);">
+</div>
 
-  <h2 class="cm-title">A tape-measure calculator for my friends.</h2>
-  <ul class="cm-list">
-    <li>
-      <div class="cm-sub">Combine inches, decimals, and fractions in a single calculation.</div>
-      <div class="cm-eg">42 1/4 + 2.375 + 9/16 = 45 3/16</div>
-    </li>
+<!-- Carousel Modal -->
+<div id="cmBackdrop" class="cm-backdrop" aria-hidden="true">
+  <div class="cm-modal panel" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+    <div class="cm-headbar">
+      <h2 id="cmTitle">Inch Calc — Guide & Tools</h2>
+      <button id="cmClose" class="cm-iconbtn" aria-label="Close">✕</button>
+    </div>
 
-    <li><div class="cm-head">Add, subtract, multiply, divide. Chain multiple operations.</div></li>
-    <li><div class="cm-head">One-Tap Fractions From 1/16 thru 15/16.</div></li>
+    <div class="cm-viewport">
+      <div id="cmTrack" class="cm-track">
 
-    <li>
-      <div class="cm-head">Results are solved and displayed automatically, in three ways:</div>
-      <ul class="cm-bullets">
-        <li>Red line on tape measure visually accurate in decimal</li>
-        <li>Left results window, rounded to the nearest 1/16″</li>
-        <li>Right results window, precise in decimal 00.000″</li>
-      </ul>
-    </li>
+        <!-- Slide 0: Home / Hub -->
+        <section class="cm-card">
+          <header class="cm-card-head">Tape Measure Calculator</header>
+          <p class="cm-card-sub">A tape-measure companion.</p>
 
-    <li>
-      <div class="cm-head">Memory slot stores four clearly labeled values:</div>
-      <ul class="cm-bullets">
-        <li>Long press to store new value as well as to replace an existing value</li>
-        <li>CM = Clear Memory, M1–M4 = Memory Slots</li>
-      </ul>
-    </li>
+          <ul class="cm-list">
+            <li><b>Chain math:</b> 42 1/4 + 2.375 + 9/16</li>
+            <li><b>Instant Results:</b> I, mixed fraction (1/16″), precise decimal</li>
+            <li><b>Memory:</b> long-press M1–M4 to save; tap to recall; MC to clear</li>
+          </ul>
 
-    <li>
-      <div class="cm-head">Undo / Clear</div>
-      <ul class="cm-bullets">
-        <li>&larr; Undo numbers, fractions, and operators one character at a time</li>
-        <li><b>C</b> Clear entire results screen</li>
-      </ul>
-    </li>
+          <div class="cm-tiles">
+            <a href="segment_tape.html" class="cm-tile">Segment Calculator ↗</a>
+            <button id="installBtn" class="cm-tile" style="display:none;">Install App</button>
+          </div>
+        </section>
 
-    <li><div class="cm-head"><a href="segment_tape.html">Segment Calculator</a></div></li>
-  </ul>
+        <!-- Slide 1: Basics -->
+        <section class="cm-card">
+          <header class="cm-card-head">Basics</header>
+          <div class="cm-grid2">
+            <div>
+              <p><b>Operators + − × ÷</b> do what you expect. <b>C</b> clears.</p>
+              <p><b>Easy One-Tap Fractions:</b> tap 1/16 through 15/16 </p>
+              <p><b>Feet (Ft):</b> type a whole or decimal number then tap <b>Ft</b> to enter feet; hold <b>Ft</b> 1s to preview results in feet.</p>
+            </div>
+            <div>
+              <p><b>Copy:</b> tap a result to copy.</p>
+              <p><b>Repeat (↻):</b> repeats the last op+term (enabled when valid).</p>
+              <p><b>Undo (hold ←):</b> removes last “number + its operator”.</p>
+            </div>
+          </div>
+        </section>
 
-      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
-        <button id="installBtn" style="background:#0ea5a5; color:#111; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; display:none;">Install</button>
-        <button id="closeModal" style="background:#111; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer;">Close</button>
+        <!-- Slide 2: Results View -->
+        <section class="cm-card">
+          <header class="cm-card-head">Results — 3 ways</header>
+          <ul class="cm-list">
+            <li><b>Tape:</b> red line marks exact decimal position (auto-fit view)</li>
+            <li><b>Left:</b> rounded to nearest 1/16″ in mixed fraction</li>
+            <li><b>Right:</b> precise decimal to 0.0000</li>
+          </ul>
+          <p class="cm-note">When feet appear anywhere in the expression, plain inches are annotated with a <b>″</b> mark in history for clarity.</p>
+        </section>
+
+        <!-- Slide 3: Memory -->
+ <!-- Slide 3: Memory (Memory Center) -->
+<section class="cm-card" id="memCenter">
+  <header class="cm-card-head">Memory Center</header>
+  <p class="cm-card-sub">Swipe to switch groups — focused group loads automatically.</p>
+
+  <!-- Top controls -->
+  <div class="cm-tiles" id="mcControls" style="margin-bottom:10px;">
+    <button id="mcClear" class="cm-tile">Clear Slots</button>
+    <button id="mcSaveCurrent" class="cm-tile">Save Slots</button>
+    <span id="mcCounter" class="pill" aria-live="polite">— / —</span>
+  </div>
+
+  <!-- Mini-carousel (Groups) -->
+  <div id="mgViewport" class="mg-viewport" aria-label="Memory Groups">
+    <div id="mgTrack" class="mg-track"></div>
+    <div id="mgDots" class="mg-dots" role="tablist" aria-label="Groups"></div>
+  </div>
+
+  <!-- First-visit hint -->
+  <p class="cm-note" id="mgHint" style="margin-top:6px;">
+    Swipe left/right to browse groups. The focused group loads automatically.
+  </p>
+</section>
+
+
+        <!-- Slide 4: What’s New / Info -->
+        <section class="cm-card">
+          <header class="cm-card-head">Info</header>
+          <ul class="cm-list">
+            <li>History now shows <b>exact decimals as typed</b> (no auto mixed-fraction)</li>
+            <li>Mixed numbers only when you tap a fraction after a whole number</li>
+            <li>Feet preview (hold <b>Ft</b>) shows alternate units without changing the math</li>
+          </ul>
+          <div class="cm-tiles">
+            <a href="https://raemennj.github.io/projects/calc_screens.html" class="cm-tile">Project Page ↗</a>
+          </div>
+        </section>
+
       </div>
+
+      <!-- Nav controls -->
+      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">‹</button>
+      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">›</button>
+      <div id="cmDots" class="cm-dots" role="tablist" aria-label="Slides"></div>
     </div>
   </div>
+</div>
 
-  <div id="updateToast" style="position:fixed; left:50%; transform:translateX(-50%); bottom:48px; background:#111; color:#fff; padding:8px 12px; border-radius:8px; display:none; gap:8px; align-items:center; z-index:40;">
-    <span>Update available</span>
-    <button id="updateReload" style="background:#0ea5a5; color:#111; border:none; border-radius:6px; padding:6px 10px; cursor:pointer;">Refresh</button>
-  </div>
 
-  <div id="copyToast"><span>Copied</span></div>
-
+<div id="updateToast" style="position:fixed; left:50%; transform:translateX(-50%); bottom:48px; background:#111; color:#fff; padding:8px 12px; border-radius:8px; display:none; gap:8px; align-items:center; z-index:40;"> <span>Update available</span>
+  <button id="updateReload" style="background:#0ea5a5; color:#111; border:none; border-radius:6px; padding:6px 10px; cursor:pointer;">Refresh</button>
+</div>
+<div id="copyToast"><span>Copied</span></div>
+ 
 <script>
 (() => {
   'use strict';
 
-  /* ====== Uniform tile/gap solver ====== */
-  const MIN_TAP = 44;
-  const MIN_GAP = 6, MAX_GAP = 12;
-
+  /* ===== Small helpers ===== */
   const setVar = (k,v) => document.documentElement.style.setProperty(k,v);
   const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
   const cssNum = (name, fallback) => {
     const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     const n = parseFloat(v); return Number.isFinite(n) ? n : fallback;
   };
+
+  /* Keep last good number handy for redraws during layout changes */
+  let lastGood = { value: 0, fraction: '', decimal: '' };
+
+  /* ====== Uniform tile/gap solver ====== */
+  const MIN_TAP = 44;
+  const MIN_GAP = 6, MAX_GAP = 12;
 
   function computeTile(){
     const card = document.getElementById('card');
@@ -486,10 +893,11 @@
 
     const tapeMin = cssNum('--tape-min', 100);
 
-    // Measure minimum results height = padding*2 + 2 input lines + gap + 1 output line (+1px border)
+    // Measure minimum results height parts
     const pad = gap;
-    const inputEl = document.getElementById('inputLine');
+    const inputEl  = document.getElementById('inputLine');
     const outputEl = document.querySelector('.output');
+
     const getLineHeightPx = (el) => {
       const cs = getComputedStyle(el);
       const lh = cs.lineHeight;
@@ -498,16 +906,26 @@
       const mult = parseFloat(lh) || 1.2;
       return fs * mult;
     };
-    const inputLH = getLineHeightPx(inputEl);
-    const outputLH = getLineHeightPx(outputEl);
+
+    const inputLH   = getLineHeightPx(inputEl);
+    const outputLH  = getLineHeightPx(outputEl);
+    const outputPad = parseFloat(getComputedStyle(outputEl).paddingTop) || 0;
+
     const historyMin = Math.ceil(inputLH * 2);
     setVar('--history-min', historyMin + 'px');
-    const resultsMin = Math.ceil(pad*2 + historyMin + 8 + outputLH + 1);
+
+    // Reserve at least one output line + its top padding so divider is stable
+    const outputMin = Math.ceil(outputPad + outputLH);
+    setVar('--output-min', outputMin + 'px');
+
+    // Results panel minimum = padding*2 + history + (fixed 8px gap between rows) + output + 1px divider
+    const INTER_ROW_GAP = 8;
+    const resultsMin = Math.ceil(pad*2 + historyMin + INTER_ROW_GAP + outputMin + 1);
     setVar('--results-min', resultsMin + 'px');
 
     // Keypad composition (8 rows total: 1 mem + 4 console + 3 fractions)
     const ROWS = 8;
-    const GAP_BUDGET = (3 + 2 + 2 + 6) * gap; // 13*gap
+    const GAP_BUDGET = (3 + 2 + 2 + 6) * gap; // 13*gap across memory/console/fractions stacks
     const W_inside = W - 2*gap;
 
     // Available height for keypad if results uses only its MIN
@@ -517,6 +935,9 @@
     const tileFromW = Math.floor((W_inside - (5 - 1) * gap) / 5);
     const tile = Math.max(MIN_TAP, Math.min(tileFromH, tileFromW));
     setVar('--tile', tile + 'px');
+
+    // Redraw tape (and recenter the red line) whenever layout changes
+    drawTape(lastGood.value || 0);
   }
 
   const ro = new ResizeObserver(computeTile);
@@ -538,10 +959,7 @@
   let tokenDisplays = [];          // pretty display for measurement tokens
   let currentEntry = '';           // normal numeric entry (non-measure)
   let tmr = null;
-  const PPI = 160;
-
-  // Keep last good output so UI never blanks mid-entry
-  let lastGood = { value: 0, fraction: '', decimal: '' };
+  const PPI = 170;                 // pixels-per-inch for visual tape
 
   // Feet-builder state (active until finalized by an operator)
   let measure = { active:false, feet:0, inches:0, inEntry:'' };
@@ -559,40 +977,59 @@
   const roundToSixteenth = (x)=> Math.round(x*16)/16;
 
   // ---------- Result formatters ----------
-  function formatResultInch(value){
-    const r = roundToSixteenth(value);
-    const sign = r<0 ? '-' : '';
-    const abs = Math.abs(r);
-    const w = Math.floor(abs);
-    const f = abs - w;
-    let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
-    let s = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
-    return { fraction: sign + s, decimal: `${r.toFixed(4)}″` };
-  }
+function formatResultInch(value){
+  // LEFT: 1/16″ fraction (rounded), with arrow when rounded
+  const rounded = roundToSixteenth(value);
+  const sign = rounded < 0 ? '-' : '';
+  const abs  = Math.abs(rounded);
+  const w    = Math.floor(abs);
+  const f    = abs - w;
 
-  function formatResultFeet(value){
-    const r = roundToSixteenth(value);
-    const sign = r<0 ? '-' : '';
-    let abs = Math.abs(r);
-    let feet = Math.floor(abs / 12);
-    let inchesR = roundToSixteenth(abs - feet*12);
-    let wholeIn = Math.floor(inchesR);
-    let fracIn = inchesR - wholeIn;
-    let n = Math.round(fracIn*16), d = 16, g = gcd(n,d); n/=g; d/=g;
+  let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
+  const fracCore = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
 
-    if (n === 16){ wholeIn += 1; n = 0; d = 16; }
-    if (wholeIn >= 12){ feet += 1; wholeIn -= 12; }
+  const arrow = roundingArrow(value, rounded);
+  const fraction = sign + arrow + fracCore;
 
-    let inchStr = '';
-    if (wholeIn === 0 && n === 0) inchStr = '';
-    else if (n === 0)            inchStr = ` ${wholeIn}″`;
-    else if (wholeIn === 0)      inchStr = ` ${n}/${d}″`;
-    else                         inchStr = ` ${wholeIn} ${n}/${d}″`;
+  // RIGHT: exact decimal (no 1/16 snap)
+  const decimal = formatExactDecimalNumber(value) + '″';
 
-    const left = `${sign}${feet}′${inchStr}`;
-    const right = `${(sign ? -1 : 1) * (abs/12).toFixed(4)}′`;
-    return { fraction: left, decimal: right };
-  }
+  return { fraction, decimal };
+}
+
+
+function formatResultFeet(value){
+  // Arrow computed against INCH value rounded to 1/16″
+  const rounded = roundToSixteenth(value);
+  const arrow   = roundingArrow(value, rounded);
+
+  const sign = value < 0 ? '-' : '';
+  const rAbs = Math.abs(rounded);
+
+  let feet    = Math.floor(rAbs / 12);
+  let inchesR = roundToSixteenth(rAbs - feet*12);
+  let wholeIn = Math.floor(inchesR);
+  let fracIn  = inchesR - wholeIn;
+
+  let n = Math.round(fracIn*16), d = 16, g = gcd(n,d); n/=g; d/=g;
+  if (n === 16){ wholeIn += 1; n = 0; d = 16; }
+  if (wholeIn >= 12){ feet += 1; wholeIn -= 12; }
+
+  let inchStr = '';
+  if (wholeIn === 0 && n === 0) inchStr = '';
+  else if (n === 0)            inchStr = ` ${wholeIn}″`;
+  else if (wholeIn === 0)      inchStr = ` ${n}/${d}″`;
+  else                         inchStr = ` ${wholeIn} ${n}/${d}″`;
+
+  // LEFT: feet + (rounded) inches with arrow if rounded
+  const fraction = `${sign}${arrow}${feet}′${inchStr}`;
+
+  // RIGHT: exact decimal in feet (no rounding)
+  const decimal = formatExactDecimalNumber(value/12) + '′';
+
+  return { fraction, decimal };
+}
+
 
   function formatResult(value){
     return displayMode === 'feet' ? formatResultFeet(value) : formatResultInch(value);
@@ -625,15 +1062,69 @@
     measure = { active:false, feet:0, inches:0, inEntry:'' };
   }
 
+	// Exact decimal formatter (no 1/16 snap)
+function formatExactDecimalNumber(x) {
+  // Prefer math.js if present
+  if (typeof math !== 'undefined' && math.format) {
+    return math.format(x, { notation: 'auto', precision: 15, lowerExp: -12, upperExp: 20 });
+  }
+  // Fallback: avoid binary tails without forcing rounding to a fraction
+  const s = Number(x).toPrecision(15);
+  return String(+s); // trims trailing zeros/exponent
+}
+
+// Arrow shows only when the fraction rounding changed the value.
+// ▴ exact is ABOVE rounded fraction
+// ▾ exact is BELOW rounded fraction
+function roundingArrow(exact, rounded){
+  const delta = exact - rounded;
+  return (Math.abs(delta) < 1e-9) ? '' : (delta > 0 ? '▴ ' : '▾ ');
+}
+
+	// Parse strings like: "1 11/32", "2 1/2″", "19/32″", "1′ 6″", "1′ 6 1/2″"
+function parseMixedInchString(s){
+  if (!s || typeof s !== 'string') return null;
+  const str = s.trim()
+    .replace(/[””"]/g,'″')
+    .replace(/[’’']/g,'′');
+
+  let feet = 0, whole = 0, num = 0, den = 1;
+
+  // Feet (optional)
+  const feetMatch = str.match(/(-?\d+)\s*′/);
+  if (feetMatch) feet = parseInt(feetMatch[1],10);
+
+  // Portion after feet
+  const afterFeet = str.replace(/.*′/,'').trim();
+
+  // Whole inches (optional)
+  const wholeMatch = afterFeet.match(/(-?\d+)(?=\s*(?:″|$|\s+\d+\/\d+))/);
+  if (wholeMatch) whole = parseInt(wholeMatch[1],10);
+
+  // Fraction inches (optional)
+  const fracMatch = afterFeet.match(/(-?\d+)\s*\/\s*(\d+)/);
+  if (fracMatch){
+    num = parseInt(fracMatch[1],10);
+    den = parseInt(fracMatch[2],10) || 1;
+  }
+
+  // If we saw *only* a fraction like "3/16" with no whole number
+  if (!wholeMatch && fracMatch) whole = 0;
+
+  const sign = (feet<0 || whole<0 || num<0) ? -1 : 1;
+  const total = Math.abs(feet)*12 + Math.abs(whole) + Math.abs(num)/(den||1);
+  const inches = sign * total;
+  return isFinite(inches) ? inches : null;
+}
+
+	
   /* --- Pretty history with precedence parentheses + inch marks when feet appear --- */
   function tokenDisplayAt(idx, tok){
-    if (tokenDisplays[idx]) return tokenDisplays[idx];
-    if (isDec(tok)){
-      const [w,f] = splitDec(tok);
-      return f>0 ? `${w} ${fracFromDec(f)}` : `${w}`;
-    }
-    return `${tok}`;
-  }
+  // If we explicitly stored a pretty display (e.g., "1 1/2"), use it.
+  // Otherwise, show exactly what the user typed.
+  return (tokenDisplays[idx] !== undefined) ? tokenDisplays[idx] : String(tok);
+}
+
 
   function buildDisplayArr(){
     const arr = [];
@@ -647,12 +1138,10 @@
     if (measure.active){
       arr.push({type:'num', value: String(measureTotal()), display: measureDisplay()});
     } else if (currentEntry){
-      const t = currentEntry;
-      const display = isDec(t)
-        ? (()=>{ const [w,f]=splitDec(t); return f>0 ? `${w} ${fracFromDec(f)}` : `${w}`; })()
-        : t;
-      arr.push({type:'num', value:t, display});
-    }
+  // Show exactly what the user typed (no decimal → fraction conversion here)
+  arr.push({ type:'num', value: currentEntry, display: currentEntry });
+}
+
 
     // Keep trailing operator visible, but don’t include it in grouping
     let trailingOp = null;
@@ -720,13 +1209,14 @@
       if(hist) hist.scrollTop = hist.scrollHeight;
     });
 
-    // Keep repeat button state fresh
     setRepeatEnabled(canRepeat());
   }
 
   function updateInput(){ renderHistory(); }
 
-  // ====== Fixed evaluator: applies pending operator to live entry/measure ======
+  // ====== Evaluator ======
+  const qEval = () => { clearTimeout(tmr); tmr = setTimeout(evaluate, 120); };
+
   function evaluate(){
     // Start with raw tokens and maybe a trailing operator
     let exprTokens = [...tokens];
@@ -742,12 +1232,9 @@
     let preview = '';
 
     if (pendingOp && (liveMeasure || liveEntry)) {
-      // correct: "... A <op> <live>"
       preview = (left ? left + ' ' : '') + pendingOp + ' ' + (liveMeasure ?? liveEntry);
     } else if (liveMeasure) {
-      // nice preview when only a measure is being typed
       preview = left ? `${left} + ${liveMeasure}` : liveMeasure;
-
     } else if (liveEntry) {
       preview = left ? `${left} ${liveEntry}` : liveEntry;
     } else {
@@ -765,7 +1252,6 @@
       decimalLine.textContent  = out.decimal;
       drawTape(num);
     } catch {
-      // Fallbacks
       if (measure.active && !left){
         const m = measureTotal();
         const out = formatResult(m);
@@ -785,31 +1271,89 @@
     }
   }
 
-  const qEval = () => { clearTimeout(tmr); tmr = setTimeout(evaluate, 120); };
+  // ===== Tape rendering + pixel-perfect center line =====
+function drawTape(center){
+  if (center<0) center=0;
 
-  // Tape rendering
-  function drawTape(center){
-    if (center<0) center=0;
-    [...tape.querySelectorAll('.tick,.tick-label')].forEach(n=>n.remove());
-    const rect = tape.getBoundingClientRect();
-    const mid = rect.width/2;
-    const range = 3;
-    const start = Math.max(center - range/2, 0), end = center + range/2;
-    const a = Math.floor(start*16), b = Math.ceil(end*16);
-    for (let i=a;i<=b;i++){
-      const inches = i/16;
-      const x = (inches - center)*PPI + mid - 1.5;
-      const el = document.createElement('div'); el.className='tick'; el.style.left = x+'px';
-      if (i%16===0){ el.classList.add('num'); const lbl=document.createElement('div'); lbl.className='tick-label'; lbl.textContent=inches.toFixed(0); lbl.style.left=(x+1.5)+'px'; tape.appendChild(lbl); }
-      else if (i%8===0) el.classList.add('lg'); else if (i%4===0) el.classList.add('med'); else el.classList.add('small');
-      tape.appendChild(el);
-    }
-    sweep.classList.remove('animate'); void sweep.offsetWidth; sweep.classList.add('animate');
+  // Clear old ticks/labels
+  [...tape.querySelectorAll('.tick,.tick-label')].forEach(n=>n.remove());
+
+  const rect = tape.getBoundingClientRect();
+  const mid = rect.width/2;
+
+  // Auto-fit: show exactly N inches across the tape width (no calibration)
+  const VIEW_RANGE_IN = 2.5;               // how many inches to display across the width
+  const PPI = rect.width / VIEW_RANGE_IN; // pixels per inch derived from container width
+
+  // Generate ticks around the center value
+  const range = VIEW_RANGE_IN;
+  const start = Math.max(center - range/2, 0), end = center + range/2;
+  const a = Math.floor(start*16), b = Math.ceil(end*16);
+
+  for (let i=a;i<=b;i++){
+    const inches = i/16;
+    const x = (inches - center)*PPI + mid - 1.5;  // centers around the red line
+
+    const el = document.createElement('div'); el.className='tick'; el.style.left = x+'px';
+    if (i%16===0){
+      el.classList.add('num');
+      const lbl=document.createElement('div');
+      lbl.className='tick-label';
+      lbl.textContent=inches.toFixed(0);
+      lbl.style.left=(x+1.5)+'px';
+      tape.appendChild(lbl);
+    } else if (i%8===0) el.classList.add('lg');
+    else if (i%4===0)   el.classList.add('med');
+    else                el.classList.add('small');
+
+    tape.appendChild(el);
   }
 
-  // Memory helpers
-  function loadMemory(){ try{ const s=localStorage.getItem(MEMORY_KEY); if (s) memorySlots = JSON.parse(s);}catch{} refreshMemLabels(); }
-  function saveMemory(){ localStorage.setItem(MEMORY_KEY, JSON.stringify(memorySlots)); }
+  // Place the red center line at the exact pixel mid (override any CSS)
+  const centerEl = tape.querySelector('.center-line');
+  if (centerEl){
+    const desiredW = 4;
+    centerEl.style.setProperty('width', desiredW + 'px', 'important');
+    centerEl.style.setProperty('transform', 'none', 'important');
+
+    const midPx = Math.round(rect.width / 2);
+    const leftPx = midPx - (desiredW / 2);
+    centerEl.style.setProperty('left', leftPx + 'px', 'important');
+  }
+
+  // Sweep animation reset
+  sweep.classList.remove('animate'); void sweep.offsetWidth; sweep.classList.add('animate');
+}
+
+  // ===== Memory helpers =====
+function loadMemory(){
+  try{
+    const raw = localStorage.getItem(MEMORY_KEY);
+    if (!raw){ refreshMemLabels(); return; }
+    const arr = JSON.parse(raw);
+
+    memorySlots = (Array.isArray(arr) ? arr : [null,null,null,null]).map(x=>{
+      if (x == null) return null;
+      if (typeof x === 'number' && isFinite(x)) return x;   // already exact inches
+      if (typeof x === 'string'){
+        // try simple number first
+        const f = parseFloat(x);
+        if (isFinite(f)) return f;
+        // try mixed fraction/feet formats: "1 11/32", "2′ 3 1/2″", "19/32″"
+        const p = parseMixedInchString(x);
+        if (p != null && isFinite(p)) return p;
+      }
+      return null; // anything else becomes empty slot
+    });
+
+    // Save back migrated format (numbers/null only)
+    saveMemory();
+  } catch {
+    memorySlots = [null,null,null,null];
+  }
+  refreshMemLabels();
+}
+
 
   function ensureLabelSpan(btn){
     let span = btn.querySelector('.btn-label');
@@ -823,7 +1367,7 @@
   }
 
   function formatResultInchOnlyLabel(v){
-    return formatResultInch(v).fraction.replace('"','');
+    return formatResultInch(v).fraction.replace(/″/g,'');
   }
 
   function refreshMemLabels(){
@@ -834,11 +1378,357 @@
       span.textContent = text;
     });
   }
+/* ===== Memory Center (mini-carousel with swipe-to-load) ===== */
+const MEM_GROUPS_KEY = 'calcMemGroups_v1';
+let memGroups = []; // [{id, name, slots:[num|null,num|null,num|null,num|null]}]
+
+function loadMemGroups(){ try{ const s = localStorage.getItem(MEM_GROUPS_KEY); if (s) memGroups = JSON.parse(s); }catch{} }
+function saveMemGroups(){ localStorage.setItem(MEM_GROUPS_KEY, JSON.stringify(memGroups)); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+const slotsEqual = (a,b)=> a.length===4 && b.length===4 && a.every((v,i)=>Object.is(v,b[i]));
+const fmtShort = (v)=> v==null ? '—' : formatResultInch(v).fraction.replace('″','');
+
+let mgState = {
+  slides: [],        // [{kind:'current'|'group', name, slots, id?}]
+  index: 0,          // focused slide index
+  dragging: false,
+  startX: 0,
+  curX: 0,
+  width: 1,
+  lastLoadedIndex: null, // for idempotence
+  undoStack: null        // {slots:[...], index:int} // (reserved for future Undo)
+};
+
+// Build slides array: inject “Current (unsaved)” only if live doesn’t match a saved group
+function mgBuildSlides(){
+  const live = memorySlots.slice(0,4); // live M1–M4
+  const match = memGroups.find(g => slotsEqual(g.slots, live));
+  const slides = [];
+
+  // “Current” (unsaved) gets default labels
+  if (!match){
+    slides.push({
+      kind: 'current',
+      name: 'Current',
+      slots: live,
+      labels: ['M1','M2','M3','M4']
+    });
+  }
+
+  // Saved groups: include labels if present; fallback to defaults
+  for (const g of memGroups){
+    const labels = (Array.isArray(g.labels) && g.labels.length === 4)
+      ? g.labels
+      : ['M1','M2','M3','M4'];
+    slides.push({ kind:'group', id:g.id, name:g.name, slots:g.slots, labels });
+  }
+
+  mgState.slides = slides;
+
+  // initial index: 0 if we added Current; else the matching group’s position
+  if (!match){
+    mgState.index = 0;
+  } else {
+    const idx = slides.findIndex(s => s.kind==='group' && s.id===match.id);
+    mgState.index = Math.max(0, idx);
+  }
+  mgState.lastLoadedIndex = null; // force first commit logic
+}
+
+
+
+// Render slides + dots, sync counter, and position track
+function mgRender(){
+  const vp = document.getElementById('mgViewport');
+  const track = document.getElementById('mgTrack');
+  const dots = document.getElementById('mgDots');
+  const counter = document.getElementById('mcCounter');
+  if (!vp || !track || !dots) return;
+
+  track.innerHTML = mgState.slides.map((s,i) => {
+    const badge = (s.kind==='current')
+      ? `<span class="mg-subtle">(unsaved)</span>`
+      : (mgState.index===i ? `<span class="mg-subtle">(loaded)</span>` : '');
+
+    const labels = (Array.isArray(s.labels) && s.labels.length === 4)
+      ? s.labels
+      : ['M1','M2','M3','M4'];
+
+    const rows = [0,1,2,3].map(k => {
+      const label = labels[k] || `M${k+1}`;
+      return `
+        <div class="mg-row">
+          <span class="mg-k"
+                title="Long-press to rename"
+                data-slide="${i}"
+                data-slot="${k}">${label}</span>
+          <span class="mg-v">${fmtShort(s.slots[k])}</span>
+        </div>`;
+    }).join('');
+
+    return `
+      <section class="mg-slide" aria-label="${s.name}">
+        <div class="mg-title">${s.name} ${badge}</div>
+        <div class="mg-list">${rows}</div>
+      </section>`;
+  }).join('');
+
+  // dots
+  dots.innerHTML = mgState.slides
+    .map((_,i)=> `<button class="mg-dot" role="tab" aria-selected="${mgState.index===i?'true':'false'}" data-idx="${i}"></button>`)
+    .join('');
+  dots.querySelectorAll('.mg-dot').forEach(btn=>{
+    btn.addEventListener('click', ()=> mgGoTo(+btn.dataset.idx, /*commit=*/true));
+  });
+
+  // counter
+  counter.textContent = `${mgState.index+1} / ${mgState.slides.length}`;
+
+  // position
+  mgSyncPosition();
+
+  // NEW: enable long-press to rename slot labels (saved groups only)
+  bindSlotLabelRenames();
+}
+
+
+function mgSyncPosition(){
+  const track = document.getElementById('mgTrack');
+  if (!track) return;
+  track.style.transform = `translateX(${-(mgState.index*100)}%)`;
+  // update dots selection
+  document.querySelectorAll('#mgDots .mg-dot').forEach((d,i)=> d.setAttribute('aria-selected', (i===mgState.index) ? 'true' : 'false'));
+  // update counter
+  const counter = document.getElementById('mcCounter');
+  if (counter) counter.textContent = `${mgState.index+1} / ${mgState.slides.length}`;
+}
+
+// Snap and maybe commit
+function mgGoTo(idx, commit){
+  const n = mgState.slides.length;
+  mgState.index = Math.max(0, Math.min(n-1, idx));
+  mgSyncPosition();
+  if (commit) mgCommitAutoLoad();
+}
+
+// Auto-load if focused slide is a saved group
+function mgCommitAutoLoad(){
+  const s = mgState.slides[mgState.index];
+  if (!s || s.kind!=='group') return;
+
+  // idempotence: don’t reload the same index repeatedly
+  if (mgState.lastLoadedIndex === mgState.index) return;
+
+  // push undo snapshot (reserved)
+  mgState.undoStack = { slots: memorySlots.slice(0,4), index: mgState.lastLoadedIndex };
+
+  // load
+  memorySlots = s.slots.slice(0,4);
+  saveMemory();
+  refreshMemLabels();
+
+  mgState.lastLoadedIndex = mgState.index;
+
+  // toast
+  showToast(`Loaded ${s.name}`);
+}
+
+// Pointer swipe
+function mgBindSwipe(){
+  const vp = document.getElementById('mgViewport');
+  const track = document.getElementById('mgTrack');
+  if (!vp || !track) return;
+
+  function onDown(e){
+    const p = e.touches ? e.touches[0] : e;
+    mgState.dragging = true;
+    mgState.startX = mgState.curX = p.clientX;
+    mgState.width = vp.clientWidth || 1;
+    track.classList.add('dragging');
+  }
+  function onMove(e){
+    if (!mgState.dragging) return;
+    const p = e.touches ? e.touches[0] : e;
+    mgState.curX = p.clientX;
+    const dx = mgState.curX - mgState.startX;
+    const pct = (dx / mgState.width) * 100;
+    track.style.transform = `translateX(${-(mgState.index*100 - pct)}%)`;
+  }
+  function onUp(){
+    if (!mgState.dragging) return;
+    mgState.dragging = false;
+    track.classList.remove('dragging');
+
+    const dx = mgState.curX - mgState.startX;
+    const thresholdPx = Math.max(40, mgState.width * 0.18);
+    let next = mgState.index;
+    if (dx > thresholdPx) next = mgState.index - 1;
+    else if (dx < -thresholdPx) next = mgState.index + 1;
+
+    mgGoTo(next, /*commit*/true);
+  }
+
+  // avoid double-binding
+  vp._mgBound && vp.removeEventListener('pointerdown', vp._mgBound);
+  vp.addEventListener('pointerdown', onDown);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  vp.addEventListener('touchstart', onDown, {passive:true});
+  window.addEventListener('touchmove', onMove, {passive:false});
+  window.addEventListener('touchend', onUp);
+  vp._mgBound = onDown;
+}
+
+// Index of a group slide by id
+function mgIndexOfGroup(id){
+  return mgState.slides.findIndex(s => s.kind==='group' && s.id===id);
+}
+
+// Clear current live slots (global)
+function clearMemorySlots(){
+  const memCount = document.querySelectorAll('.btn.mem').length || 4;
+  memorySlots = new Array(memCount).fill(null);
+  saveMemory();
+  refreshMemLabels();
+  showToast('Memory cleared');
+}
+
+// Save current live slots as a new or overwriting group
+function saveCurrentAsGroup(){
+  const live = memorySlots.slice(0,4);
+  // name proposal
+  const base = 'Group';
+  let n = 1; const names = new Set(memGroups.map(g=>g.name));
+  while (names.has(`${base} ${n}`)) n++;
+  let name = prompt('Name this group:', `${base} ${n}`);
+  if (!name) name = `${base} ${n}`;
+  name = name.trim();
+
+  const existing = memGroups.find(g => g.name.toLowerCase() === name.toLowerCase());
+  if (existing){
+    const ok = confirm(`A group named "${name}" exists. Overwrite it?`);
+    if (!ok) return;
+    existing.slots = live;
+    // keep any existing labels; otherwise create defaults
+    if (!Array.isArray(existing.labels) || existing.labels.length !== 4){
+      existing.labels = ['M1','M2','M3','M4'];
+    }
+    saveMemGroups();
+    mgBuildSlides();
+    mgRender();
+    const go = mgIndexOfGroup(existing.id);
+    if (go >= 0) { mgGoTo(go, /*commit*/true); }
+    showToast(`Saved as "${name}"`);
+    return;
+  }
+
+  // new group with default labels
+  const g = { id: uid(), name, slots: live, labels: ['M1','M2','M3','M4'] };
+  memGroups.unshift(g);
+  saveMemGroups();
+
+  mgBuildSlides();
+  mgRender();
+  const go = mgIndexOfGroup(g.id);
+  if (go >= 0) { mgGoTo(go, /*commit*/true); }
+  showToast(`Saved as "${name}"`);
+}
+
+
+// Entry point when opening Memory Center
+function openMemoryCenterInit(){
+  loadMemGroups();
+  mgBuildSlides();
+  mgRender();
+  mgBindSwipe();
+
+  // If we started on a saved group (no Current), ensure it's loaded exactly once
+  const first = mgState.slides[mgState.index];
+  if (first && first.kind === 'group'){
+    mgCommitAutoLoad();
+  }
+}
+
+// Hook buttons
+window.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('mcClear')?.addEventListener('click', ()=>{
+    if (confirm('Clear current memory slots (M1–M4)?')) {
+      clearMemorySlots();
+      // rebuild slides so Current reflects cleared state
+      mgBuildSlides();
+      mgRender();
+    }
+  });
+  document.getElementById('mcSaveCurrent')?.addEventListener('click', saveCurrentAsGroup);
+});
+
+function bindSlotLabelRenames(){
+  const track = document.getElementById('mgTrack');
+  if (!track) return;
+
+  track.querySelectorAll('.mg-k').forEach(el => {
+    let timer = null;
+
+    const arm = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        doRenameLabel(el);
+      }, 600); // long-press threshold
+    };
+    const disarm = () => clearTimeout(timer);
+
+    // Pointer events (covers mouse & touch on modern browsers)
+    el.addEventListener('pointerdown', arm);
+    el.addEventListener('pointerup', disarm);
+    el.addEventListener('pointercancel', disarm);
+    el.addEventListener('pointerleave', disarm);
+
+    // Touch fallback for older browsers
+    el.addEventListener('touchstart', arm, { passive: true });
+    el.addEventListener('touchend', disarm);
+    el.addEventListener('touchcancel', disarm);
+  });
+}
+
+function doRenameLabel(el){
+  const slideIdx = +el.dataset.slide;
+  const slotIdx  = +el.dataset.slot;
+  const s = mgState.slides[slideIdx];
+  if (!s) return;
+
+  // Only saved groups persist labels; “Current” is a live, unsaved preview
+  if (s.kind !== 'group') { showToast('Save these slots as a group to add labels'); return; }
+
+  const g = memGroups.find(g => g.id === s.id);
+  if (!g) return;
+
+  if (!Array.isArray(g.labels) || g.labels.length !== 4){
+    g.labels = ['M1','M2','M3','M4'];
+  }
+
+  const current = g.labels[slotIdx] || `M${slotIdx+1}`;
+  const next = prompt('Label for this slot:', current);
+  if (!next) return;
+
+  g.labels[slotIdx] = next.trim().slice(0, 24); // small cap to keep UI tidy
+  saveMemGroups();
+
+  // Rebuild slides so the label shows immediately and keep focus on same group
+  const id = g.id;
+  mgBuildSlides();
+  mgRender();
+  const go = mgIndexOfGroup(id);
+  if (go >= 0) mgGoTo(go, /*commit=*/false);
+
+  showToast('Label updated');
+}
+
 
   // ===== Number / decimal entry =====
   document.querySelectorAll('.btn[data-val]').forEach(b=>b.addEventListener('click',()=>{
     const val = b.dataset.val;
     if (measure.active){
+
       measure.inEntry += val;
       updateInput(); qEval();
       return;
@@ -911,7 +1801,6 @@
   }
 
   function removeLastTermPair(){
-    // If building a measure or typing, drop it and the operator just before it (if any)
     if (measure.active){
       measure = { active:false, feet:0, inches:0, inEntry:'' };
       if (tokens.length && isOp(tokens.at(-1))) { tokens.pop(); tokenDisplays.pop(); }
@@ -948,6 +1837,7 @@
   });
 
   // Long-hold (750ms)
+  function setHoldVisual(btn, on) { if (btn) btn.classList.toggle('hold', !!on); }
   function clearBackHold(){
     clearTimeout(backHoldTimer);
     setHoldVisual(backBtn, false);
@@ -973,105 +1863,290 @@
     setRepeatEnabled(false);
   });
 
-  // ===== Feet behavior (tap) =====
-  const feetBtn = document.getElementById('feetBtn');
-  feetBtn.addEventListener('click',()=>{
-    if (isDec(currentEntry)){
-      const ft = parseFloat(currentEntry);
-      const total = ft * 12;
-      tokens.push(String(total));
-      tokenDisplays.push(`${ft}\u2032`);
-      currentEntry='';
-      updateInput(); qEval();
-      return;
-    }
-    if (isWhole(currentEntry)){
-      measure = { active:true, feet: parseInt(currentEntry,10), inches:0, inEntry:'' };
-      currentEntry='';
-      updateInput(); qEval();
-      return;
-    }
-    if (!currentEntry) return;
+// ===== Feet behavior (tap = commit feet; long-press = preview feet; mixed/fraction friendly) =====
+const feetBtn = document.getElementById('feetBtn');
 
+// --- helpers just for Ft handling ---
+const isWholeOrWholeDot = (s) => /^[+-]?\d+\.?$/.test(s);      // "1" or "1."
+const isTypedFraction   = (s) => /^[+-]?\d+\s*\/\s*\d+$/.test(s);
+function fracToDecimal(s){
+  const m = s.match(/^\s*([+-])?\s*(\d+)\s*\/\s*(\d+)\s*$/);
+  if (!m) return null;
+  const sign = m[1]==='-' ? -1 : 1;
+  const n = +m[2], d = +m[3];
+  if (!d) return null;
+  return sign * (n/d);
+}
+function lastNumericIndex(){
+  let i = tokens.length - 1;
+  while (i >= 0 && isOp(tokens[i])) i--;
+  return i;
+}
+
+// --- click → commit feet (whole/decimal/fraction or convert last mixed token) ---
+let suppressFeetClick = false;
+feetBtn.addEventListener('click', (e) => {
+  if (suppressFeetClick) {        // swallow the click that follows a long-press
+    suppressFeetClick = false;
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+
+  // A) Current entry is a fraction → treat it as feet (e.g., "1/2" Ft → 6")
+  if (currentEntry && isTypedFraction(currentEntry)){
+    const ft = fracToDecimal(currentEntry);           // feet as decimal
+    if (ft != null){
+      const totalIn = ft * 12;
+      tokens.push(String(totalIn));
+      tokenDisplays.push(`${currentEntry}\u2032`);     // show 1/2′ in history
+      currentEntry = '';
+      updateInput(); qEval();
+      return;
+    }
+  }
+
+  // B) No current entry: if last token looks like mixed or fraction, convert it to feet
+  if (!currentEntry){
+    const i = lastNumericIndex();
+    if (i >= 0){
+      const disp = tokenDisplays[i];
+      const looksMixed = disp && /^\s*[+-]?\d+\s+\d+\/\d+\s*$/.test(disp);   // "1 1/2"
+      const looksFrac  = disp && /^\s*[+-]?\d+\/\d+\s*$/.test(disp);         // "1/2"
+      const alreadyFeet = disp && disp.includes('′');
+
+      if (!alreadyFeet && (looksMixed || looksFrac)){
+        const val = parseFloat(tokens[i]);            // numeric inches (e.g., 1.5)
+        if (!Number.isNaN(val)){
+          tokens[i] = String(val * 12);               // reinterpret as feet ⇒ inches
+          tokenDisplays[i] = disp + '\u2032';         // add prime to the label
+          updateInput(); qEval();
+          return;
+        }
+      }
+    }
+  }
+
+  // C) Normal paths: decimal feet or whole feet start/commit
+  if (isDec(currentEntry)){
     const ft = parseFloat(currentEntry);
-    if (!Number.isNaN(ft)){
-      const total = ft * 12;
-      tokens.push(String(total));
-      tokenDisplays.push(`${ft}\u2032`);
-      currentEntry='';
-      updateInput(); qEval();
+    const total = ft * 12;
+    tokens.push(String(total));
+    tokenDisplays.push(`${ft}\u2032`);
+    currentEntry='';
+    updateInput(); qEval();
+    return;
+  }
+  if (isWholeOrWholeDot(currentEntry)){
+    // start feet-builder if desired (treat "1." as "1")
+    const feetWhole = parseInt(currentEntry,10);
+    measure = { active:true, feet: feetWhole, inches:0, inEntry:'' };
+    currentEntry='';
+    updateInput(); qEval();
+    return;
+  }
+  if (!currentEntry) return;
+
+  // D) Loose parse fallback (e.g., "1.5")
+  const ftLoose = parseFloat(currentEntry);
+  if (!Number.isNaN(ftLoose)){
+    const total = ftLoose * 12;
+    tokens.push(String(total));
+    tokenDisplays.push(`${ftLoose}\u2032`);
+    currentEntry='';
+    updateInput(); qEval();
+  }
+});
+
+// --- long-press (600ms) → temporarily show results in feet while held
+let feetHoldTimer = null;
+let feetPeekActive = false;
+
+function startFeetPeek(){
+  if (feetPeekActive) return;
+  feetPeekActive = true;
+  displayMode = 'feet';
+  setHoldVisual(feetBtn, true);   // uses your existing .btn.hold pulse
+  evaluate();
+}
+function endFeetPeek(){
+  if (!feetPeekActive) return;
+  feetPeekActive = false;
+  displayMode = 'inch';
+  setHoldVisual(feetBtn, false);
+  evaluate();
+}
+
+// Pointer (covers mouse + touch with Pointer Events)
+feetBtn.addEventListener('pointerdown', () => {
+  clearTimeout(feetHoldTimer);
+  feetHoldTimer = setTimeout(() => {
+    suppressFeetClick = true;     // prevent the click after a hold
+    startFeetPeek();
+  }, 600);
+});
+function clearFeetHold(){
+
+  clearTimeout(feetHoldTimer);
+  endFeetPeek();
+}
+feetBtn.addEventListener('pointerup', clearFeetHold);
+feetBtn.addEventListener('pointercancel', clearFeetHold);
+feetBtn.addEventListener('pointerleave', clearFeetHold);
+
+// Optional: keyboard “hold to peek” (Space)
+feetBtn.addEventListener('keydown', (e) => {
+  if (e.code === 'Space'){
+    e.preventDefault();
+    startFeetPeek();
+  }
+});
+feetBtn.addEventListener('keyup', (e) => {
+  if (e.code === 'Space'){
+    e.preventDefault();
+    suppressFeetClick = true;     // Space would also fire click on button
+    endFeetPeek();
+  }
+});
+
+
+// ===== Memory buttons =====
+function storeToMem(btn){
+  let expr=[...tokens];
+  if (currentEntry) expr.push(currentEntry);
+  while (expr.length && isOp(expr.at(-1))) expr.pop();
+
+  let base = expr.length ? math.evaluate(expr.join(' ')) : 0;
+  let valNum = (typeof base === 'number' ? base : base.toNumber())
+             + (measure.active ? measureTotal() : 0);
+
+  const i = +btn.dataset.mem;
+  const confirmReplace = memorySlots[i]!=null
+    ? confirm(`M${i+1} has ${formatResultInchOnlyLabel(memorySlots[i])}. Replace?`)
+    : true;
+  if (!confirmReplace) return;
+
+  memorySlots[i] = valNum;
+  saveMemory();
+  refreshMemLabels();
+
+  // Saved flash
+  btn.classList.add('saved');
+  setTimeout(() => btn.classList.remove('saved'), 480);
+}
+
+function recallFromMem(btn){
+  const i = +btn.dataset.mem;
+  const v = memorySlots[i];
+
+  // Empty slot? Tap = save current result into this slot (no confirm).
+  if (v == null){
+    storeToMem(btn, /*skipConfirm=*/true);
+    return;
+  }
+
+  // Filled slot → recall (existing behavior)
+  if (measure.active) finalizeMeasureToken();
+  if (currentEntry) { tokens.push(currentEntry); tokenDisplays.push(undefined); }
+  currentEntry = String(v);
+  updateInput(); evaluate();
+}
+
+
+document.querySelectorAll('.btn.mem').forEach(btn=>{
+  // Per-button guards
+  btn._recallTimer = null;
+  btn._preventNextClick = false;   // set true by LP or dblclick to block ensuing click
+
+  // Tap = recall (debounced so a dblclick won’t recall first)
+  btn.addEventListener('click', (e) => {
+    if (btn._preventNextClick){
+      btn._preventNextClick = false;
+      return;
     }
+    if (e.detail && e.detail > 1){  // second click of a dblclick
+      clearTimeout(btn._recallTimer);
+      return;
+    }
+    clearTimeout(btn._recallTimer);
+    btn._recallTimer = setTimeout(() => recallFromMem(btn), 300);
   });
 
-  // ===== Memory buttons =====
-  document.querySelectorAll('.btn.mem').forEach(btn=>{
-    // Insert on tap
-    btn.addEventListener('click',()=>{
-      const i=+btn.dataset.mem, v=memorySlots[i]; if (v==null) return;
-      if (measure.active) finalizeMeasureToken();
-      if (currentEntry) tokens.push(currentEntry), tokenDisplays.push(undefined);
-      currentEntry = String(v);
-      updateInput(); evaluate();
-    });
+  // Double-click = store
+  btn.addEventListener('dblclick', (e) => {
+    clearTimeout(btn._recallTimer);
+    btn._preventNextClick = true; // block the synthetic click that follows
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    storeToMem(btn);
+  });
 
-    // Store on double-click (or long-press)
-    btn.addEventListener('dblclick',()=>{
-      let expr=[...tokens];
-      if (currentEntry) expr.push(currentEntry);
-      while (expr.length && isOp(expr.at(-1))) expr.pop();
-      let base = expr.length ? math.evaluate(expr.join(' ')) : 0;
-      let valNum = (typeof base==='number' ? base : base.toNumber()) + (measure.active ? measureTotal() : 0);
-
-      const i=+btn.dataset.mem;
-      const confirmReplace = memorySlots[i]!=null ? confirm(`M${i+1} has ${formatResultInchOnlyLabel(memorySlots[i])}. Replace?`) : true;
-      if (!confirmReplace) return;
-      memorySlots[i]= valNum;
-      saveMemory(); refreshMemLabels();
-
-      // Saved flash
-      btn.classList.add('saved');
-      setTimeout(() => btn.classList.remove('saved'), 480);
-    });
-
-    // Long-press → store (touch)
-    let lpTimer = null;
-    btn.addEventListener('touchstart', () => {
-      setHoldVisual(btn, true);
-      lpTimer = setTimeout(() => {
-        btn.dispatchEvent(new Event('dblclick'));
-      }, 600);
-    }, { passive: true });
-
-    function clearLP() {
-      clearTimeout(lpTimer);
+  // Long-press (touch) = store directly (no dispatching dblclick)
+  let lpTimer = null;
+  btn.addEventListener('touchstart', () => {
+    setHoldVisual(btn, true);
+    clearTimeout(lpTimer);
+    lpTimer = setTimeout(() => {
+      btn._preventNextClick = true; // swallow the click after touchend
       setHoldVisual(btn, false);
-    }
-    btn.addEventListener('touchend', clearLP, { passive: true });
-    btn.addEventListener('touchcancel', clearLP, { passive: true });
-  });
+      storeToMem(btn);
+    }, 600);
+  }, { passive: true });
 
-  document.querySelector('.btn.clear[data-action="mc"]').addEventListener('click',()=>{
-    if (!confirm('Clear all memory slots?')) return;
-    memorySlots=[null,null,null,null]; saveMemory(); refreshMemLabels();
-  });
+  function clearLP(){
+    clearTimeout(lpTimer);
+    setHoldVisual(btn, false);
+  }
+  btn.addEventListener('touchend', clearLP, { passive: true });
+  btn.addEventListener('touchcancel', clearLP, { passive: true });
+});
+
+// ----- MC: Tap = open Memory Center slide -----
+const mcBtn = document.querySelector('.btn.clear[data-action="mc"]');
+
+function openMemoryCenter(){
+  const memEl = document.getElementById('memCenter');
+  // requires modal helpers (Step 5); falls back to menu open if not available
+  if (window._cmOpen && window._cmGoTo && window._cmIndexOf && memEl){
+    window._cmOpen();
+    const i = window._cmIndexOf(memEl);
+if (i >= 0) window._cmGoTo(i);
+openMemoryCenterInit();     // ✅ new
+
+  } else {
+    // Fallback: open the menu; user can swipe to the Memory Center card
+    document.getElementById('menuBtn')?.click();
+  }
+}
+
+mcBtn.addEventListener('click', openMemoryCenter);
+mcBtn.addEventListener('keydown', (e)=>{
+  if (e.key==='Enter' || e.key===' '){
+    e.preventDefault();
+    openMemoryCenter();
+  }
+});
+
+/* ===== FRACTION BUTTON PALETTES ===== */
+
 
   /* ===== FRACTION BUTTON PALETTES ===== */
   const FRACTION_PALETTES = {
-     '1/16': { bg: '#003d99', fg:'#fff' },
-     '1/8': { bg: '#005ce6', fg:'#fff' },
+     '1/16': { bg: '#1a75ff', fg:'#fff' },
+     '1/8': { bg: '#66a3ff', fg:'#fff' },
      '3/16': { bg: '#1a75ff', fg:'#fff' },
      '1/4': { bg: '#66a3ff', fg:'#fff' },
      '5/16': { bg: '#1a75ff', fg:'#fff' },
-     '3/8': { bg: '#005ce6', fg:'#fff' },
+     '3/8': { bg: '#66a3ff', fg:'#fff' },
      '7/16': { bg: '#1a75ff', fg:'#fff' },
      '1/2': { bg: '#66a3ff', fg:'#fff' },
      '9/16': { bg: '#1a75ff', fg:'#fff' },
-     '5/8': { bg: '#005ce6', fg:'#fff' },
+     '5/8': { bg: '#66a3ff', fg:'#fff' },
      '11/16': { bg: '#1a75ff', fg:'#fff' },
      '3/4': { bg: '#66a3ff', fg:'#fff' },
      '13/16': { bg: '#1a75ff', fg:'#fff' },
-     '7/8': { bg: '#005ce6', fg:'#fff' },
-     '15/16': { bg: '#003d99', fg:'#fff' },
+     '7/8': { bg: '#66a3ff', fg:'#fff' },
+     '15/16': { bg: '#1a75ff', fg:'#fff' },
   };
 
   function fallbackFor(frac){
@@ -1115,11 +2190,15 @@
 
     if (!currentEntry) {
       currentEntry = f;
-    } else if (isWhole(currentEntry)) {
-      const whole = parseInt(currentEntry,10);
-      const combined = whole + fVal;
-      tokens.push(String(combined)); tokenDisplays.push(undefined); currentEntry='';
-    } else {
+} else if (isWhole(currentEntry)) {
+  const whole = parseInt(currentEntry, 10);
+  const combined = whole + fVal;
+  tokens.push(String(combined));
+  // History should reflect the user's intent explicitly: "1 1/2"
+  tokenDisplays.push(`${whole} ${f}`);
+  currentEntry = '';
+}
+ else {
       tokens.push(currentEntry); tokenDisplays.push(undefined);
       tokens.push('+');         tokenDisplays.push(undefined);
       currentEntry=f;
@@ -1146,7 +2225,7 @@
     });
   }
 
-  /* ===== NEW: touch-friendly pressed state ===== */
+  // Touch-friendly pressed state
   function attachPressState(){
     document.querySelectorAll('.btn').forEach(btn=>{
       const set = on => { if (!btn.disabled) btn.classList.toggle('pressed', !!on); };
@@ -1156,8 +2235,6 @@
       btn.addEventListener('mouseleave',  ()=> set(false));
     });
   }
-
-  function setHoldVisual(btn, on) { if (btn) btn.classList.toggle('hold', !!on); }
 
   function showToast(msg='Copied', ms=900){
     const toast = document.getElementById('copyToast');
@@ -1178,7 +2255,6 @@
         if (navigator.clipboard?.writeText){
           navigator.clipboard.writeText(text).then(()=> showToast('Copied'));
         } else {
-          // fallback
           const ta = document.createElement('textarea');
           ta.value = text; document.body.appendChild(ta); ta.select();
           try { document.execCommand('copy'); showToast('Copied'); } catch {}
@@ -1188,84 +2264,157 @@
     });
   }
 
-  // Block selection/callout on buttons only (not outputs/history)
-  document.addEventListener('selectstart', (e) => {
-    if (e.target.closest('.btn')) e.preventDefault();
-  }, { capture: true });
-  document.addEventListener('contextmenu', (e) => {
-    if (e.target.closest('.btn')) e.preventDefault();
-  }, { capture: true });
+  /* ===== Carousel Modal (cards only, not full-screen screenshot) ===== */
+(function carouselModal(){
+  const backdrop = document.getElementById('cmBackdrop');
+  const track = document.getElementById('cmTrack');
+  const dotsWrap = document.getElementById('cmDots');
+  const prevBtn = document.getElementById('cmPrev');
+  const nextBtn = document.getElementById('cmNext');
+  const closeBtn = document.getElementById('cmClose');
+  const openBtn  = document.getElementById('menuBtn');
+  const memPreview = document.getElementById('cmMemPreview');
 
-  // Modal
-  const modal=document.getElementById('modal');
-  document.getElementById('menuBtn').addEventListener('click',()=>{ modal.style.display='flex'; });
-  document.getElementById('closeModal').addEventListener('click',()=>{ modal.style.display='none'; });
-  modal.addEventListener('click',e=>{ if(e.target===modal) modal.style.display='none'; });
+  const slideCount = track ? track.children.length : 0;
+  let idx = 0;
+  let lastFocus = null;
 
-  // Prevent body scroll, allow results/history/modal/output scroll/selection
-  document.addEventListener('touchmove', e=>{
-    if (e.target.closest('.history') || e.target.closest('.output') || e.target.closest('#modal')) return;
-    e.preventDefault();
-  }, {passive:false});
+  // Build dots
+  function buildDots(){
+    if (!dotsWrap) return;
+    dotsWrap.innerHTML = '';
+    for (let i=0;i<slideCount;i++){
+      const b = document.createElement('button');
+      b.className = 'cm-dot';
+      b.setAttribute('role','tab');
+      b.setAttribute('aria-label', `Slide ${i+1}`);
+      b.addEventListener('click', ()=> goTo(i));
+      dotsWrap.appendChild(b);
+    }
+  }
 
-  // === Feet Peek (hold) ===
-  (function enableFeetPeek(){
-    const DELAY_MS = 1000; // 1s hold
-    let holdTimer = null;
-    let peeking = false;
-    let suppressNextClick = false;
+  function syncUI(){
+    // Move the track
+    track.style.transform = `translateX(${(-idx*100)}%)`;
+    // Dots
+    [...dotsWrap.children].forEach((d,i)=> d.setAttribute('aria-selected', i===idx ? 'true' : 'false'));
+    // Prev/Next disabled?
+    prevBtn.disabled = (idx===0);
+    nextBtn.disabled = (idx===slideCount-1);
+  }
 
-    const start = () => {
-      clearTimeout(holdTimer);
-      setHoldVisual(feetBtn, true);
-      holdTimer = setTimeout(()=>{
-        peeking = true;
-        suppressNextClick = true;
-        displayMode = 'feet';
-        feetBtn.classList.add('peek');
-        evaluate();
-      }, DELAY_MS);
-    };
-    const end = () => {
-      clearTimeout(holdTimer);
-      setHoldVisual(feetBtn, false);
-      if (peeking){
-        peeking = false;
-        displayMode = 'inch';
-        feetBtn.classList.remove('peek');
-        evaluate();
-      }
-    };
+  function goTo(n){
+    idx = Math.max(0, Math.min(slideCount-1, n));
+    syncUI();
+  }
+  const next = () => goTo(idx+1);
+  const prev = () => goTo(idx-1);
 
-    feetBtn.addEventListener('pointerdown', start);
-    feetBtn.addEventListener('pointerup', end);
-    feetBtn.addEventListener('pointercancel', end);
-    feetBtn.addEventListener('mouseleave', end);
+  // Open/close
+  function open(){
+    if (!backdrop) return;
+    lastFocus = document.activeElement;
+    backdrop.setAttribute('aria-hidden','false');
+    renderMemoryPreview();
+    buildDots();
+    syncUI();
+    // focus close for accessibility
+    setTimeout(()=> closeBtn?.focus(), 0);
+    // block body touch scroll while open except inside card
+    document.body.style.overscrollBehavior = 'contain';
+  }
+  function close(){
+    backdrop.setAttribute('aria-hidden','true');
+    document.body.style.overscrollBehavior = '';
+    lastFocus?.focus?.();
+  }
 
-    feetBtn.addEventListener('click', (e)=>{
-      if (suppressNextClick){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        suppressNextClick = false;
-      }
-    }, true);
+  // Hook existing menu button
+  openBtn?.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  backdrop?.addEventListener('click', (e)=>{ if (e.target === backdrop) close(); });
+  document.addEventListener('keydown', (e)=>{
+    if (backdrop.getAttribute('aria-hidden') === 'true') return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowRight') next();
+    if (e.key === 'ArrowLeft') prev();
+  });
+
+  // Swipe (only the track moves)
+  (function enableSwipe(){
+    const viewport = backdrop?.querySelector('.cm-viewport');
+    if (!viewport || !track) return;
+
+    let startX = 0, curX = 0, dragging = false, width = 1;
+
+    function onDown(e){
+      const p = e.touches ? e.touches[0] : e;
+      startX = curX = p.clientX;
+      width = viewport.clientWidth || 1;
+      dragging = true;
+      track.classList.add('dragging');
+    }
+    function onMove(e){
+      if (!dragging) return;
+      const p = e.touches ? e.touches[0] : e;
+      curX = p.clientX;
+      const dx = curX - startX;
+      const pct = (dx / width) * 100;
+      // slide position + drag offset
+      track.style.transform = `translateX(${(-idx*100 + pct)}%)`;
+    }
+    function onUp(){
+      if (!dragging) return;
+      dragging = false;
+      track.classList.remove('dragging');
+      const dx = curX - startX;
+      const threshold = Math.max(60, width * 0.18); // pixels
+      if (dx > threshold) prev();
+      else if (dx < -threshold) next();
+      else syncUI(); // snap back
+    }
+
+    viewport.addEventListener('pointerdown', onDown);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    viewport.addEventListener('touchstart', onDown, {passive:true});
+    window.addEventListener('touchmove', onMove, {passive:false});
+    window.addEventListener('touchend', onUp);
   })();
+
+  // Dynamic memory preview (reads your existing memorySlots)
+  function renderMemoryPreview(){
+    if (!memPreview) return;
+    const cells = [];
+    for (let i=0;i<4;i++){
+      const v = memorySlots[i];
+      const display = (v==null) ? '—' : formatResultInch(v).fraction.replace('″','');
+      cells.push(`<div class="cm-memcell"><span class="k">M${i+1}</span><span class="v">${display}</span></div>`);
+    }
+    memPreview.innerHTML = cells.join('');
+  }
+
+  // Expose a tiny API if you want to deep-link a slide later:
+  window._cmGoTo = goTo; // e.g., _cmGoTo(3)
+	  window._cmOpen = open;
+  window._cmIndexOf = (el) => Array.from(track.children).indexOf(el);
+														  
+															  
+})();
+
 
   /* ====== REPEAT BUTTON ====== */
   const repeatBtn = document.getElementById('repeatBtn');
 
   function canRepeat(){
-    // If measure in progress and there is an operator before it, allow
     if (measure.active){
       const hasOpBefore = tokens.length && isOp(tokens.at(-1));
       const hasSomeMeasure = (measure.feet || measure.inches || measure.inEntry);
       return hasOpBefore && hasSomeMeasure;
     }
-    // If currently typing a number/fraction and last token is an operator
     if (currentEntry){
       return tokens.length && isOp(tokens.at(-1));
     }
-    // Otherwise need ... op term as the last two tokens
     const n = tokens.length;
     return n >= 2 && isOp(tokens[n-2]) && !isOp(tokens[n-1]);
   }
@@ -1276,11 +2425,9 @@
   }
 
   function commitPendingIfPair(){
-    // If measure active with an operator before it, finalize into tokens
     if (measure.active && tokens.length && isOp(tokens.at(-1))){
       finalizeMeasureToken();
     }
-    // If currently typing and last token is an operator, commit the entry
     if (currentEntry && tokens.length && isOp(tokens.at(-1))){
       tokens.push(currentEntry);
       tokenDisplays.push(undefined);
@@ -1297,9 +2444,7 @@
   }
 
   function doRepeat(){
-    if (!canRepeat()){
-      return;
-    }
+    if (!canRepeat()) return;
     commitPendingIfPair();
 
     const pair = findLastPair();
@@ -1309,24 +2454,52 @@
     const term = tokens[pair.termIdx];
     const disp = tokenDisplays[pair.termIdx];
 
-    tokens.push(op);            tokenDisplays.push(undefined);
-    tokens.push(term);          tokenDisplays.push(disp);
+    tokens.push(op);   tokenDisplays.push(undefined);
+    tokens.push(term); tokenDisplays.push(disp);
 
     updateInput(); qEval();
   }
 
   repeatBtn.addEventListener('click', doRepeat);
 
-  // Init
-  function initTape(){ const r=tape.getBoundingClientRect(); if(!r.width){ requestAnimationFrame(initTape); return; } drawTape(0); }
-  computeTile();
-  initTape();
-  loadMemory();
+  // Init tape once it has width
+  function initTape(){
+    const r=tape.getBoundingClientRect();
+    if(!r.width){ requestAnimationFrame(initTape); return; }
+    drawTape(0);
+  }
 
-  attachRipples();
-  attachPressState();          // NEW: enable touch pressed-state
-  applyFractionPalettes();
-  enableClickCopy('#fractionLine, #decimalLine');
+  // Block selection/callout on buttons only (not outputs/history)
+  document.addEventListener('selectstart', (e) => {
+    if (e.target.closest('.btn')) e.preventDefault();
+  }, { capture: true });
+  document.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.btn')) e.preventDefault();
+  }, { capture: true });
+
+  // Optional orientation transform helper (no-op if .app is absent)
+  function applyOrientationFix() {
+    const app = document.querySelector('.app');
+    if (!app) return;
+
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    const rawAngle = (screen.orientation && typeof screen.orientation.angle === 'number')
+      ? screen.orientation.angle
+      : (typeof window.orientation === 'number' ? window.orientation : 0);
+    const angle = ((rawAngle % 360) + 360) % 360; // 0, 90, 180, 270
+
+    if (!isLandscape) { app.style.transform = ''; app.style.transformOrigin = ''; return; }
+
+    if (angle === 270)       app.style.transform = 'rotate(-90deg) translateX(-100%)';
+    else if (angle === 90)   app.style.transform = 'rotate(90deg) translateY(-100%)';
+    else if (angle === 180)  app.style.transform = 'rotate(90deg) translateY(-100%)';
+    else                     app.style.transform = 'rotate(90deg) translateY(-100%)';
+
+    app.style.transformOrigin = 'top left';
+  }
+  window.addEventListener('DOMContentLoaded', applyOrientationFix);
+  window.addEventListener('resize', applyOrientationFix);
+  window.addEventListener('orientationchange', () => setTimeout(applyOrientationFix, 60));
 
   /* PWA: Service Worker + Install */
   let deferredPrompt = null;
@@ -1367,102 +2540,31 @@
     if (reg?.waiting){ reg.waiting.postMessage('skipWaiting'); }
   });
 
+  // Bootstrap
+  computeTile();
+  initTape();
+  loadMemory();
+  attachRipples();
+  attachPressState();
+  applyFractionPalettes();
+  enableClickCopy('#fractionLine, #decimalLine');
+
 })();
 </script>
+
 </body>
 
-<!-- ===== manifest.webmanifest (create this file alongside) ===== -->
-<!--
-{
-  "name": "Inch Calc",
-  "short_name": "Inch Calc",
-  "start_url": ".",
-  "scope": ".",
-  "display_override": ["window-controls-overlay", "standalone"],
-  "background_color": "#1f4d4d",
-  "theme_color": "#1f4d4d",
-  "description": "Tape & Memory calculator with inch fractions.",
-  "icons": [
-    {"src": "calcicon-192.png", "sizes": "192x192", "type": "image/png"},
-    {"src": "calcicon-512.png", "sizes": "512x512", "type": "image/png"},
-    {"src": "maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any"}
-  ]
-}
--->
-
-<!-- ===== sw.js (create this file alongside) ===== -->
-<!--
-const CACHE_NAME = 'inch-calc-v2';
-const ASSETS = [
-  './',
-  './calc_screens.html',
-  './manifest.webmanifest',
-  './sw.js',
-  './calcicon-192.png',
-  './calcicon-512.png',
-  './maskable-512.png'
-];
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(ASSETS))
-      .then(() => self.skipWaiting())
-  );
-});
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-    )).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  const accept = req.headers.get('accept') || '';
-
-  // HTML (navigation): network-first
-  if (req.mode === 'navigate' || accept.includes('text/html')){
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
-
-  const sameOrigin = new URL(req.url).origin === self.location.origin;
-
-  // Same-origin assets: cache-first
-  if (sameOrigin){
-    event.respondWith(
-      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(c => c.put(req, copy));
-        return res;
-      }))
-    );
-    return;
-  }
-
-  // Cross-origin (e.g., CDN): network, fallback to cache
-  event.respondWith(
-    fetch(req).then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE_NAME).then(c => c.put(req, copy));
-      return res;
-    }).catch(() => caches.match(req))
-  );
-});
-
-self.addEventListener('message', (event) => {
-  if (event.data === 'skipWaiting') self.skipWaiting();
-});
--->
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
