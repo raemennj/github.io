@@ -968,18 +968,7 @@ function renderOutputs(leftFractionText, rightDecimalText){
 }
 
 
-  // If the *next* token is an up/down arrow, wrap it
-  if (rest.startsWith('▴') || rest.startsWith('▾')) {
-    const arrow = rest[0];                 // ▴ or ▾
-    const after = rest.slice(1).trimStart();
-    fractionLine.innerHTML = `${sign}<span class="arrow">${arrow}</span>${after}`;
-  } else {
-    // No rounding arrow — just plain text
-    fractionLine.textContent = sign + rest;
-  }
-
-  decimalLine.textContent = (rightDecimalText || '');
-}
+ 
 
 	
 	
