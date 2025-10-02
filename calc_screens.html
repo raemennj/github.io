@@ -554,6 +554,7 @@
   margin-right: .25rem;
 }
 
+#fractionLine { display:inline-flex; align-items:baseline; gap:.3rem; }
 	  
 	  
 /* Motion preferences */
@@ -954,16 +955,18 @@
   const decimalLine = document.getElementById('decimalLine');
 
 /* ---- Render helper for arrow span (robust) ---- */
+/* ---- Render helper that ALWAYS shows the arrow if present ---- */
 function renderOutputs(leftFractionText, rightDecimalText){
-  const s = (leftFractionText || '').trim();
+  // Wrap a leading ▴/▾ *after optional sign* with a span.arrow
+  const s = String(leftFractionText || '');
+  const html = s.replace(
+    /^(\s*[−-]?)\s*([▴▾])\s*/,
+    (m, sign, arr) => `${sign}<span class="arrow">${arr}</span> `
+  );
+  fractionLine.innerHTML = html;
+  decimalLine.textContent = rightDecimalText || '';
+}
 
-  // Pull off an optional ASCII '-' OR Unicode '−' minus
-  let sign = '';
-  let rest = s;
-  if (rest.startsWith('-') || rest.startsWith('−')) {
-    sign = rest[0];
-    rest = rest.slice(1).trimStart();
-  }
 
   // If the *next* token is an up/down arrow, wrap it
   if (rest.startsWith('▴') || rest.startsWith('▾')) {
@@ -1105,8 +1108,10 @@ function formatExactDecimalNumber(x) {
 // ▴ exact is ABOVE rounded fraction
 // ▾ exact is BELOW rounded fraction
 function roundingArrow(exact, rounded){
+  const EPS = 1e-12;                     // looser epsilon so FP noise never hides the arrow
   const delta = exact - rounded;
-  return (Math.abs(delta) < 1e-9) ? '' : (delta > 0 ? '▴ ' : '▾ ');
+  if (Math.abs(delta) < EPS) return '';
+  return (delta > 0) ? '▴ ' : '▾ ';
 }
 
 	// Parse strings like: "1 11/32", "2 1/2″", "19/32″", "1′ 6″", "1′ 6 1/2″"
