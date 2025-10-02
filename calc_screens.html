@@ -55,18 +55,19 @@
     --bezel-hi:rgba(255,255,255,.07); --bezel-lo:rgba(0,0,0,.65); --bezel-divider:rgba(255,255,255,.08);
   }
 
-  /* Center line positioned by JS */
-  .center-line{
-    position:absolute; top:29%; height:75%; width:4px; background:red;
-  }
+
 
   /* ---------- Card (stacked zones) ---------- */
-  .card{
-    width:clamp(320px,100%,var(--card-max)); height:100%;
-    display:grid; gap:var(--gap);
-    grid-template-rows:auto auto auto auto;
-    grid-template-areas:"bezel" "memory" "console" "fractions";
-  }
+.card{
+  width:clamp(320px,100%,var(--card-max)); height:100%;
+  display:grid; gap:var(--gap);
+  grid-template-rows:auto auto 1fr;
+  grid-template-areas:
+    "bezel"
+    "memory"
+    "keypad";
+}
+
   .panel{
     background:var(--card); border-radius:8px; background-color:darkslategrey;
     box-shadow:0 8px 24px rgba(0,0,0,.15); overflow:hidden;
@@ -129,7 +130,7 @@
     font-size:clamp(24px, 3.1vw, 26px);
     display:flex; flex-direction:column; gap:4px;
   }
-  .row.input{ letter-spacing:.04em; font-size:clamp(20px, 25.8vw, 26px); opacity:.9; }
+  .row.input{ letter-spacing:.04em; font-size:clamp(20px, 3.1vw, 26px); opacity:.9; }
   #inputLine{ display:block; }
   .output{
     display:flex; justify-content:space-between; gap:8px;
@@ -959,7 +960,6 @@
   let tokenDisplays = [];          // pretty display for measurement tokens
   let currentEntry = '';           // normal numeric entry (non-measure)
   let tmr = null;
-  const PPI = 170;                 // pixels-per-inch for visual tape
 
   // Feet-builder state (active until finalized by an operator)
   let measure = { active:false, feet:0, inches:0, inEntry:'' };
@@ -1366,9 +1366,14 @@ function loadMemory(){
     return span;
   }
 
-  function formatResultInchOnlyLabel(v){
-    return formatResultInch(v).fraction.replace(/″/g,'');
-  }
+function formatResultInchOnlyLabel(v){
+  // Build from the rounded fraction but strip arrow + inch mark for compact labels
+  return formatResultInch(v)
+    .fraction
+    .replace(/^(?:▴ |▾ )/, '') // remove leading arrow if present
+    .replace(/″/g, '');
+}
+
 
   function refreshMemLabels(){
     document.querySelectorAll('.btn.mem').forEach(btn=>{
