@@ -1109,14 +1109,23 @@ function parseMixedInchString(s){
   }
 /* ---- Render helper for arrow span (left side only) ---- */
 function renderOutputs(leftFractionText, rightDecimalText){
-  const m = /^(▴ |▾ )(.+)$/.exec(leftFractionText || '');
+  const txt = leftFractionText || '';
+
+  // Match optional leading sign, then the arrow, then the rest
+  // groups: [1]=sign ('' or '-'), [2]=arrow ('▴ ' or '▾ '), [3]=rest
+  const m = /^(-?\s*)(▴ |▾ )(.+)$/.exec(txt);
+
   if (m){
-    fractionLine.innerHTML = `<span class="arrow">${m[1].trim()}</span>${m[2]}`;
+    const sign = m[1] || '';
+    const arrow = m[2].trim();
+    const rest = m[3];
+    fractionLine.innerHTML = `${sign}<span class="arrow">${arrow}</span>${rest}`;
   } else {
-    fractionLine.textContent = leftFractionText || '';
+    fractionLine.textContent = txt;
   }
   decimalLine.textContent = rightDecimalText || '';
 }
+
 
   // If we saw *only* a fraction like "3/16" with no whole number
   if (!wholeMatch && fracMatch) whole = 0;
@@ -1267,14 +1276,13 @@ function renderOutputs(leftFractionText, rightDecimalText){
         drawTape(m);
         return;
       }
-      if (lastGood.decimal){
-        fractionLine.textContent = lastGood.fraction;
-        decimalLine.textContent  = lastGood.decimal;
-        drawTape(lastGood.value);
-      } else {
-        fractionLine.textContent = '';
-        decimalLine.textContent  = '';
-      }
+     if (lastGood.decimal){
+  renderOutputs(lastGood.fraction, lastGood.decimal);
+  drawTape(lastGood.value);
+} else {
+  renderOutputs('', '');
+}
+
     }
   }
 
