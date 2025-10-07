@@ -549,9 +549,13 @@
 #fractionLine:has(> .arrow) { /* optional if you wrap the arrow in a span */
   gap: .25rem;
 }
-.arrow {
-  opacity: .85;
-  margin-right: .25rem;
+.arrow{
+  display:inline-block;
+  line-height:1;
+  /* small optical nudge so the triangle baseline aligns with numerals */
+  transform: translateY(-1px);
+  /* fallback font that definitely has the ▴▾ glyphs on Windows */
+  font-family: "aktiv-grotesk", "Segoe UI Symbol", system-ui, sans-serif;
 }
 
 #fractionLine { display:inline-flex; align-items:baseline; gap:.3rem; }
@@ -955,17 +959,24 @@
   const decimalLine = document.getElementById('decimalLine');
 
 /* ---- Render helper for arrow span (robust) ---- */
-/* ---- Render helper that ALWAYS shows the arrow if present ---- */
 function renderOutputs(leftFractionText, rightDecimalText){
+  const raw = String(leftFractionText || '');
   // Wrap a leading ▴/▾ *after optional sign* with a span.arrow
-  const s = String(leftFractionText || '');
-  const html = s.replace(
+  let html = raw.replace(
     /^(\s*[−-]?)\s*([▴▾])\s*/,
-    (m, sign, arr) => `${sign}<span class="arrow">${arr}</span> `
+    (_, sign, arr) => `${sign}<span class="arrow" aria-hidden="true">${arr}</span> `
   );
+  // Normalize accidental double spaces
+  html = html.replace(/\s{2,}/g, ' ').trim();
+
+  // Flag whether we're rounded (useful if you want styles like blinking, etc.)
+  const rounded = /^(\s*[−-]?)\s*<span class="arrow/.test(html);
+  fractionLine.setAttribute('data-rounded', rounded ? 'true' : 'false');
+
   fractionLine.innerHTML = html;
   decimalLine.textContent = rightDecimalText || '';
 }
+
 
 
  
@@ -1094,14 +1105,15 @@ function formatExactDecimalNumber(x) {
 }
 
 // Arrow shows only when the fraction rounding changed the value.
-// ▴ exact is ABOVE rounded fraction
-// ▾ exact is BELOW rounded fraction
 function roundingArrow(exact, rounded){
-  const EPS = 1e-12;                     // looser epsilon so FP noise never hides the arrow
+  // Slightly looser tolerance so typical decimal entries (e.g., 1.3 vs 1-5/16)
+  // actually show an arrow on most devices/browsers.
+  const EPS = 1e-6;
   const delta = exact - rounded;
   if (Math.abs(delta) < EPS) return '';
   return (delta > 0) ? '▴ ' : '▾ ';
 }
+
 
 	// Parse strings like: "1 11/32", "2 1/2″", "19/32″", "1′ 6″", "1′ 6 1/2″"
 function parseMixedInchString(s){
