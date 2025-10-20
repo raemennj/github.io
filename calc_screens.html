@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,19 +56,18 @@
     --bezel-hi:rgba(255,255,255,.07); --bezel-lo:rgba(0,0,0,.65); --bezel-divider:rgba(255,255,255,.08);
   }
 
-
+  /* Center line positioned by JS */
+  .center-line{
+    position:absolute; top:29%; height:75%; width:4px; background:red;
+  }
 
   /* ---------- Card (stacked zones) ---------- */
-.card{
-  width:clamp(320px,100%,var(--card-max)); height:100%;
-  display:grid; gap:var(--gap);
-  grid-template-rows:auto auto 1fr;
-  grid-template-areas:
-    "bezel"
-    "memory"
-    "keypad";
-}
-
+  .card{
+    width:clamp(320px,100%,var(--card-max)); height:100%;
+    display:grid; gap:var(--gap);
+    grid-template-rows:auto auto auto auto;
+    grid-template-areas:"bezel" "memory" "console" "fractions";
+  }
   .panel{
     background:var(--card); border-radius:8px; background-color:darkslategrey;
     box-shadow:0 8px 24px rgba(0,0,0,.15); overflow:hidden;
@@ -130,7 +130,7 @@
     font-size:clamp(24px, 3.1vw, 26px);
     display:flex; flex-direction:column; gap:4px;
   }
-  .row.input{ letter-spacing:.04em; font-size:clamp(20px, 3.1vw, 26px); opacity:.9; }
+  .row.input{ letter-spacing:.04em; font-size:clamp(20px, 25.8vw, 26px); opacity:.9; }
   #inputLine{ display:block; }
   .output{
     display:flex; justify-content:space-between; gap:8px;
@@ -541,26 +541,6 @@
 .cm-memcell .k{ opacity: .7; }
 .cm-memcell .v{ font-weight: 700; }
 
-	  /* Fraction rounding arrow polish */
-#fractionLine::first-letter {}
-#fractionLine {
-  letter-spacing: .01em;
-}
-#fractionLine:has(> .arrow) { /* optional if you wrap the arrow in a span */
-  gap: .25rem;
-}
-.arrow{
-  display:inline-block;
-  line-height:1;
-  /* small optical nudge so the triangle baseline aligns with numerals */
-  transform: translateY(-1px);
-  /* fallback font that definitely has the ▴▾ glyphs on Windows */
-  font-family: "aktiv-grotesk", "Segoe UI Symbol", system-ui, sans-serif;
-}
-
-#fractionLine { display:inline-flex; align-items:baseline; gap:.3rem; }
-	  
-	  
 /* Motion preferences */
 @media (prefers-reduced-motion: reduce){
   .cm-track{ transition: none !important; }
@@ -646,7 +626,22 @@
 .mg-dot[aria-selected="true"]{ background: #0ea5a5; }
 
 	  
-	  
+	/* Small "LIN" badge on operator buttons when Linear Mode is active */
+[data-op].linear-badged { position: relative; }
+[data-op].linear-badged::after {
+  content: attr(data-badge);
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 10px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  pointer-events: none;
+}
+  
 	  
   </style>
 </head>
@@ -958,31 +953,6 @@
   const fractionLine = document.getElementById('fractionLine');
   const decimalLine = document.getElementById('decimalLine');
 
-/* ---- Render helper for arrow span (robust) ---- */
-function renderOutputs(leftFractionText, rightDecimalText){
-  const raw = String(leftFractionText || '');
-  // Wrap a leading ▴/▾ *after optional sign* with a span.arrow
-  let html = raw.replace(
-    /^(\s*[−-]?)\s*([▴▾])\s*/,
-    (_, sign, arr) => `${sign}<span class="arrow" aria-hidden="true">${arr}</span> `
-  );
-  // Normalize accidental double spaces
-  html = html.replace(/\s{2,}/g, ' ').trim();
-
-  // Flag whether we're rounded (useful if you want styles like blinking, etc.)
-  const rounded = /^(\s*[−-]?)\s*<span class="arrow/.test(html);
-  fractionLine.setAttribute('data-rounded', rounded ? 'true' : 'false');
-
-  fractionLine.innerHTML = html;
-  decimalLine.textContent = rightDecimalText || '';
-}
-
-
-
- 
-
-	
-	
   const MEMORY_KEY = 'calcMemorySlots_uniform420';
   let memorySlots = [null,null,null,null];
 
@@ -990,6 +960,7 @@ function renderOutputs(leftFractionText, rightDecimalText){
   let tokenDisplays = [];          // pretty display for measurement tokens
   let currentEntry = '';           // normal numeric entry (non-measure)
   let tmr = null;
+  const PPI = 170;                 // pixels-per-inch for visual tape
 
   // Feet-builder state (active until finalized by an operator)
   let measure = { active:false, feet:0, inches:0, inEntry:'' };
@@ -1007,60 +978,40 @@ function renderOutputs(leftFractionText, rightDecimalText){
   const roundToSixteenth = (x)=> Math.round(x*16)/16;
 
   // ---------- Result formatters ----------
-function formatResultInch(value){
-  // LEFT: 1/16″ fraction (rounded), with arrow when rounded
-  const rounded = roundToSixteenth(value);
-  const sign = rounded < 0 ? '-' : '';
-  const abs  = Math.abs(rounded);
-  const w    = Math.floor(abs);
-  const f    = abs - w;
+  function formatResultInch(value){
+    const r = roundToSixteenth(value);
+    const sign = r<0 ? '-' : '';
+    const abs = Math.abs(r);
+    const w = Math.floor(abs);
+    const f = abs - w;
+    let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
+    let s = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
+    return { fraction: sign + s, decimal: `${r.toFixed(4)}″` };
+  }
 
-  let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
-  const fracCore = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
+  function formatResultFeet(value){
+    const r = roundToSixteenth(value);
+    const sign = r<0 ? '-' : '';
+    let abs = Math.abs(r);
+    let feet = Math.floor(abs / 12);
+    let inchesR = roundToSixteenth(abs - feet*12);
+    let wholeIn = Math.floor(inchesR);
+    let fracIn = inchesR - wholeIn;
+    let n = Math.round(fracIn*16), d = 16, g = gcd(n,d); n/=g; d/=g;
 
-  const arrow = roundingArrow(value, rounded);
-  const fraction = sign + arrow + fracCore;
+    if (n === 16){ wholeIn += 1; n = 0; d = 16; }
+    if (wholeIn >= 12){ feet += 1; wholeIn -= 12; }
 
-  // RIGHT: exact decimal (no 1/16 snap)
-  const decimal = formatExactDecimalNumber(value) + '″';
+    let inchStr = '';
+    if (wholeIn === 0 && n === 0) inchStr = '';
+    else if (n === 0)            inchStr = ` ${wholeIn}″`;
+    else if (wholeIn === 0)      inchStr = ` ${n}/${d}″`;
+    else                         inchStr = ` ${wholeIn} ${n}/${d}″`;
 
-  return { fraction, decimal };
-}
-
-
-
-function formatResultFeet(value){
-  // Arrow computed against INCH value rounded to 1/16″
-  const rounded = roundToSixteenth(value);
-  const arrow   = roundingArrow(value, rounded);
-
-  const sign = value < 0 ? '-' : '';
-  const rAbs = Math.abs(rounded);
-
-  let feet    = Math.floor(rAbs / 12);
-  let inchesR = roundToSixteenth(rAbs - feet*12);
-  let wholeIn = Math.floor(inchesR);
-  let fracIn  = inchesR - wholeIn;
-
-  let n = Math.round(fracIn*16), d = 16, g = gcd(n,d); n/=g; d/=g;
-  if (n === 16){ wholeIn += 1; n = 0; d = 16; }
-  if (wholeIn >= 12){ feet += 1; wholeIn -= 12; }
-
-  let inchStr = '';
-  if (wholeIn === 0 && n === 0) inchStr = '';
-  else if (n === 0)            inchStr = ` ${wholeIn}″`;
-  else if (wholeIn === 0)      inchStr = ` ${n}/${d}″`;
-  else                         inchStr = ` ${wholeIn} ${n}/${d}″`;
-
-  // LEFT: feet + (rounded) inches with arrow if rounded
-  const fraction = `${sign}${arrow}${feet}′${inchStr}`;
-
-  // RIGHT: exact decimal in feet (no rounding)
-  const decimal = formatExactDecimalNumber(value/12) + '′';
-
-  return { fraction, decimal };
-}
-
+    const left = `${sign}${feet}′${inchStr}`;
+    const right = `${(sign ? -1 : 1) * (abs/12).toFixed(4)}′`;
+    return { fraction: left, decimal: right };
+  }
 
   function formatResult(value){
     return displayMode === 'feet' ? formatResultFeet(value) : formatResultInch(value);
@@ -1093,67 +1044,6 @@ function formatResultFeet(value){
     measure = { active:false, feet:0, inches:0, inEntry:'' };
   }
 
-	// Exact decimal formatter (no 1/16 snap)
-function formatExactDecimalNumber(x) {
-  // Prefer math.js if present
-  if (typeof math !== 'undefined' && math.format) {
-    return math.format(x, { notation: 'auto', precision: 15, lowerExp: -12, upperExp: 20 });
-  }
-  // Fallback: avoid binary tails without forcing rounding to a fraction
-  const s = Number(x).toPrecision(15);
-  return String(+s); // trims trailing zeros/exponent
-}
-
-// Arrow shows only when the fraction rounding changed the value.
-function roundingArrow(exact, rounded){
-  // Slightly looser tolerance so typical decimal entries (e.g., 1.3 vs 1-5/16)
-  // actually show an arrow on most devices/browsers.
-  const EPS = 1e-6;
-  const delta = exact - rounded;
-  if (Math.abs(delta) < EPS) return '';
-  return (delta > 0) ? '▴ ' : '▾ ';
-}
-
-
-	// Parse strings like: "1 11/32", "2 1/2″", "19/32″", "1′ 6″", "1′ 6 1/2″"
-function parseMixedInchString(s){
-  if (!s || typeof s !== 'string') return null;
-  const str = s.trim()
-    .replace(/[””"]/g,'″')
-    .replace(/[’’']/g,'′');
-
-  let feet = 0, whole = 0, num = 0, den = 1;
-
-  // Feet (optional)
-  const feetMatch = str.match(/(-?\d+)\s*′/);
-  if (feetMatch) feet = parseInt(feetMatch[1],10);
-
-  // Portion after feet
-  const afterFeet = str.replace(/.*′/,'').trim();
-
-  // Whole inches (optional)
-  const wholeMatch = afterFeet.match(/(-?\d+)(?=\s*(?:″|$|\s+\d+\/\d+))/);
-  if (wholeMatch) whole = parseInt(wholeMatch[1],10);
-
-  // Fraction inches (optional)
-  const fracMatch = afterFeet.match(/(-?\d+)\s*\/\s*(\d+)/);
-  if (fracMatch){
-    num = parseInt(fracMatch[1],10);
-    den = parseInt(fracMatch[2],10) || 1;
-  }
-
-
-
-  // If we saw *only* a fraction like "3/16" with no whole number
-  if (!wholeMatch && fracMatch) whole = 0;
-
-  const sign = (feet<0 || whole<0 || num<0) ? -1 : 1;
-  const total = Math.abs(feet)*12 + Math.abs(whole) + Math.abs(num)/(den||1);
-  const inches = sign * total;
-  return isFinite(inches) ? inches : null;
-}
-
-	
   /* --- Pretty history with precedence parentheses + inch marks when feet appear --- */
   function tokenDisplayAt(idx, tok){
   // If we explicitly stored a pretty display (e.g., "1 1/2"), use it.
@@ -1283,23 +1173,27 @@ function parseMixedInchString(s){
 
       const out = formatResult(num);
       lastGood = { value: num, fraction: out.fraction, decimal: out.decimal };
-      renderOutputs(out.fraction, out.decimal);
+
+      fractionLine.textContent = out.fraction;
+      decimalLine.textContent  = out.decimal;
       drawTape(num);
     } catch {
       if (measure.active && !left){
         const m = measureTotal();
         const out = formatResult(m);
-        renderOutputs(out.fraction, out.decimal);
+        fractionLine.textContent = out.fraction;
+        decimalLine.textContent  = out.decimal;
         drawTape(m);
         return;
       }
-     if (lastGood.decimal){
-  renderOutputs(lastGood.fraction, lastGood.decimal);
-  drawTape(lastGood.value);
-} else {
-  renderOutputs('', '');
-}
-
+      if (lastGood.decimal){
+        fractionLine.textContent = lastGood.fraction;
+        decimalLine.textContent  = lastGood.decimal;
+        drawTape(lastGood.value);
+      } else {
+        fractionLine.textContent = '';
+        decimalLine.textContent  = '';
+      }
     }
   }
 
@@ -1358,34 +1252,8 @@ function drawTape(center){
 }
 
   // ===== Memory helpers =====
-function loadMemory(){
-  try{
-    const raw = localStorage.getItem(MEMORY_KEY);
-    if (!raw){ refreshMemLabels(); return; }
-    const arr = JSON.parse(raw);
-
-    memorySlots = (Array.isArray(arr) ? arr : [null,null,null,null]).map(x=>{
-      if (x == null) return null;
-      if (typeof x === 'number' && isFinite(x)) return x;   // already exact inches
-      if (typeof x === 'string'){
-        // try simple number first
-        const f = parseFloat(x);
-        if (isFinite(f)) return f;
-        // try mixed fraction/feet formats: "1 11/32", "2′ 3 1/2″", "19/32″"
-        const p = parseMixedInchString(x);
-        if (p != null && isFinite(p)) return p;
-      }
-      return null; // anything else becomes empty slot
-    });
-
-    // Save back migrated format (numbers/null only)
-    saveMemory();
-  } catch {
-    memorySlots = [null,null,null,null];
-  }
-  refreshMemLabels();
-}
-
+  function loadMemory(){ try{ const s=localStorage.getItem(MEMORY_KEY); if (s) memorySlots = JSON.parse(s);}catch{} refreshMemLabels(); }
+  function saveMemory(){ localStorage.setItem(MEMORY_KEY, JSON.stringify(memorySlots)); }
 
   function ensureLabelSpan(btn){
     let span = btn.querySelector('.btn-label');
@@ -1398,14 +1266,9 @@ function loadMemory(){
     return span;
   }
 
-function formatResultInchOnlyLabel(v){
-  // Build from the rounded fraction but strip arrow + inch mark for compact labels
-  return formatResultInch(v)
-    .fraction
-    .replace(/^(?:▴ |▾ )/, '') // remove leading arrow if present
-    .replace(/″/g, '');
-}
-
+  function formatResultInchOnlyLabel(v){
+    return formatResultInch(v).fraction.replace('"','');
+  }
 
   function refreshMemLabels(){
     document.querySelectorAll('.btn.mem').forEach(btn=>{
@@ -1895,9 +1758,7 @@ function doRenameLabel(el){
   // ===== Clear =====
   document.querySelector('.btn.clear[data-action="clear"]').addEventListener('click',()=>{
     tokens=[]; tokenDisplays=[]; currentEntry=''; measure = { active:false, feet:0, inches:0, inEntry:'' };
-    inputLine.textContent='';
-renderOutputs('', '');
-
+    inputLine.textContent=''; fractionLine.textContent=''; decimalLine.textContent='';
     drawTape(0);
     setRepeatEnabled(false);
   });
@@ -2589,6 +2450,147 @@ mcBtn.addEventListener('keydown', (e)=>{
   enableClickCopy('#fractionLine, #decimalLine');
 
 })();
+  
+  
+  // ===== Linear Mode (global left-to-right) =====
+(() => {
+  const LONG_PRESS_MS = 500;
+  let linearMode = false;
+
+  const DISPLAY_SEL = '#display';
+  const OP_BUTTON_SEL = '[data-op]'; // add | sub | mul | div
+
+  // --- DOM helpers ---
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+  function getExpr() {
+    return ($(DISPLAY_SEL)?.value || '').trim();
+  }
+  function setExpr(s) {
+    const el = $(DISPLAY_SEL);
+    if (el) el.value = s;
+  }
+
+  // --- String utils ---
+  const TRAILING_OP_RE = /[×*/+\-]$/;
+
+  function trimTrailingOp(expr) {
+    return expr.replace(TRAILING_OP_RE, '');
+  }
+
+  // Is the entire string wrapped by a single top-level (...) ?
+  function isWholeWrapped(expr) {
+    if (!expr || expr[0] !== '(' || expr[expr.length - 1] !== ')') return false;
+    let depth = 0;
+    for (let i = 0; i < expr.length; i++) {
+      const ch = expr[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+      if (depth === 0 && i < expr.length - 1) return false; // we closed early
+    }
+    return depth === 0;
+  }
+
+  // Wrap whole expression once (no nesting-on-nesting)
+  function wrapWholeOnce(expr) {
+    const t = trimTrailingOp(expr);
+    if (!t) return expr;
+    return isWholeWrapped(t) ? t : `(${t})`;
+  }
+
+  function symbolFromOp(op) {
+    switch (op) {
+      case 'add': return '+';
+      case 'sub': return '-';
+      case 'mul': return '×';
+      case 'div': return '÷';
+      default: return op; // future ops
+    }
+  }
+
+  // --- Core operator handler ---
+  function onOperator(opSymbol) {
+    let expr = getExpr();
+
+    // If the expression is empty and user hits + or × etc., ignore (optional)
+    if (!expr && (opSymbol === '+' || opSymbol === '×' || opSymbol === '÷')) {
+      return;
+    }
+
+    // Linear mode: group what we have so far (enforce left→right)
+    if (linearMode) {
+      expr = wrapWholeOnce(expr);
+    }
+
+    // Append operator (avoid stacking an operator after operator)
+    expr = trimTrailingOp(expr) + opSymbol;
+    setExpr(expr);
+  }
+
+  // --- Visual cue helpers ---
+  function applyLinearBadge(active) {
+    const buttons = $$(OP_BUTTON_SEL);
+    for (const b of buttons) {
+      if (active) {
+        b.classList.add('linear-badged');
+        b.setAttribute('data-badge', 'LIN');
+      } else {
+        b.classList.remove('linear-badged');
+        b.removeAttribute('data-badge');
+      }
+    }
+  }
+
+  // --- Long press toggler ---
+  function wireLongPressToggle(btn) {
+    let timer = null;
+    let pressed = false;
+
+    const arm = () => {
+      if (timer) return;
+      pressed = true;
+      timer = setTimeout(() => {
+        // Toggle global mode
+        linearMode = !linearMode;
+        applyLinearBadge(linearMode);
+        // Optional haptic
+        if (navigator.vibrate) navigator.vibrate(12);
+      }, LONG_PRESS_MS);
+    };
+    const disarm = () => {
+      pressed = false;
+      if (timer) clearTimeout(timer);
+      timer = null;
+    };
+
+    btn.addEventListener('mousedown', arm);
+    btn.addEventListener('touchstart', arm, { passive: true });
+    ['mouseup', 'mouseleave', 'touchend', 'touchcancel'].forEach(ev =>
+      btn.addEventListener(ev, disarm)
+    );
+  }
+
+  // --- Wire everything once DOM is ready ---
+  document.addEventListener('DOMContentLoaded', () => {
+    const buttons = $$(OP_BUTTON_SEL);
+    for (const btn of buttons) {
+      const op = btn.getAttribute('data-op'); // add|sub|mul|div
+      const symbol = symbolFromOp(op);
+
+      // Short press: insert operator following current mode
+      btn.addEventListener('click', () => onOperator(symbol));
+
+      // Long press on ANY operator toggles Linear Mode
+      wireLongPressToggle(btn);
+
+      // Accessibility nicety
+      btn.setAttribute('aria-pressed', 'false');
+      btn.setAttribute('aria-label', btn.getAttribute('aria-label') || `${op} operator`);
+    }
+  });
+})();
+
 </script>
 
 </body>
