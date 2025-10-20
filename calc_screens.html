@@ -1089,16 +1089,13 @@ function formatResultFeet(value){
     measure = { active:false, feet:0, inches:0, inEntry:'' };
   }
 
-	// Exact decimal formatter (no 1/16 snap)
+	// old -- Exact decimal formatter (no 1/16 snap)
+// Exact decimal formatter — always 4 places (normalizes "-0.0000" → "0.0000")
 function formatExactDecimalNumber(x) {
-  // Prefer math.js if present
-  if (typeof math !== 'undefined' && math.format) {
-    return math.format(x, { notation: 'auto', precision: 15, lowerExp: -12, upperExp: 20 });
-  }
-  // Fallback: avoid binary tails without forcing rounding to a fraction
-  const s = Number(x).toPrecision(15);
-  return String(+s); // trims trailing zeros/exponent
+  const s = Number(x).toFixed(4);
+  return s === '-0.0000' ? '0.0000' : s;
 }
+
 
 // Arrow shows only when the fraction rounding changed the value.
 function roundingArrow(exact, rounded){
