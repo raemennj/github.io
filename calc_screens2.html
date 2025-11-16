@@ -1401,6 +1401,15 @@ function loadMemory(){
   refreshMemLabels();
 }
 
+function saveMemory(){
+  try{
+    const sanitized = memorySlots.map(v =>
+      (typeof v === 'number' && Number.isFinite(v)) ? v : null
+    );
+    localStorage.setItem(MEMORY_KEY, JSON.stringify(sanitized));
+  }catch{}
+}
+
 
   function ensureLabelSpan(btn){
     let span = btn.querySelector('.btn-label');
