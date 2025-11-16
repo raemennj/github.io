@@ -127,7 +127,7 @@
   .history{
     min-height:var(--history-min); flex:1 1 auto; max-height:100%;
     overflow:auto; padding-right:4px;
-    font-size:clamp(24px, 3.1vw, 26px);
+    font-size:clamp(26px, 3.35vw, 28px);
     display:flex; flex-direction:column; gap:4px;
   }
   .row.input{ letter-spacing:.04em; font-size:clamp(20px, 3.1vw, 26px); opacity:.9; }
@@ -547,11 +547,17 @@
   letter-spacing: .01em;
 }
 #fractionLine:has(> .arrow) { /* optional if you wrap the arrow in a span */
-  gap: .25rem;
+  gap: .35rem;
 }
 .arrow {
-  opacity: .85;
-  margin-right: .25rem;
+  opacity: .9;
+  margin-right: .35rem;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.2em;
+  line-height:1;
+  padding:0 .15rem;
 }
 
 #fractionLine { display:inline-flex; align-items:baseline; gap:.3rem; }
