@@ -68,6 +68,30 @@
     "keypad";
 }
 
+@media (orientation: landscape) and (min-width: 820px){
+  .card{
+    width:100%;
+    max-width:1100px;
+    grid-template-columns:minmax(360px, 1.15fr) minmax(360px, .85fr);
+    grid-template-rows:auto 1fr;
+    grid-template-areas:
+      "bezel keypad"
+      "memory keypad";
+    align-items:stretch;
+  }
+  .panel.memory{
+    align-self:start;
+  }
+  .panel.keypad{
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+  }
+  .panel.keypad .console-grid{
+    margin-bottom:var(--gap);
+  }
+}
+
   .panel{
     background:var(--card); border-radius:8px; background-color:darkslategrey;
     box-shadow:0 8px 24px rgba(0,0,0,.15); overflow:hidden;
