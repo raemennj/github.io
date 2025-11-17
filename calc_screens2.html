@@ -1915,6 +1915,10 @@ function doRenameLabel(el){
       }
       updateInput(); evaluate(); return;
     }
+    if (currentEntry && isTypedFraction(currentEntry)){
+      currentEntry = '';
+      updateInput(); evaluate(); return;
+    }
 
     if (currentEntry){
       currentEntry = currentEntry.slice(0,-1);
