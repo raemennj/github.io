@@ -2922,7 +2922,70 @@ mcBtn.addEventListener('keydown', (e)=>{
   enableClickCopy('#fractionLine, #decimalLine');
 
   const eqSaveBtn = document.getElementById('eqSaveBtn');
-  eqSaveBtn?.addEventListener('click', snapshotCurrentEquation);
+  if (eqSaveBtn){
+    let lpTimer = null;
+    let suppressNextClick = false;
+    let holdTriggered = false;
+    const HOLD_MS = 600;
+
+    const armHold = () => {
+      clearTimeout(lpTimer);
+      eqSaveBtn.classList.add('hold');
+      lpTimer = setTimeout(() => {
+        holdTriggered = true;
+        suppressNextClick = true;
+        eqSaveBtn.classList.remove('hold');
+        openSavedEqCard();
+      }, HOLD_MS);
+    };
+
+    const disarmHold = () => {
+      clearTimeout(lpTimer);
+      eqSaveBtn.classList.remove('hold');
+    };
+
+    eqSaveBtn.addEventListener('pointerdown', armHold);
+    eqSaveBtn.addEventListener('pointerup', () => {
+      disarmHold();
+      holdTriggered = false;
+    });
+    eqSaveBtn.addEventListener('pointerleave', disarmHold);
+    eqSaveBtn.addEventListener('pointercancel', disarmHold);
+
+    eqSaveBtn.addEventListener('keydown', (e) => {
+      if (e.code === 'Space'){
+        e.preventDefault();
+        armHold();
+      }
+    });
+    eqSaveBtn.addEventListener('keyup', (e) => {
+      if (e.code === 'Space'){
+        e.preventDefault();
+        disarmHold();
+      }
+    });
+
+    eqSaveBtn.addEventListener('click', (e) => {
+      if (suppressNextClick){
+        suppressNextClick = false;
+        return;
+      }
+      snapshotCurrentEquation();
+    });
+  }
+
+  function openSavedEqCard(){
+    const eqCard = document.getElementById('cmSavedEq');
+    if (typeof window._cmOpen === 'function'){
+      window._cmOpen();
+      renderSavedEq();
+      if (typeof window._cmIndexOf === 'function' && typeof window._cmGoTo === 'function' && eqCard){
+        const idx = window._cmIndexOf(eqCard);
+        if (idx >= 0) window._cmGoTo(idx);
+      }
+    }
+  }
+
   document.getElementById('eqClearBtn')?.addEventListener('click', clearSavedEq);
 
 })();
