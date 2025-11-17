@@ -150,11 +150,10 @@
   .results .pad{
     display:flex; flex-direction:column; gap:8px; height:100%;
     position:relative;
-    padding-top:calc(var(--pad) + 36px);
   }
   .history{
     min-height:var(--history-min); flex:1 1 auto; max-height:100%;
-    overflow:auto; padding-right:4px;
+    overflow:auto; padding-right:44px;
     font-size:clamp(26px, 3.35vw, 28px);
     display:flex; flex-direction:column; gap:4px;
   }
@@ -172,7 +171,7 @@
 
   .eq-save-btn{
     position:absolute;
-    top:4px; right:4px;
+    top:var(--pad); right:var(--pad);
     width:36px; height:36px;
     border-radius:999px;
     border:0;
