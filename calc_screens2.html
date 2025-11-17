@@ -623,8 +623,17 @@
   font-weight: 800;
   font-size: clamp(14px, 2.4vw, 16px);
   margin-bottom: 8px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:8px;
 }
 .mg-subtle{ opacity:.8; font-size: 12px; margin-left:6px; }
+.mg-delete{
+  appearance:none; border:0; background:rgba(255,255,255,.08);
+  color:#d7f0f0; width:28px; height:28px; border-radius:8px;
+  display:grid; place-items:center; cursor:pointer;
+}
+.mg-delete:hover{ background:rgba(255,255,255,.18); }
+.mg-delete:focus-visible{ outline:2px solid #0ea5a5; outline-offset:2px; }
 
 .mg-list{
   display:grid; gap:8px;
@@ -1521,6 +1530,10 @@ function mgRender(){
       ? s.labels
       : ['M1','M2','M3','M4'];
 
+    const deleteBtn = (s.kind==='group')
+      ? `<button class="mg-delete" data-id="${s.id}" aria-label="Delete ${s.name} group">🗑</button>`
+      : '';
+
     const rows = [0,1,2,3].map(k => {
       const label = labels[k] || `M${k+1}`;
       return `
@@ -1535,7 +1548,7 @@ function mgRender(){
 
     return `
       <section class="mg-slide" aria-label="${s.name}">
-        <div class="mg-title">${s.name} ${badge}</div>
+        <div class="mg-title"><span>${s.name} ${badge}</span>${deleteBtn}</div>
         <div class="mg-list">${rows}</div>
       </section>`;
   }).join('');
@@ -1556,6 +1569,18 @@ function mgRender(){
 
   // NEW: enable long-press to rename slot labels (saved groups only)
   bindSlotLabelRenames();
+
+  // Bind delete buttons
+  track.querySelectorAll('.mg-delete').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (!id) return;
+      const ok = confirm('Delete this group and all its slots? This cannot be undone.');
+      if (!ok) return;
+      deleteGroupById(id);
+    });
+  });
 }
 
 
@@ -1702,6 +1727,42 @@ function saveCurrentAsGroup(){
 }
 
 
+function saveFocusedGroupInPlace(){
+  const slide = mgState.slides[mgState.index];
+  if (!slide || slide.kind !== 'group') return false;
+  const g = memGroups.find(g => g.id === slide.id);
+  if (!g) return false;
+
+  g.slots = memorySlots.slice(0,4);
+  if (!Array.isArray(g.labels) || g.labels.length !== 4){
+    g.labels = ['M1','M2','M3','M4'];
+  }
+  saveMemGroups();
+
+  const targetId = g.id;
+  mgBuildSlides();
+  mgRender();
+  const idx = mgIndexOfGroup(targetId);
+  if (idx >= 0) mgGoTo(idx, /*commit*/true);
+  showToast(`Saved to ${g.name}`);
+  return true;
+}
+
+function deleteGroupById(id){
+  const idx = memGroups.findIndex(g => g.id === id);
+  if (idx < 0) return;
+  const prevIndex = mgState.index;
+  memGroups.splice(idx,1);
+  saveMemGroups();
+  mgBuildSlides();
+  mgRender();
+  const maxIdx = Math.max(0, mgState.slides.length - 1);
+  const target = Math.min(prevIndex, maxIdx);
+  mgGoTo(target, /*commit*/true);
+  showToast('Group deleted');
+}
+
+
 // Entry point when opening Memory Center
 function openMemoryCenterInit(){
   loadMemGroups();
@@ -1719,14 +1780,17 @@ function openMemoryCenterInit(){
 // Hook buttons
 window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mcClear')?.addEventListener('click', ()=>{
-    if (confirm('Clear current memory slots (M1–M4)?')) {
+    if (confirm('Are you sure you want to clear all memory slots (M1–M4)? This cannot be undone.')) {
       clearMemorySlots();
       // rebuild slides so Current reflects cleared state
       mgBuildSlides();
       mgRender();
     }
   });
-  document.getElementById('mcSaveCurrent')?.addEventListener('click', saveCurrentAsGroup);
+  document.getElementById('mcSaveCurrent')?.addEventListener('click', ()=>{
+    if (saveFocusedGroupInPlace()) return;
+    saveCurrentAsGroup();
+  });
 });
 
 function bindSlotLabelRenames(){
