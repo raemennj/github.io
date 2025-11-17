@@ -650,8 +650,10 @@
 }
 .eq-actions{
   display:flex;
-  flex-direction:column;
+  flex-direction:row;
+  justify-content:flex-end;
   gap:6px;
+  align-self:center;
 }
 .eq-actions button{
   border:0;
@@ -1859,6 +1861,9 @@ function loadSavedEquation(item){
   lastGood = { value:resolvedValue, fraction:frac, decimal:dec };
   drawTape(resolvedValue);
   showToast('Equation loaded');
+  if (typeof window._cmClose === 'function'){
+    window._cmClose();
+  }
 }
 
 /* ===== Memory Center (mini-carousel with swipe-to-load) ===== */
@@ -2956,6 +2961,7 @@ mcBtn.addEventListener('keydown', (e)=>{
   window._cmGoTo = goTo; // e.g., _cmGoTo(3)
 	  window._cmOpen = open;
   window._cmIndexOf = (el) => Array.from(track.children).indexOf(el);
+  window._cmClose = close;
 														  
 															  
 })();
