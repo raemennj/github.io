@@ -123,7 +123,10 @@
 
   /* ---------- Results ---------- */
   .results{ background:var(--display-bg); color:var(--display-text); min-height:0; }
-  .results .pad{ display:flex; flex-direction:column; gap:8px; height:100%; }
+  .results .pad{
+    display:flex; flex-direction:column; gap:8px; height:100%;
+    position:relative;
+  }
   .history{
     min-height:var(--history-min); flex:1 1 auto; max-height:100%;
     overflow:auto; padding-right:4px;
@@ -141,6 +144,32 @@
   }
   /* Re-enable selection for history and outputs */
   .history, .output, .output *{ -webkit-user-select:text; user-select:text; }
+
+  .eq-save-btn{
+    position:absolute;
+    top:6px; right:6px;
+    width:28px; height:28px;
+    border-radius:999px;
+    border:0;
+    display:grid; place-items:center;
+    font-size:16px; font-weight:700;
+    cursor:pointer;
+    background:#0e5f3a;
+    color:#dfffe0;
+    box-shadow:0 1px 3px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .eq-save-btn:hover{
+    filter:brightness(1.07);
+    box-shadow:0 3px 8px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.16);
+  }
+  .eq-save-btn:active{
+    transform:translateY(1px) scale(.98);
+    box-shadow:inset 0 2px 5px rgba(0,0,0,.45);
+  }
+  .eq-save-btn:focus-visible{
+    outline:2px solid #0ea5a5;
+    outline-offset:2px;
+  }
 
   /* ---------- Memory ---------- */
   .memory{ grid-area:memory }
@@ -541,6 +570,46 @@
 .cm-memcell .k{ opacity: .7; }
 .cm-memcell .v{ font-weight: 700; }
 
+.eq-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:100%;
+  overflow:auto;
+}
+.eq-row{
+  text-align:left;
+  width:100%;
+  border-radius:10px;
+  padding:8px 10px;
+  background:#0f1515;
+  color:#d7f0f0;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+  border:0;
+  cursor:pointer;
+}
+.eq-row-main{
+  font-weight:600;
+  margin-bottom:4px;
+  font-size:14px;
+}
+.eq-row-res{
+  display:flex;
+  justify-content:space-between;
+  gap:6px;
+  font-size:13px;
+  opacity:.9;
+}
+.eq-row-meta{
+  margin-top:2px;
+  font-size:11px;
+  opacity:.65;
+}
+.eq-empty{
+  font-size:13px;
+  opacity:.8;
+}
+
 	  /* Fraction rounding arrow polish */
 #fractionLine::first-letter {}
 #fractionLine {
@@ -693,6 +762,7 @@
       <!-- Results -->
       <div class="panel results">
         <div class="pad">
+          <button id="eqSaveBtn" class="eq-save-btn" aria-label="Save equation" type="button">⧉</button>
           <div class="history" id="history">
             <div class="row input" id="inputLine"></div>
           </div>
@@ -853,7 +923,20 @@
 </section>
 
 
-        <!-- Slide 4: What’s New / Info -->
+        <!-- Slide 4: Saved Equations -->
+        <section class="cm-card" id="cmSavedEq">
+          <header class="cm-card-head">Saved Equations</header>
+          <p class="cm-card-sub">
+            Snapshots of the full tape history and results. Tap a row to copy.
+          </p>
+          <div id="eqList" class="eq-list"></div>
+          <button id="eqClearBtn" class="cm-tile" style="margin-top:10px;">Clear All</button>
+          <p class="cm-note">
+            Use the ⧉ button next to the history to add equations.
+          </p>
+        </section>
+
+        <!-- Slide 5: What’s New / Info -->
         <section class="cm-card">
           <header class="cm-card-head">Info</header>
           <ul class="cm-list">
@@ -1446,14 +1529,130 @@ function formatResultInchOnlyLabel(v){
 }
 
 
-  function refreshMemLabels(){
-    document.querySelectorAll('.btn.mem').forEach(btn=>{
-      const i=+btn.dataset.mem, v=memorySlots[i];
-      const text = v==null ? `M${i+1}` : formatResultInchOnlyLabel(v);
-      const span = ensureLabelSpan(btn);
-      span.textContent = text;
-    });
+function refreshMemLabels(){
+  document.querySelectorAll('.btn.mem').forEach(btn=>{
+    const i=+btn.dataset.mem, v=memorySlots[i];
+    const text = v==null ? `M${i+1}` : formatResultInchOnlyLabel(v);
+    const span = ensureLabelSpan(btn);
+    span.textContent = text;
+  });
+}
+
+/* ===== Saved Equations (manual snapshots) ===== */
+const EQ_KEY = 'calcSavedEquations_v1';
+let savedEq = [];
+
+function loadSavedEq(){
+  try{
+    const raw = localStorage.getItem(EQ_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    savedEq = Array.isArray(arr) ? arr : [];
+  }catch{
+    savedEq = [];
   }
+}
+
+function saveSavedEq(){
+  try{
+    localStorage.setItem(EQ_KEY, JSON.stringify(savedEq));
+  }catch{}
+}
+
+function formatEqTimestamp(ts){
+  const d = new Date(ts);
+  return d.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+}
+
+function copyEqText(text){
+  if (!text) return;
+  if (navigator.clipboard?.writeText){
+    navigator.clipboard.writeText(text).then(()=> showToast('Equation copied')).catch(()=> fallbackCopy());
+  } else {
+    fallbackCopy();
+  }
+
+  function fallbackCopy(){
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try{
+      document.execCommand('copy');
+      showToast('Equation copied');
+    }catch{}
+    ta.remove();
+  }
+}
+
+function renderSavedEq(){
+  const list = document.getElementById('eqList');
+  if (!list) return;
+
+  if (!savedEq.length){
+    list.innerHTML = '<p class="eq-empty">No saved equations yet.</p>';
+    return;
+  }
+
+  const esc = (s='') => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+  list.innerHTML = savedEq.map(item => `
+    <button class="eq-row" type="button">
+      <div class="eq-row-main">${esc(item.expr)}</div>
+      <div class="eq-row-res">
+        <span>${esc(item.frac)}</span>
+        <span>${esc(item.dec)}</span>
+      </div>
+      <div class="eq-row-meta">${esc(formatEqTimestamp(item.ts))}</div>
+    </button>
+  `).join('');
+
+  list.querySelectorAll('.eq-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const expr = row.querySelector('.eq-row-main')?.textContent?.trim() || '';
+      const frac = row.querySelector('.eq-row-res span:nth-child(1)')?.textContent?.trim() || '';
+      const dec = row.querySelector('.eq-row-res span:nth-child(2)')?.textContent?.trim() || '';
+      const text = [expr, frac, dec].filter(Boolean).join(' = ');
+      copyEqText(text);
+    });
+  });
+}
+
+function clearSavedEq(){
+  if (!savedEq.length) return;
+  if (!confirm('Clear all saved equations?')) return;
+  savedEq = [];
+  saveSavedEq();
+  renderSavedEq();
+  showToast('Saved equations cleared');
+}
+
+function snapshotCurrentEquation(){
+  const expr = (inputLine.textContent || '').trim();
+  if (!expr){
+    showToast('Nothing to save');
+    return;
+  }
+  const frac = (fractionLine.textContent || '').trim();
+  const dec = (decimalLine.textContent || '').trim();
+
+  const item = {
+    id: Date.now().toString(36) + '-' + Math.random().toString(16).slice(2),
+    expr,
+    frac,
+    dec,
+    ts: Date.now()
+  };
+
+  savedEq.unshift(item);
+  if (savedEq.length > 50) savedEq.length = 50;
+
+  saveSavedEq();
+  renderSavedEq();
+  showToast('Equation saved');
+}
+
 /* ===== Memory Center (mini-carousel with swipe-to-load) ===== */
 const MEM_GROUPS_KEY = 'calcMemGroups_v1';
 let memGroups = []; // [{id, name, slots:[num|null,num|null,num|null,num|null]}]
@@ -2460,6 +2659,7 @@ mcBtn.addEventListener('keydown', (e)=>{
     lastFocus = document.activeElement;
     backdrop.setAttribute('aria-hidden','false');
     renderMemoryPreview();
+    renderSavedEq();
     buildDots();
     syncUI();
     // focus close for accessibility
@@ -2694,10 +2894,16 @@ mcBtn.addEventListener('keydown', (e)=>{
   computeTile();
   initTape();
   loadMemory();
+  loadSavedEq();
+  renderSavedEq();
   attachRipples();
   attachPressState();
   applyFractionPalettes();
   enableClickCopy('#fractionLine, #decimalLine');
+
+  const eqSaveBtn = document.getElementById('eqSaveBtn');
+  eqSaveBtn?.addEventListener('click', snapshotCurrentEquation);
+  document.getElementById('eqClearBtn')?.addEventListener('click', clearSavedEq);
 
 })();
   
