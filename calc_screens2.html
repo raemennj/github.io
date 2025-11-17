@@ -129,7 +129,7 @@
   }
   .history{
     min-height:var(--history-min); flex:1 1 auto; max-height:100%;
-    overflow:auto; padding-right:4px;
+    overflow:auto; padding-right:4px; padding-top:38px;
     font-size:clamp(26px, 3.35vw, 28px);
     display:flex; flex-direction:column; gap:4px;
   }
@@ -147,12 +147,12 @@
 
   .eq-save-btn{
     position:absolute;
-    top:6px; right:6px;
-    width:28px; height:28px;
+    top:4px; right:4px;
+    width:36px; height:36px;
     border-radius:999px;
     border:0;
     display:grid; place-items:center;
-    font-size:16px; font-weight:700;
+    font-size:18px; font-weight:700;
     cursor:pointer;
     background:#0e5f3a;
     color:#dfffe0;
@@ -580,29 +580,28 @@
 .eq-row{
   text-align:left;
   width:100%;
-  border-radius:10px;
-  padding:8px 10px;
+  border-radius:12px;
+  padding:12px 14px;
   background:#0f1515;
   color:#d7f0f0;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
   border:0;
   cursor:pointer;
-}
-.eq-row-main{
-  font-weight:600;
-  margin-bottom:4px;
-  font-size:14px;
-}
-.eq-row-res{
   display:flex;
-  justify-content:space-between;
+  flex-direction:column;
   gap:6px;
-  font-size:13px;
-  opacity:.9;
 }
-.eq-row-meta{
-  margin-top:2px;
-  font-size:11px;
+.eq-row:focus-visible{
+  outline:2px solid #0ea5a5;
+  outline-offset:2px;
+}
+.eq-equation{
+  font-weight:700;
+  font-size:clamp(16px, 2.6vw, 20px);
+  line-height:1.35;
+}
+.eq-meta{
+  font-size:12px;
   opacity:.65;
 }
 .eq-empty{
@@ -1597,23 +1596,20 @@ function renderSavedEq(){
 
   const esc = (s='') => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
-  list.innerHTML = savedEq.map(item => `
-    <button class="eq-row" type="button">
-      <div class="eq-row-main">${esc(item.expr)}</div>
-      <div class="eq-row-res">
-        <span>${esc(item.frac)}</span>
-        <span>${esc(item.dec)}</span>
-      </div>
-      <div class="eq-row-meta">${esc(formatEqTimestamp(item.ts))}</div>
-    </button>
-  `).join('');
+  list.innerHTML = savedEq.map(item => {
+    const eqParts = [item.expr, item.frac, item.dec].filter(Boolean).map(esc);
+    const line = eqParts.join(' = ');
+    return `
+      <button class="eq-row" type="button">
+        <div class="eq-equation">${line}</div>
+        <div class="eq-meta">${esc(formatEqTimestamp(item.ts))}</div>
+      </button>
+    `;
+  }).join('');
 
   list.querySelectorAll('.eq-row').forEach(row => {
     row.addEventListener('click', () => {
-      const expr = row.querySelector('.eq-row-main')?.textContent?.trim() || '';
-      const frac = row.querySelector('.eq-row-res span:nth-child(1)')?.textContent?.trim() || '';
-      const dec = row.querySelector('.eq-row-res span:nth-child(2)')?.textContent?.trim() || '';
-      const text = [expr, frac, dec].filter(Boolean).join(' = ');
+      const text = row.querySelector('.eq-equation')?.textContent?.trim() || '';
       copyEqText(text);
     });
   });
