@@ -1632,6 +1632,7 @@ function mgBindSwipe(){
   if (!vp || !track) return;
 
   function onDown(e){
+    e.stopPropagation?.();
     const p = e.touches ? e.touches[0] : e;
     mgState.dragging = true;
     mgState.startX = mgState.curX = p.clientX;
@@ -1640,6 +1641,7 @@ function mgBindSwipe(){
   }
   function onMove(e){
     if (!mgState.dragging) return;
+    e.stopPropagation?.();
     const p = e.touches ? e.touches[0] : e;
     mgState.curX = p.clientX;
     const dx = mgState.curX - mgState.startX;
@@ -2485,6 +2487,7 @@ mcBtn.addEventListener('keydown', (e)=>{
     let startX = 0, curX = 0, dragging = false, width = 1;
 
     function onDown(e){
+      if (e.target && e.target.closest && e.target.closest('#mgViewport')) return;
       const p = e.touches ? e.touches[0] : e;
       startX = curX = p.clientX;
       width = viewport.clientWidth || 1;
