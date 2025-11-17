@@ -605,20 +605,28 @@
   overflow:auto;
 }
 .eq-row{
-  text-align:left;
   width:100%;
   border-radius:12px;
-  padding:12px 14px;
+  padding:8px 10px;
   background:#0f1515;
   color:#d7f0f0;
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+}
+.eq-body{
+  flex:1;
   border:0;
-  cursor:pointer;
+  background:transparent;
+  text-align:left;
+  color:inherit;
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:4px;
+  cursor:pointer;
 }
-.eq-row:focus-visible{
+.eq-body:focus-visible{
   outline:2px solid #0ea5a5;
   outline-offset:2px;
 }
@@ -629,11 +637,37 @@
 }
 .eq-meta{
   font-size:12px;
-  opacity:.65;
+  opacity:.75;
+  cursor:pointer;
+}
+.eq-meta.hold{
+  opacity:1;
+  text-decoration:underline;
 }
 .eq-empty{
   font-size:13px;
   opacity:.8;
+}
+.eq-actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.eq-actions button{
+  border:0;
+  width:30px;
+  height:30px;
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  color:#e5f6f6;
+  cursor:pointer;
+}
+.eq-actions button:hover{
+  background:rgba(255,255,255,.18);
+}
+.eq-actions button:focus-visible{
+  outline:2px solid #0ea5a5;
+  outline-offset:2px;
 }
 
 	  /* Fraction rounding arrow polish */
@@ -1626,21 +1660,54 @@ function renderSavedEq(){
   const esc = (s='') => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
   list.innerHTML = savedEq.map(item => {
-    const eqParts = [item.expr, item.frac, item.dec].filter(Boolean).map(esc);
+    const eqParts = [item.expr, item.frac].filter(Boolean).map(esc);
     const line = eqParts.join(' = ');
+    const meta = esc(item.label && item.label.trim() ? item.label : formatEqTimestamp(item.ts));
     return `
-      <button class="eq-row" type="button">
-        <div class="eq-equation">${line}</div>
-        <div class="eq-meta">${esc(formatEqTimestamp(item.ts))}</div>
-      </button>
+      <div class="eq-row" data-id="${item.id}">
+        <button class="eq-body" type="button">
+          <div class="eq-equation">${line}</div>
+          <div class="eq-meta" data-id="${item.id}">${meta}</div>
+        </button>
+        <div class="eq-actions">
+          <button class="eq-load" type="button" aria-label="Load equation" data-id="${item.id}">⤓</button>
+          <button class="eq-delete" type="button" aria-label="Delete equation" data-id="${item.id}">🗑</button>
+        </div>
+      </div>
     `;
   }).join('');
 
-  list.querySelectorAll('.eq-row').forEach(row => {
-    row.addEventListener('click', () => {
-      const text = row.querySelector('.eq-equation')?.textContent?.trim() || '';
+  list.querySelectorAll('.eq-body').forEach(btn => {
+    const row = btn.closest('.eq-row');
+    const id = row?.dataset.id;
+    btn.addEventListener('click', () => {
+      const item = savedEq.find(eq => eq.id === id);
+      if (!item) return;
+      const text = [item.expr, item.frac].filter(Boolean).join(' = ');
       copyEqText(text);
     });
+  });
+
+  list.querySelectorAll('.eq-load').forEach(btn => {
+    const id = btn.dataset.id;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const item = savedEq.find(eq => eq.id === id);
+      if (item) loadSavedEquation(item);
+    });
+  });
+
+  list.querySelectorAll('.eq-delete').forEach(btn => {
+    const id = btn.dataset.id;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteSavedEquation(id);
+    });
+  });
+
+  list.querySelectorAll('.eq-meta').forEach(metaEl => {
+    const id = metaEl.dataset.id;
+    attachEqMetaRename(metaEl, id);
   });
 }
 
@@ -1662,12 +1729,18 @@ function snapshotCurrentEquation(){
   const frac = (fractionLine.textContent || '').trim();
   const dec = (decimalLine.textContent || '').trim();
 
+  const tokensSnapshot = tokens.map(t => (t == null ? null : String(t)));
+  const displaysSnapshot = tokenDisplays.map(v => (v === undefined ? null : v));
+
   const item = {
     id: Date.now().toString(36) + '-' + Math.random().toString(16).slice(2),
     expr,
     frac,
     dec,
-    ts: Date.now()
+    ts: Date.now(),
+    tokens: tokensSnapshot,
+    displays: displaysSnapshot,
+    value: Number.isFinite(lastGood?.value) ? lastGood.value : null
   };
 
   savedEq.unshift(item);
@@ -1676,6 +1749,116 @@ function snapshotCurrentEquation(){
   saveSavedEq();
   renderSavedEq();
   showToast('Equation saved');
+}
+
+function deleteSavedEquation(id){
+  if (!id) return;
+  const idx = savedEq.findIndex(eq => eq.id === id);
+  if (idx < 0) return;
+  if (!confirm('Delete this saved equation?')) return;
+  savedEq.splice(idx, 1);
+  saveSavedEq();
+  renderSavedEq();
+  showToast('Saved equation deleted');
+}
+
+function attachEqMetaRename(metaEl, id){
+  if (!metaEl || !id) return;
+  const HOLD_MS = 600;
+  let timer = null;
+  let suppressClick = false;
+  const clear = () => {
+    clearTimeout(timer);
+    metaEl.classList.remove('hold');
+  };
+  const arm = () => {
+    clearTimeout(timer);
+    metaEl.classList.add('hold');
+    timer = setTimeout(() => {
+      metaEl.classList.remove('hold');
+      renameSavedEquation(id);
+      suppressClick = true;
+    }, HOLD_MS);
+  };
+
+  metaEl.addEventListener('pointerdown', arm);
+  metaEl.addEventListener('pointerup', clear);
+  metaEl.addEventListener('pointerleave', clear);
+  metaEl.addEventListener('pointercancel', clear);
+  metaEl.addEventListener('touchstart', arm, { passive: true });
+  metaEl.addEventListener('touchend', clear);
+  metaEl.addEventListener('touchcancel', clear);
+  metaEl.addEventListener('click', (e) => {
+    if (suppressClick){
+      suppressClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+}
+
+function renameSavedEquation(id){
+  const item = savedEq.find(eq => eq.id === id);
+  if (!item) return;
+  const next = prompt('Name this equation (leave blank to reset to date):', item.label || '');
+  if (next === null) return;
+  const trimmed = next.trim();
+  if (trimmed){
+    item.label = trimmed;
+  } else {
+    delete item.label;
+  }
+  saveSavedEq();
+  renderSavedEq();
+}
+
+function parseSavedValue(item){
+  if (!item) return null;
+  if (typeof item.value === 'number' && Number.isFinite(item.value)) return item.value;
+  const decText = (item.dec || '').trim();
+  if (!decText) return null;
+  let num = parseFloat(decText);
+  if (!Number.isFinite(num)) return null;
+  if (decText.includes('′')) num *= 12;
+  return num;
+}
+
+function loadSavedEquation(item){
+  if (!item) return;
+  const numeric = parseSavedValue(item);
+  const resolvedValue = Number.isFinite(numeric)
+    ? numeric
+    : (Number.isFinite(lastGood?.value) ? lastGood.value : 0);
+  const frac = item.frac || '';
+  const dec = item.dec || '';
+
+  tokens = Array.isArray(item.tokens)
+    ? item.tokens.map(t => (t == null ? '' : String(t)))
+    : [];
+  tokenDisplays = Array.isArray(item.displays)
+    ? item.displays.map(v => (v == null ? undefined : v))
+    : [];
+
+  currentEntry = '';
+  measure = { active:false, feet:0, inches:0, inEntry:'' };
+
+  if (tokenDisplays.length < tokens.length){
+    for (let i = tokenDisplays.length; i < tokens.length; i++){
+      tokenDisplays[i] = undefined;
+    }
+  }
+
+  if (!tokens.length){
+    tokens = [String(resolvedValue)];
+    tokenDisplays = [item.expr || String(resolvedValue)];
+  }
+
+  renderHistory();
+  renderOutputs(frac, dec);
+
+  lastGood = { value:resolvedValue, fraction:frac, decimal:dec };
+  drawTape(resolvedValue);
+  showToast('Equation loaded');
 }
 
 /* ===== Memory Center (mini-carousel with swipe-to-load) ===== */
