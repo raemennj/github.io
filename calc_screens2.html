@@ -126,10 +126,11 @@
   .results .pad{
     display:flex; flex-direction:column; gap:8px; height:100%;
     position:relative;
+    padding-top:calc(var(--pad) + 36px);
   }
   .history{
     min-height:var(--history-min); flex:1 1 auto; max-height:100%;
-    overflow:auto; padding-right:4px; padding-top:38px;
+    overflow:auto; padding-right:4px;
     font-size:clamp(26px, 3.35vw, 28px);
     display:flex; flex-direction:column; gap:4px;
   }
