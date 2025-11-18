@@ -935,6 +935,7 @@
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
   max-height:260px;
   overflow-y:auto;
+  color:#f3fff4;
 }
 .chalk-results-empty{
   font-size:13px;
@@ -942,20 +943,17 @@
 }
 .chalk-row{
   display:flex;
-  justify-content:space-between;
-  align-items:baseline;
-  gap:8px;
-  padding:4px 0;
+  justify-content:flex-start;
+  align-items:center;
+  gap:10px;
+  padding:6px 0;
   border-bottom:1px dashed rgba(255,255,255,.08);
 }
 .chalk-row:last-child{ border-bottom:none; }
 .chalk-pos-in{
   font-size:clamp(18px, 3.3vw, 22px);
   font-weight:800;
-}
-.chalk-pos-ft{
-  font-size:14px;
-  opacity:.9;
+  color:#e8fff0;
 }
 
 	  
@@ -3041,7 +3039,6 @@ mcBtn.addEventListener('keydown', (e)=>{
     };
 
     const stripArrow = (text) => text.replace(/^\s*[▴▾]\s*/, '');
-    const formatFeetLabel = (inches) => stripArrow(formatResultFeet(inches).fraction);
     const formatInchLabel = (inches) => stripArrow(formatResultInch(inches).fraction);
 
     function renderMessage(msg){
@@ -3055,15 +3052,22 @@ mcBtn.addEventListener('keydown', (e)=>{
       }
       const rows = marks.map(pos => {
         const left = formatInchLabel(pos);
-        const right = formatFeetLabel(pos);
-        return `<div class="chalk-row"><div class="chalk-pos-in">${left}</div><div class="chalk-pos-ft">${right}</div></div>`;
+        return `<div class="chalk-row"><div class="chalk-pos-in">${left}</div></div>`;
       }).join('');
       resultsEl.innerHTML = rows;
     }
 
+    let lastStepInches = null;
+
     function updateModeLabel(){
       if (modeLabelEl){
-        modeLabelEl.textContent = `Mode: ${DOOR_DESCRIPTIONS[chalkDoorMode]}`;
+        const base = `Mode: ${DOOR_DESCRIPTIONS[chalkDoorMode]}`;
+        if (lastStepInches){
+          const spacing = formatInchLabel(lastStepInches);
+          modeLabelEl.textContent = `${base} • spacing ≈ ${spacing}`;
+        } else {
+          modeLabelEl.textContent = base;
+        }
       }
     }
 
@@ -3084,18 +3088,26 @@ mcBtn.addEventListener('keydown', (e)=>{
 
       const totalInches = safeFeet * 12 + safeInches;
       if (!totalInches){
+        lastStepInches = null;
+        updateModeLabel();
         renderMessage('Enter a door width to see chalk marks.');
         return;
       }
       if (totalInches < 24){
+        lastStepInches = null;
+        updateModeLabel();
         renderMessage('Width is under 24″ — no chalk lines needed.');
         return;
       }
 
+      const segments = Math.max(2, Math.round(totalInches / 24));
+      const step = totalInches / segments;
       const marks = [];
-      for (let pos = 24; pos < totalInches; pos += 24){
+      for (let pos = step; pos < totalInches - 1e-6; pos += step){
         marks.push(pos);
       }
+      lastStepInches = step;
+      updateModeLabel();
       renderMarks(marks);
     }
 
