@@ -723,69 +723,131 @@
 .mc-k{ opacity:.7; }
 .mc-v{ font-weight:800; }
  
-/* ===== Memory Groups mini-carousel ===== */
-.mg-viewport{
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(180deg, #0f1a1a, #0d1616);
+.mem-livegrid{
+  margin-top: 12px;
+  padding: 12px;
   border-radius: 12px;
+  background: #0f1515;
   border: 1px solid rgba(255,255,255,.08);
-  min-height: 220px;
-}
-.mg-track{
-  display: flex;
-  gap: 0;
-  transform: translate3d(0,0,0);
-  transition: transform .3s ease;
-  will-change: transform;
-}
-.mg-track.dragging{ transition: none; }
-
-.mg-slide{
-  flex: 0 0 100%;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  background-clip: padding-box;
-
-  padding: 14px 16px;
-  color: #d7f0f0;
-}
-.mg-title{
-  font-weight: 800;
-  font-size: clamp(14px, 2.4vw, 16px);
-  margin-bottom: 8px;
-  display:flex; align-items:center; justify-content:space-between;
+  display:flex;
+  flex-direction:column;
   gap:8px;
 }
-.mg-subtle{ opacity:.8; font-size: 12px; margin-left:6px; }
-.mg-delete{
-  appearance:none; border:0; background:rgba(255,255,255,.08);
-  color:#d7f0f0; width:28px; height:28px; border-radius:8px;
-  display:grid; place-items:center; cursor:pointer;
+.mem-live-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-weight:700;
+  font-size:clamp(13px,2.1vw,14px);
 }
-.mg-delete:hover{ background:rgba(255,255,255,.18); }
-.mg-delete:focus-visible{ outline:2px solid #0ea5a5; outline-offset:2px; }
-
-.mg-list{
-  display:grid; gap:8px;
+.mem-live-note{
+  font-size:12px;
+  opacity:.75;
 }
-.mg-row{
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-  background:#0f1515; border:1px solid rgba(255,255,255,.08);
-  border-radius: 10px; padding: 10px 12px;
+.mem-live-row{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
 }
-.mg-k{ opacity:.7 }
-.mg-v{ font-weight:800 }
-
-.mg-dots{
-  display:flex; gap:8px; justify-content:center; align-items:center;
-  padding: 10px 0;
+.mem-sets{
+  margin-top:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
-.mg-dot{
-  width: 8px; height: 8px; border-radius: 999px; border: 0;
-  background: rgba(255,255,255,.35);
+.mem-sets-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  font-weight:700;
 }
-.mg-dot[aria-selected="true"]{ background: #0ea5a5; }
+.mem-sets-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-height:320px;
+  overflow-y:auto;
+  padding-right:2px;
+}
+.mem-set-row{
+  border-radius:12px;
+  padding:10px;
+  background:#0f1515;
+  border:1px solid rgba(255,255,255,.08);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.mem-set-header{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.mem-set-name{
+  flex:1;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.04);
+  color:#d7f0f0;
+  font-weight:600;
+  padding:6px 8px;
+}
+.mem-set-name::placeholder{ color:rgba(255,255,255,.45); }
+.mem-set-delete{
+  border:0;
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  color:#e5f6f6;
+  width:32px;
+  height:32px;
+  font-size:16px;
+  cursor:pointer;
+}
+.mem-set-delete:hover{ background:rgba(255,255,255,.16); }
+.mem-set-delete:focus-visible{ outline:2px solid #0ea5a5; outline-offset:2px; }
+.mem-set-buttons{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
+.mem-set-slot{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  border:0;
+  border-radius:8px;
+  padding:10px 6px;
+  min-height:44px;
+  font-weight:700;
+  font-size:clamp(14px,2.3vw,16px);
+  background:var(--mem, lightskyblue);
+  color:#083f3f;
+  box-shadow:0 2px 4px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.12);
+  cursor:pointer;
+}
+.mem-set-slot:hover:not(.empty){
+  filter:brightness(1.05);
+}
+.mem-set-slot:focus-visible{
+  outline:2px solid #0ea5a5;
+  outline-offset:2px;
+}
+.mem-set-slot.empty{
+  opacity:.6;
+  cursor:default;
+}
+.mem-live-slot{
+  cursor:default;
+}
+.mem-live-slot:disabled{
+  opacity:.85;
+  filter:none;
+}
+.mem-sets-empty{
+  font-size:13px;
+  opacity:.75;
+}
 
 	  
 	  
@@ -949,25 +1011,31 @@
         <!-- Slide 2: Memory Center -->
         <section class="cm-card" id="memCenter">
           <header class="cm-card-head">Memory Center</header>
-          <p class="cm-card-sub">Swipe to switch groups — focused group loads automatically.</p>
+          <p class="cm-card-sub">Save different mixes of M1–M4 as rows you can tap later.</p>
 
-          <!-- Top controls -->
           <div class="cm-tiles" id="mcControls" style="margin-bottom:10px;">
             <button id="mcClear" class="cm-tile">Clear Slots</button>
             <button id="mcSaveCurrent" class="cm-tile">Save Slots</button>
-            <span id="mcCounter" class="pill" aria-live="polite">— / —</span>
+            <span id="mcCounter" class="pill" aria-live="polite">0 saved</span>
           </div>
 
-          <!-- Mini-carousel (Groups) -->
-          <div id="mgViewport" class="mg-viewport" aria-label="Memory Groups">
-            <div id="mgTrack" class="mg-track"></div>
-            <div id="mgDots" class="mg-dots" role="tablist" aria-label="Groups"></div>
+          <div class="mem-livegrid">
+            <div class="mem-live-head">
+              <span>Current memory buttons</span>
+              <span class="mem-live-note">Edit via M1–M4 on the keypad</span>
+            </div>
+            <div class="mem-live-row" id="memLiveRow"></div>
           </div>
 
-          <!-- First-visit hint -->
-          <p class="cm-note" id="mgHint" style="margin-top:6px;">
-            Swipe left/right to browse groups. The focused group loads automatically.
-          </p>
+          <div class="mem-sets">
+            <div class="mem-sets-heading">
+              <span>Saved sets</span>
+            </div>
+            <div class="mem-sets-list" id="memSetsList" role="list"></div>
+            <p class="cm-note mem-sets-empty" id="memSetsEmpty">
+              No saved sets yet. Tap “Save Slots” to capture the current four memory buttons.
+            </p>
+          </div>
         </section>
 
 
@@ -1595,6 +1663,7 @@ function refreshMemLabels(){
     const span = ensureLabelSpan(btn);
     span.textContent = text;
   });
+  renderMemoryLiveRow();
 }
 
 /* ===== Saved Equations (manual snapshots) ===== */
@@ -1861,236 +1930,148 @@ function loadSavedEquation(item){
   }
 }
 
-/* ===== Memory Center (mini-carousel with swipe-to-load) ===== */
-const MEM_GROUPS_KEY = 'calcMemGroups_v1';
-let memGroups = []; // [{id, name, slots:[num|null,num|null,num|null,num|null]}]
+/* ===== Memory Sets list (vertical rows) ===== */
+const MEMORY_SETS_KEY = 'inchCalc.memorySets.v2';
+let memorySets = [];
 
-function loadMemGroups(){ try{ const s = localStorage.getItem(MEM_GROUPS_KEY); if (s) memGroups = JSON.parse(s); }catch{} }
-function saveMemGroups(){ localStorage.setItem(MEM_GROUPS_KEY, JSON.stringify(memGroups)); }
 function uid(){ return Math.random().toString(36).slice(2,9); }
-const slotsEqual = (a,b)=> a.length===4 && b.length===4 && a.every((v,i)=>Object.is(v,b[i]));
-const fmtShort = (v)=> v==null ? '—' : formatResultInch(v).fraction.replace('″','');
+const sanitizeMemoryValue = (v) => (Number.isFinite(v) ? v : null);
 
-let mgState = {
-  slides: [],        // [{kind:'current'|'group', name, slots, id?}]
-  index: 0,          // focused slide index
-  dragging: false,
-  startX: 0,
-  curX: 0,
-  width: 1,
-  lastLoadedIndex: null, // for idempotence
-  undoStack: null        // {slots:[...], index:int} // (reserved for future Undo)
-};
-
-// Build slides array: inject “Current (unsaved)” only if live doesn’t match a saved group
-function mgBuildSlides(){
-  const live = memorySlots.slice(0,4); // live M1–M4
-  const match = memGroups.find(g => slotsEqual(g.slots, live));
-  const slides = [];
-
-  // “Current” (unsaved) gets default labels
-  if (!match){
-    slides.push({
-      kind: 'current',
-      name: 'Current',
-      slots: live,
-      labels: ['M1','M2','M3','M4']
+function loadMemorySets(){
+  try{
+    const raw = localStorage.getItem(MEMORY_SETS_KEY);
+    if (!raw){
+      memorySets = [];
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)){
+      memorySets = [];
+      return;
+    }
+    memorySets = parsed.map(item => {
+      const rawVals = Array.isArray(item?.values) ? item.values : [];
+      const values = [];
+      for (let i=0;i<4;i++){
+        const raw = rawVals[i];
+        values.push(sanitizeMemoryValue(typeof raw === 'number' ? raw : parseFloat(raw)));
+      }
+      return {
+        id: item?.id || uid(),
+        name: typeof item?.name === 'string' ? item.name : '',
+        values
+      };
     });
+  }catch{
+    memorySets = [];
+  }
+}
+
+function saveMemorySets(){
+  try{
+    localStorage.setItem(MEMORY_SETS_KEY, JSON.stringify(memorySets));
+  }catch{}
+}
+
+function defaultSetName(index){
+  return `Set ${index}`;
+}
+
+function renderMemoryLiveRow(){
+  const row = document.getElementById('memLiveRow');
+  if (!row) return;
+  const scrollLock = row.scrollTop;
+  row.textContent = '';
+  for (let i=0;i<4;i++){
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'mem-set-slot mem-live-slot';
+    btn.disabled = true;
+    btn.textContent = memorySlots[i]==null ? `M${i+1}` : formatResultInchOnlyLabel(memorySlots[i]);
+    row.appendChild(btn);
+  }
+  row.scrollTop = scrollLock;
+}
+
+function renderMemorySets(){
+  const list = document.getElementById('memSetsList');
+  const emptyEl = document.getElementById('memSetsEmpty');
+  const counter = document.getElementById('mcCounter');
+  if (!list) return;
+
+  const prevScroll = list.scrollTop;
+  list.textContent = '';
+
+  memorySets.forEach((set, idx) => {
+    const row = document.createElement('div');
+    row.className = 'mem-set-row';
+    row.setAttribute('role','listitem');
+    row.dataset.groupId = set.id;
+
+    const header = document.createElement('div');
+    header.className = 'mem-set-header';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.className = 'mem-set-name';
+    nameInput.placeholder = 'Untitled set';
+    const label = (set.name && set.name.trim()) || defaultSetName(idx + 1);
+    nameInput.value = label;
+    header.appendChild(nameInput);
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'mem-set-delete';
+    deleteBtn.setAttribute('aria-label', 'Delete saved set');
+    deleteBtn.textContent = '✕';
+    header.appendChild(deleteBtn);
+
+    const buttonsWrap = document.createElement('div');
+    buttonsWrap.className = 'mem-set-buttons';
+
+    for (let i=0;i<4;i++){
+      const slotBtn = document.createElement('button');
+      slotBtn.type = 'button';
+      slotBtn.className = 'mem-set-slot';
+      slotBtn.dataset.slotIndex = String(i);
+      const value = set.values?.[i];
+      if (!Number.isFinite(value)){
+        slotBtn.classList.add('empty');
+        slotBtn.textContent = '—';
+        slotBtn.disabled = true;
+        slotBtn.setAttribute('aria-disabled','true');
+      } else {
+        slotBtn.textContent = formatResultInchOnlyLabel(value);
+      }
+      buttonsWrap.appendChild(slotBtn);
+    }
+
+    row.append(header, buttonsWrap);
+    list.appendChild(row);
+  });
+
+  if (counter){
+    counter.textContent = memorySets.length ? `${memorySets.length} saved` : '0 saved';
+  }
+  if (emptyEl){
+    emptyEl.style.display = memorySets.length ? 'none' : 'block';
   }
 
-  // Saved groups: include labels if present; fallback to defaults
-  for (const g of memGroups){
-    const labels = (Array.isArray(g.labels) && g.labels.length === 4)
-      ? g.labels
-      : ['M1','M2','M3','M4'];
-    slides.push({ kind:'group', id:g.id, name:g.name, slots:g.slots, labels });
-  }
-
-  mgState.slides = slides;
-
-  // initial index: 0 if we added Current; else the matching group’s position
-  if (!match){
-    mgState.index = 0;
+  if (memorySets.length){
+    const maxScroll = list.scrollHeight - list.clientHeight;
+    list.scrollTop = Math.max(0, Math.min(prevScroll, maxScroll));
   } else {
-    const idx = slides.findIndex(s => s.kind==='group' && s.id===match.id);
-    mgState.index = Math.max(0, idx);
+    list.scrollTop = 0;
   }
-  mgState.lastLoadedIndex = null; // force first commit logic
 }
 
-
-
-// Render slides + dots, sync counter, and position track
-function mgRender(){
-  const vp = document.getElementById('mgViewport');
-  const track = document.getElementById('mgTrack');
-  const dots = document.getElementById('mgDots');
-  const counter = document.getElementById('mcCounter');
-  if (!vp || !track || !dots) return;
-
-  track.innerHTML = mgState.slides.map((s,i) => {
-    const badge = (s.kind==='current')
-      ? `<span class="mg-subtle">(unsaved)</span>`
-      : (mgState.index===i ? `<span class="mg-subtle">(loaded)</span>` : '');
-
-    const labels = (Array.isArray(s.labels) && s.labels.length === 4)
-      ? s.labels
-      : ['M1','M2','M3','M4'];
-
-    const deleteBtn = (s.kind==='group')
-      ? `<button class="mg-delete" data-id="${s.id}" aria-label="Delete ${s.name} group">🗑</button>`
-      : '';
-
-    const rows = [0,1,2,3].map(k => {
-      const label = labels[k] || `M${k+1}`;
-      return `
-        <div class="mg-row">
-          <span class="mg-k"
-                title="Long-press to rename"
-                data-slide="${i}"
-                data-slot="${k}">${label}</span>
-          <span class="mg-v">${fmtShort(s.slots[k])}</span>
-        </div>`;
-    }).join('');
-
-    return `
-      <section class="mg-slide" aria-label="${s.name}">
-        <div class="mg-title"><span>${s.name} ${badge}</span>${deleteBtn}</div>
-        <div class="mg-list">${rows}</div>
-      </section>`;
-  }).join('');
-
-  // dots
-  dots.innerHTML = mgState.slides
-    .map((_,i)=> `<button class="mg-dot" role="tab" aria-selected="${mgState.index===i?'true':'false'}" data-idx="${i}"></button>`)
-    .join('');
-  dots.querySelectorAll('.mg-dot').forEach(btn=>{
-    btn.addEventListener('click', ()=> mgGoTo(+btn.dataset.idx, /*commit=*/true));
-  });
-
-  // counter
-  counter.textContent = `${mgState.index+1} / ${mgState.slides.length}`;
-
-  // position
-  mgSyncPosition();
-
-  // NEW: enable long-press to rename slot labels (saved groups only)
-  bindSlotLabelRenames();
-
-  // Bind delete buttons
-  track.querySelectorAll('.mg-delete').forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      const id = btn.dataset.id;
-      if (!id) return;
-      const ok = confirm('Delete this group and all its slots? This cannot be undone.');
-      if (!ok) return;
-      deleteGroupById(id);
-    });
-  });
+// Entry point when opening Memory Center
+function openMemoryCenterInit(){
+  loadMemorySets();
+  renderMemoryLiveRow();
+  renderMemorySets();
 }
 
-
-function mgSyncPosition(){
-  const track = document.getElementById('mgTrack');
-  if (!track) return;
-  track.style.transform = `translateX(${-(mgState.index*100)}%)`;
-  // update dots selection
-  document.querySelectorAll('#mgDots .mg-dot').forEach((d,i)=> d.setAttribute('aria-selected', (i===mgState.index) ? 'true' : 'false'));
-  // update counter
-  const counter = document.getElementById('mcCounter');
-  if (counter) counter.textContent = `${mgState.index+1} / ${mgState.slides.length}`;
-}
-
-// Snap and maybe commit
-function mgGoTo(idx, commit){
-  const n = mgState.slides.length;
-  mgState.index = Math.max(0, Math.min(n-1, idx));
-  mgSyncPosition();
-  if (commit) mgCommitAutoLoad();
-}
-
-// Auto-load if focused slide is a saved group
-function mgCommitAutoLoad(){
-  const s = mgState.slides[mgState.index];
-  if (!s || s.kind!=='group') return;
-
-  // idempotence: don’t reload the same index repeatedly
-  if (mgState.lastLoadedIndex === mgState.index) return;
-
-  // push undo snapshot (reserved)
-  mgState.undoStack = { slots: memorySlots.slice(0,4), index: mgState.lastLoadedIndex };
-
-  // load
-  memorySlots = s.slots.slice(0,4);
-  saveMemory();
-  refreshMemLabels();
-
-  mgState.lastLoadedIndex = mgState.index;
-
-  // toast
-  showToast(`Loaded ${s.name}`);
-}
-
-// Pointer swipe
-function mgBindSwipe(){
-  const vp = document.getElementById('mgViewport');
-  const track = document.getElementById('mgTrack');
-  if (!vp || !track) return;
-
-  function swallowInnerSwipe(e){
-    e.stopImmediatePropagation?.();
-    e.stopPropagation?.();
-  }
-
-  function onDown(e){
-    swallowInnerSwipe(e);
-    const p = e.touches ? e.touches[0] : e;
-    mgState.dragging = true;
-    mgState.startX = mgState.curX = p.clientX;
-    mgState.width = vp.clientWidth || 1;
-    track.classList.add('dragging');
-  }
-  function onMove(e){
-    if (!mgState.dragging) return;
-    swallowInnerSwipe(e);
-    const p = e.touches ? e.touches[0] : e;
-    mgState.curX = p.clientX;
-    const dx = mgState.curX - mgState.startX;
-    const pct = (dx / mgState.width) * 100;
-    track.style.transform = `translateX(${-(mgState.index*100 - pct)}%)`;
-  }
-  function onUp(){
-    if (!mgState.dragging) return;
-    mgState.dragging = false;
-    track.classList.remove('dragging');
-
-    const dx = mgState.curX - mgState.startX;
-    const thresholdPx = Math.max(40, mgState.width * 0.18);
-    let next = mgState.index;
-    if (dx > thresholdPx) next = mgState.index - 1;
-    else if (dx < -thresholdPx) next = mgState.index + 1;
-
-    mgGoTo(next, /*commit*/true);
-  }
-
-  // avoid double-binding
-  vp._mgBound && vp.removeEventListener('pointerdown', vp._mgBound);
-  vp.addEventListener('pointerdown', onDown);
-  window.addEventListener('pointermove', onMove);
-  window.addEventListener('pointerup', onUp);
-  vp.addEventListener('touchstart', onDown, {passive:true});
-  window.addEventListener('touchmove', onMove, {passive:false});
-  window.addEventListener('touchend', onUp);
-  vp._mgBound = onDown;
-}
-
-// Index of a group slide by id
-function mgIndexOfGroup(id){
-  return mgState.slides.findIndex(s => s.kind==='group' && s.id===id);
-}
-
-// Clear current live slots (global)
 function clearMemorySlots(){
   const memCount = document.querySelectorAll('.btn.mem').length || 4;
   memorySlots = new Array(memCount).fill(null);
@@ -2099,174 +2080,88 @@ function clearMemorySlots(){
   showToast('Memory cleared');
 }
 
-// Save current live slots as a new or overwriting group
-function saveCurrentAsGroup(){
-  const live = memorySlots.slice(0,4);
-  // name proposal
-  const base = 'Group';
-  let n = 1; const names = new Set(memGroups.map(g=>g.name));
-  while (names.has(`${base} ${n}`)) n++;
-  let name = prompt('Name this group:', `${base} ${n}`);
-  if (!name) name = `${base} ${n}`;
-  name = name.trim();
-
-  const existing = memGroups.find(g => g.name.toLowerCase() === name.toLowerCase());
-  if (existing){
-    const ok = confirm(`A group named "${name}" exists. Overwrite it?`);
-    if (!ok) return;
-    existing.slots = live;
-    // keep any existing labels; otherwise create defaults
-    if (!Array.isArray(existing.labels) || existing.labels.length !== 4){
-      existing.labels = ['M1','M2','M3','M4'];
-    }
-    saveMemGroups();
-    mgBuildSlides();
-    mgRender();
-    const go = mgIndexOfGroup(existing.id);
-    if (go >= 0) { mgGoTo(go, /*commit*/true); }
-    showToast(`Saved as "${name}"`);
+function addCurrentSlotsAsSet(){
+  const values = memorySlots.slice(0,4).map(v => sanitizeMemoryValue(v));
+  if (!values.some(v => v != null)){
+    showToast('Nothing to save');
     return;
   }
-
-  // new group with default labels
-  const g = { id: uid(), name, slots: live, labels: ['M1','M2','M3','M4'] };
-  memGroups.unshift(g);
-  saveMemGroups();
-
-  mgBuildSlides();
-  mgRender();
-  const go = mgIndexOfGroup(g.id);
-  if (go >= 0) { mgGoTo(go, /*commit*/true); }
-  showToast(`Saved as "${name}"`);
+  const set = {
+    id: uid(),
+    name: defaultSetName(memorySets.length + 1),
+    values
+  };
+  memorySets.push(set);
+  saveMemorySets();
+  renderMemorySets();
+  showToast('Set saved');
 }
 
-
-function saveFocusedGroupInPlace(){
-  const slide = mgState.slides[mgState.index];
-  if (!slide || slide.kind !== 'group') return false;
-  const g = memGroups.find(g => g.id === slide.id);
-  if (!g) return false;
-
-  g.slots = memorySlots.slice(0,4);
-  if (!Array.isArray(g.labels) || g.labels.length !== 4){
-    g.labels = ['M1','M2','M3','M4'];
-  }
-  saveMemGroups();
-
-  const targetId = g.id;
-  mgBuildSlides();
-  mgRender();
-  const idx = mgIndexOfGroup(targetId);
-  if (idx >= 0) mgGoTo(idx, /*commit*/true);
-  showToast(`Saved to ${g.name}`);
-  return true;
-}
-
-function deleteGroupById(id){
-  const idx = memGroups.findIndex(g => g.id === id);
+function deleteMemorySetById(id){
+  const idx = memorySets.findIndex(s => s.id === id);
   if (idx < 0) return;
-  const prevIndex = mgState.index;
-  memGroups.splice(idx,1);
-  saveMemGroups();
-  mgBuildSlides();
-  mgRender();
-  const maxIdx = Math.max(0, mgState.slides.length - 1);
-  const target = Math.min(prevIndex, maxIdx);
-  mgGoTo(target, /*commit*/true);
-  showToast('Group deleted');
+  if (!confirm('Delete this saved set?')) return;
+  memorySets.splice(idx, 1);
+  saveMemorySets();
+  renderMemorySets();
+  showToast('Saved set deleted');
 }
 
-
-// Entry point when opening Memory Center
-function openMemoryCenterInit(){
-  loadMemGroups();
-  mgBuildSlides();
-  mgRender();
-  mgBindSwipe();
-
-  // If we started on a saved group (no Current), ensure it's loaded exactly once
-  const first = mgState.slides[mgState.index];
-  if (first && first.kind === 'group'){
-    mgCommitAutoLoad();
-  }
+function updateMemorySetName(id, value){
+  const set = memorySets.find(s => s.id === id);
+  if (!set) return;
+  const trimmed = value.trim();
+  set.name = trimmed || defaultSetName(memorySets.indexOf(set) + 1);
+  saveMemorySets();
+  renderMemorySets();
 }
 
-// Hook buttons
 window.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mcClear')?.addEventListener('click', ()=>{
-    if (confirm('Are you sure you want to clear all memory slots (M1–M4)? This cannot be undone.')) {
+    if (confirm('Clear all current memory slots? This does not delete your saved sets.')) {
       clearMemorySlots();
-      // rebuild slides so Current reflects cleared state
-      mgBuildSlides();
-      mgRender();
     }
   });
-  document.getElementById('mcSaveCurrent')?.addEventListener('click', ()=>{
-    if (saveFocusedGroupInPlace()) return;
-    saveCurrentAsGroup();
-  });
+  document.getElementById('mcSaveCurrent')?.addEventListener('click', addCurrentSlotsAsSet);
 });
 
-function bindSlotLabelRenames(){
-  const track = document.getElementById('mgTrack');
-  if (!track) return;
-
-  track.querySelectorAll('.mg-k').forEach(el => {
-    let timer = null;
-
-    const arm = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        doRenameLabel(el);
-      }, 600); // long-press threshold
-    };
-    const disarm = () => clearTimeout(timer);
-
-    // Pointer events (covers mouse & touch on modern browsers)
-    el.addEventListener('pointerdown', arm);
-    el.addEventListener('pointerup', disarm);
-    el.addEventListener('pointercancel', disarm);
-    el.addEventListener('pointerleave', disarm);
-
-    // Touch fallback for older browsers
-    el.addEventListener('touchstart', arm, { passive: true });
-    el.addEventListener('touchend', disarm);
-    el.addEventListener('touchcancel', disarm);
-  });
-}
-
-function doRenameLabel(el){
-  const slideIdx = +el.dataset.slide;
-  const slotIdx  = +el.dataset.slot;
-  const s = mgState.slides[slideIdx];
-  if (!s) return;
-
-  // Only saved groups persist labels; “Current” is a live, unsaved preview
-  if (s.kind !== 'group') { showToast('Save these slots as a group to add labels'); return; }
-
-  const g = memGroups.find(g => g.id === s.id);
-  if (!g) return;
-
-  if (!Array.isArray(g.labels) || g.labels.length !== 4){
-    g.labels = ['M1','M2','M3','M4'];
+const memSetsListEl = document.getElementById('memSetsList');
+memSetsListEl?.addEventListener('click', (e) => {
+  const target = e.target;
+  if (!(target instanceof Element)) return;
+  const deleteBtn = target.closest('.mem-set-delete');
+  if (deleteBtn){
+    const row = deleteBtn.closest('.mem-set-row');
+    if (row?.dataset.groupId) deleteMemorySetById(row.dataset.groupId);
+    return;
   }
+  const slotBtn = target.closest('.mem-set-slot');
+  if (slotBtn && !slotBtn.disabled){
+    const row = slotBtn.closest('.mem-set-row');
+    const slotIdx = Number(slotBtn.dataset.slotIndex);
+    const set = memorySets.find(s => s.id === row?.dataset.groupId);
+    const value = set?.values?.[slotIdx];
+    insertValueIntoEntry(value);
+  }
+});
 
-  const current = g.labels[slotIdx] || `M${slotIdx+1}`;
-  const next = prompt('Label for this slot:', current);
-  if (!next) return;
+memSetsListEl?.addEventListener('keydown', (e) => {
+  const target = e.target;
+  if (!(target instanceof Element)) return;
+  if (target.classList.contains('mem-set-name') && e.key === 'Enter'){
+    e.preventDefault();
+    target.blur();
+  }
+});
 
-  g.labels[slotIdx] = next.trim().slice(0, 24); // small cap to keep UI tidy
-  saveMemGroups();
-
-  // Rebuild slides so the label shows immediately and keep focus on same group
-  const id = g.id;
-  mgBuildSlides();
-  mgRender();
-  const go = mgIndexOfGroup(id);
-  if (go >= 0) mgGoTo(go, /*commit=*/false);
-
-  showToast('Label updated');
-}
+memSetsListEl?.addEventListener('blur', (e) => {
+  const input = e.target;
+  if (!(input instanceof Element)) return;
+  if (!input.classList.contains('mem-set-name')) return;
+  const row = input.closest('.mem-set-row');
+  if (!row?.dataset.groupId) return;
+  updateMemorySetName(row.dataset.groupId, input.value);
+}, true);
 
 
   // ===== Number / decimal entry =====
@@ -2562,6 +2457,18 @@ feetBtn.addEventListener('keyup', (e) => {
 
 
 // ===== Memory buttons =====
+function insertValueIntoEntry(value){
+  if (!Number.isFinite(value)) return;
+  if (measure.active) finalizeMeasureToken();
+  if (currentEntry){
+    tokens.push(currentEntry);
+    tokenDisplays.push(undefined);
+  }
+  currentEntry = String(value);
+  updateInput();
+  evaluate();
+}
+
 function storeToMem(btn){
   let expr=[...tokens];
   if (currentEntry) expr.push(currentEntry);
@@ -2597,10 +2504,7 @@ function recallFromMem(btn){
   }
 
   // Filled slot → recall (existing behavior)
-  if (measure.active) finalizeMeasureToken();
-  if (currentEntry) { tokens.push(currentEntry); tokenDisplays.push(undefined); }
-  currentEntry = String(v);
-  updateInput(); evaluate();
+  insertValueIntoEntry(v);
 }
 
 
@@ -2898,7 +2802,7 @@ mcBtn.addEventListener('keydown', (e)=>{
     if (!viewport || !track) return;
 
     let startX = 0, curX = 0, dragging = false, width = 1;
-    const shouldIgnoreDrag = (target) => target?.closest?.('#mgViewport');
+    const shouldIgnoreDrag = (target) => target?.closest?.('#memSetsList');
 
     function onDown(e){
       if (shouldIgnoreDrag(e.target)){
@@ -3104,6 +3008,9 @@ mcBtn.addEventListener('keydown', (e)=>{
   initTape();
   loadMemory();
   loadSavedEq();
+  loadMemorySets();
+  renderMemoryLiveRow();
+  renderMemorySets();
   renderSavedEq();
   attachRipples();
   attachPressState();
