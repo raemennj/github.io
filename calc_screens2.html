@@ -1058,7 +1058,7 @@
 
           <ul class="cm-list">
             <li><b>Chain math:</b> 42 1/4 + 2.375 + 9/16</li>
-            <li><b>Instant Results:</b> I, mixed fraction (1/16″), precise decimal</li>
+            <li><b>Instant Results:</b>  mixed fraction (1/16″), precise decimal</li>
             <li><b>Memory:</b> long-press M1–M4 to save; tap to recall; MC to clear</li>
           </ul>
 
@@ -1073,10 +1073,9 @@
         <section class="cm-card" id="cmSavedEq">
           <header class="cm-card-head">Saved Equations</header>
           <p class="cm-card-sub">
-            Snapshots of the full tape history and results. Tap a row to copy.
+            History and Results.
           </p>
           <div id="eqList" class="eq-list"></div>
-          <button id="eqClearBtn" class="cm-tile" style="margin-top:10px;">Clear All</button>
           <p class="cm-note">
             Use the ⧉ button next to the history to add equations.
           </p>
@@ -1112,8 +1111,36 @@
           </div>
         </section>
 
+        
+        <!-- Slide 3: Chalk Line Helper -->
+        <section class="cm-card" id="chalkHelperCard">
+          <header class="cm-card-head">Hinge/Style Marker</header>
+          <p class="cm-card-sub">
+            Enter the door width and get hinge spacing.
+          </p>
 
-        <!-- Slide 3: How Inch Calc Works -->
+          <div class="chalk-width-grid">
+            <div class="chalk-field">
+              <label for="chalkFeet">Feet</label>
+              <input id="chalkFeet" type="number" inputmode="numeric" min="0" step="1" placeholder="16" />
+            </div>
+            <div class="chalk-field">
+              <label for="chalkInches">Inches</label>
+              <input id="chalkInches" type="number" inputmode="numeric" min="0" max="11" step="1" placeholder="0" />
+            </div>
+          </div>
+
+          <button id="chalkCalcBtn" class="cm-tile chalk-calc-btn" type="button">
+            Calculate marks
+          </button>
+
+          <p id="chalkModeStatus" class="chalk-mode-status" aria-live="polite"></p>
+          <div id="chalkResults" class="chalk-results" aria-live="polite">
+            <p class="chalk-results-empty">Enter a door width to see marks.</p>
+          </div>
+        </section>
+
+        <!-- Slide 4: How Inch Calc Works -->
         <section class="cm-card" id="cmInfoCombined">
           <header class="cm-card-head">How Inch Calc Works</header>
           <p class="cm-card-sub">Basics, results, and tips in one place.</p>
@@ -1142,41 +1169,11 @@
           <ul class="cm-list">
             <li>History now shows <b>exact decimals as typed</b> without forcing mixed fractions.</li>
             <li>Mixed numbers form when you type a whole number and then tap a fraction (e.g., <code>1</code> + <code>1/2</code> → <b>1 1/2</b>).</li>
-            <li>Feet preview (hold <b>Ft</b>) shows alternate units without altering the underlying value.</li>
+       
           </ul>
 
-          <div class="cm-tiles">
-            <a href="https://raemennj.github.io/projects/calc_screens.html" class="cm-tile">Project Page ↗</a>
-          </div>
         </section>
 
-        <!-- Slide 4: Chalk Line Helper -->
-        <section class="cm-card" id="chalkHelperCard">
-          <header class="cm-card-head">Hinge/Style Helper</header>
-          <p class="cm-card-sub">
-            Enter the door width and get hinge spacing.
-          </p>
-
-          <div class="chalk-width-grid">
-            <div class="chalk-field">
-              <label for="chalkFeet">Feet</label>
-              <input id="chalkFeet" type="number" inputmode="numeric" min="0" step="1" placeholder="16" />
-            </div>
-            <div class="chalk-field">
-              <label for="chalkInches">Inches</label>
-              <input id="chalkInches" type="number" inputmode="numeric" min="0" max="11" step="1" placeholder="0" />
-            </div>
-          </div>
-
-          <button id="chalkCalcBtn" class="cm-tile chalk-calc-btn" type="button">
-            Calculate marks
-          </button>
-
-          <p id="chalkModeStatus" class="chalk-mode-status" aria-live="polite"></p>
-          <div id="chalkResults" class="chalk-results" aria-live="polite">
-            <p class="chalk-results-empty">Enter a door width to see marks.</p>
-          </div>
-        </section>
 
       </div>
 
