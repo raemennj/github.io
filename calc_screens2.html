@@ -933,61 +933,7 @@
           </div>
         </section>
 
-        <!-- Slide 1: Basics -->
-        <section class="cm-card">
-          <header class="cm-card-head">Basics</header>
-          <div class="cm-grid2">
-            <div>
-              <p><b>Operators + − × ÷</b> do what you expect. <b>C</b> clears.</p>
-              <p><b>Easy One-Tap Fractions:</b> tap 1/16 through 15/16 </p>
-              <p><b>Feet (Ft):</b> type a whole or decimal number then tap <b>Ft</b> to enter feet; hold <b>Ft</b> 1s to preview results in feet.</p>
-            </div>
-            <div>
-              <p><b>Copy:</b> tap a result to copy.</p>
-              <p><b>Repeat (↻):</b> repeats the last op+term (enabled when valid).</p>
-              <p><b>Undo (hold ←):</b> removes last “number + its operator”.</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- Slide 2: Results View -->
-        <section class="cm-card">
-          <header class="cm-card-head">Results — 3 ways</header>
-          <ul class="cm-list">
-            <li><b>Tape:</b> red line marks exact decimal position (auto-fit view)</li>
-            <li><b>Left:</b> rounded to nearest 1/16″ in mixed fraction</li>
-            <li><b>Right:</b> precise decimal to 0.0000</li>
-          </ul>
-          <p class="cm-note">When feet appear anywhere in the expression, plain inches are annotated with a <b>″</b> mark in history for clarity.</p>
-        </section>
-
-        <!-- Slide 3: Memory -->
- <!-- Slide 3: Memory (Memory Center) -->
-<section class="cm-card" id="memCenter">
-  <header class="cm-card-head">Memory Center</header>
-  <p class="cm-card-sub">Swipe to switch groups — focused group loads automatically.</p>
-
-  <!-- Top controls -->
-  <div class="cm-tiles" id="mcControls" style="margin-bottom:10px;">
-    <button id="mcClear" class="cm-tile">Clear Slots</button>
-    <button id="mcSaveCurrent" class="cm-tile">Save Slots</button>
-    <span id="mcCounter" class="pill" aria-live="polite">— / —</span>
-  </div>
-
-  <!-- Mini-carousel (Groups) -->
-  <div id="mgViewport" class="mg-viewport" aria-label="Memory Groups">
-    <div id="mgTrack" class="mg-track"></div>
-    <div id="mgDots" class="mg-dots" role="tablist" aria-label="Groups"></div>
-  </div>
-
-  <!-- First-visit hint -->
-  <p class="cm-note" id="mgHint" style="margin-top:6px;">
-    Swipe left/right to browse groups. The focused group loads automatically.
-  </p>
-</section>
-
-
-        <!-- Slide 4: Saved Equations -->
+        <!-- Slide 1: Saved Equations -->
         <section class="cm-card" id="cmSavedEq">
           <header class="cm-card-head">Saved Equations</header>
           <p class="cm-card-sub">
@@ -1000,14 +946,63 @@
           </p>
         </section>
 
-        <!-- Slide 5: What’s New / Info -->
-        <section class="cm-card">
-          <header class="cm-card-head">Info</header>
+        <!-- Slide 2: Memory Center -->
+        <section class="cm-card" id="memCenter">
+          <header class="cm-card-head">Memory Center</header>
+          <p class="cm-card-sub">Swipe to switch groups — focused group loads automatically.</p>
+
+          <!-- Top controls -->
+          <div class="cm-tiles" id="mcControls" style="margin-bottom:10px;">
+            <button id="mcClear" class="cm-tile">Clear Slots</button>
+            <button id="mcSaveCurrent" class="cm-tile">Save Slots</button>
+            <span id="mcCounter" class="pill" aria-live="polite">— / —</span>
+          </div>
+
+          <!-- Mini-carousel (Groups) -->
+          <div id="mgViewport" class="mg-viewport" aria-label="Memory Groups">
+            <div id="mgTrack" class="mg-track"></div>
+            <div id="mgDots" class="mg-dots" role="tablist" aria-label="Groups"></div>
+          </div>
+
+          <!-- First-visit hint -->
+          <p class="cm-note" id="mgHint" style="margin-top:6px;">
+            Swipe left/right to browse groups. The focused group loads automatically.
+          </p>
+        </section>
+
+
+        <!-- Slide 3: How Inch Calc Works -->
+        <section class="cm-card" id="cmInfoCombined">
+          <header class="cm-card-head">How Inch Calc Works</header>
+          <p class="cm-card-sub">Basics, results, and tips in one place.</p>
+
+          <h3>Basics</h3>
           <ul class="cm-list">
-            <li>History now shows <b>exact decimals as typed</b> (no auto mixed-fraction)</li>
-            <li>Mixed numbers only when you tap a fraction after a whole number</li>
-            <li>Feet preview (hold <b>Ft</b>) shows alternate units without changing the math</li>
+            <li><b>Operators + − × ÷</b> behave like a tape calculator; <b>C</b> clears everything.</li>
+            <li><b>Easy fractions:</b> tap 1/16 through 15/16 for common inch fractions.</li>
+            <li><b>Feet (Ft):</b> type a whole or decimal number then tap <b>Ft</b>; hold <b>Ft</b> for ~1s to preview feet without changing the math.</li>
+            <li><b>Copy:</b> tap a result to copy it.</li>
+            <li><b>Repeat (↻):</b> repeats the last operator + term whenever it’s enabled.</li>
+            <li><b>Undo (hold ←):</b> removes the last “number + its operator” pair.</li>
           </ul>
+
+          <h3>Results — 3 views</h3>
+          <ul class="cm-list">
+            <li><b>Tape view:</b> the red line marks the exact decimal position and the tape auto-fits around your result.</li>
+            <li><b>Left result:</b> a mixed fraction rounded to the nearest 1/16″.</li>
+            <li><b>Right result:</b> the precise decimal to 0.0000.</li>
+          </ul>
+          <p class="cm-note">
+            When feet appear anywhere in the expression, inch-only numbers in history get a <b>″</b> mark for clarity.
+          </p>
+
+          <h3>Updates & tips</h3>
+          <ul class="cm-list">
+            <li>History now shows <b>exact decimals as typed</b> without forcing mixed fractions.</li>
+            <li>Mixed numbers form when you type a whole number and then tap a fraction (e.g., <code>1</code> + <code>1/2</code> → <b>1 1/2</b>).</li>
+            <li>Feet preview (hold <b>Ft</b>) shows alternate units without altering the underlying value.</li>
+          </ul>
+
           <div class="cm-tiles">
             <a href="https://raemennj.github.io/projects/calc_screens.html" class="cm-tile">Project Page ↗</a>
           </div>
