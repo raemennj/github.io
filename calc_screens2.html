@@ -851,7 +851,9 @@
 }
 .mem-sets-empty{
   font-size:13px;
-  opacity:.75;
+
+      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">‹</button>
+      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">›</button>  opacity:.75;
 }
 
 .chalk-width-grid{
@@ -1162,7 +1164,7 @@
             </div>
             <div class="chalk-field">
               <label for="chalkInches">Inches</label>
-              <input id="chalkInches" type="number" inputmode="numeric" min="0" max="11" step="1" placeholder="2" />
+              <input id="chalkInches" type="number" inputmode="numeric" min="0" max="11" step="1" placeholder="0" />
             </div>
           </div>
 
@@ -1179,6 +1181,8 @@
       </div>
 
       <!-- Nav controls -->
+      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">‹</button>
+      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">›</button>
       <div id="cmDots" class="cm-dots" role="tablist" aria-label="Slides"></div>
     </div>
   </div>
