@@ -783,6 +783,11 @@
   align-items:center;
   gap:8px;
 }
+.mem-set-actions{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
 .mem-set-name{
   flex:1;
   border-radius:8px;
@@ -793,7 +798,7 @@
   padding:6px 8px;
 }
 .mem-set-name::placeholder{ color:rgba(255,255,255,.45); }
-.mem-set-delete{
+.mem-set-action{
   border:0;
   border-radius:8px;
   background:rgba(255,255,255,.08);
@@ -803,8 +808,8 @@
   font-size:16px;
   cursor:pointer;
 }
-.mem-set-delete:hover{ background:rgba(255,255,255,.16); }
-.mem-set-delete:focus-visible{ outline:2px solid #0ea5a5; outline-offset:2px; }
+.mem-set-action:hover{ background:rgba(255,255,255,.16); }
+.mem-set-action:focus-visible{ outline:2px solid #0ea5a5; outline-offset:2px; }
 .mem-set-buttons{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
@@ -2019,12 +2024,24 @@ function renderMemorySets(){
     nameInput.value = label;
     header.appendChild(nameInput);
 
+    const headActions = document.createElement('div');
+    headActions.className = 'mem-set-actions';
+
+    const loadBtn = document.createElement('button');
+    loadBtn.type = 'button';
+    loadBtn.className = 'mem-set-action mem-set-load';
+    loadBtn.setAttribute('aria-label', 'Load saved set into memory slots');
+    loadBtn.textContent = '⤓';
+    headActions.appendChild(loadBtn);
+
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
-    deleteBtn.className = 'mem-set-delete';
+    deleteBtn.className = 'mem-set-action mem-set-delete';
     deleteBtn.setAttribute('aria-label', 'Delete saved set');
-    deleteBtn.textContent = '✕';
-    header.appendChild(deleteBtn);
+    deleteBtn.textContent = '🗑';
+    headActions.appendChild(deleteBtn);
+
+    header.appendChild(headActions);
 
     const buttonsWrap = document.createElement('div');
     buttonsWrap.className = 'mem-set-buttons';
@@ -2107,6 +2124,21 @@ function deleteMemorySetById(id){
   showToast('Saved set deleted');
 }
 
+function loadMemorySetById(id){
+  const setIndex = memorySets.findIndex(s => s.id === id);
+  if (setIndex < 0) return;
+  const set = memorySets[setIndex];
+  const cleaned = (set.values || []).map(v => sanitizeMemoryValue(v));
+  for (let i=0;i<4;i++){
+    memorySlots[i] = cleaned[i] ?? null;
+  }
+  saveMemory();
+  refreshMemLabels();
+  renderMemoryLiveRow();
+  const name = (set.name && set.name.trim()) || defaultSetName(setIndex + 1);
+  showToast(`Loaded ${name}`);
+}
+
 function updateMemorySetName(id, value){
   const set = memorySets.find(s => s.id === id);
   if (!set) return;
@@ -2133,6 +2165,12 @@ memSetsListEl?.addEventListener('click', (e) => {
   if (deleteBtn){
     const row = deleteBtn.closest('.mem-set-row');
     if (row?.dataset.groupId) deleteMemorySetById(row.dataset.groupId);
+    return;
+  }
+  const loadBtn = target.closest('.mem-set-load');
+  if (loadBtn){
+    const row = loadBtn.closest('.mem-set-row');
+    if (row?.dataset.groupId) loadMemorySetById(row.dataset.groupId);
     return;
   }
   const slotBtn = target.closest('.mem-set-slot');
