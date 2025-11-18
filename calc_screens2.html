@@ -854,6 +854,110 @@
   opacity:.75;
 }
 
+.chalk-door-toggle{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:12px;
+}
+.chalk-door-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:10px;
+  border:0;
+  background:#0f1515;
+  color:#d7f0f0;
+  cursor:pointer;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 4px 10px rgba(0,0,0,.35);
+}
+.chalk-door-btn.is-active{
+  outline:2px solid #0ea5a5;
+  outline-offset:1px;
+  background:#123131;
+}
+.chalk-door-label{
+  font-size:13px;
+}
+.chalk-door-icon{
+  width:32px;
+  height:24px;
+  border-radius:4px;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);
+  background:linear-gradient(to right, rgba(255,255,255,.18) 1px, transparent 1px);
+  background-repeat:repeat-x;
+}
+.chalk-door-single{ background-size:calc(100% / 4) 100%; }
+.chalk-door-double{ background-size:calc(100% / 8) 100%; }
+.chalk-width-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:12px;
+}
+.chalk-field label{
+  display:block;
+  font-size:12px;
+  margin-bottom:2px;
+  opacity:.8;
+}
+.chalk-field input{
+  width:100%;
+  border-radius:8px;
+  border:1px solid rgba(0,0,0,.25);
+  padding:6px 8px;
+  font-size:14px;
+  background:#fff;
+}
+@media (prefers-color-scheme: dark){
+  .chalk-field input{
+    background:#0b1515;
+    color:#f5fffb;
+    border-color:rgba(255,255,255,.18);
+  }
+}
+.chalk-calc-btn{
+  width:100%;
+  justify-content:center;
+  margin-top:4px;
+}
+.chalk-mode-status{
+  margin-top:12px;
+  font-size:13px;
+  opacity:.85;
+}
+.chalk-results{
+  margin-top:8px;
+  border-radius:10px;
+  padding:10px;
+  background:#0f1515;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+  max-height:260px;
+  overflow-y:auto;
+}
+.chalk-results-empty{
+  font-size:13px;
+  opacity:.8;
+}
+.chalk-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:8px;
+  padding:4px 0;
+  border-bottom:1px dashed rgba(255,255,255,.08);
+}
+.chalk-row:last-child{ border-bottom:none; }
+.chalk-pos-in{
+  font-size:clamp(18px, 3.3vw, 22px);
+  font-weight:800;
+}
+.chalk-pos-ft{
+  font-size:14px;
+  opacity:.9;
+}
+
 	  
 	  
 	  
@@ -997,6 +1101,7 @@
           <div class="cm-tiles">
             <a href="segment_tape.html" class="cm-tile">Segment Calculator ↗</a>
             <button id="installBtn" class="cm-tile" style="display:none;">Install App</button>
+            <button id="chalkHelperTile" class="cm-tile" type="button">Chalk Line Helper</button>
           </div>
         </section>
 
@@ -1078,6 +1183,45 @@
 
           <div class="cm-tiles">
             <a href="https://raemennj.github.io/projects/calc_screens.html" class="cm-tile">Project Page ↗</a>
+          </div>
+        </section>
+
+        <!-- Slide 4: Chalk Line Helper -->
+        <section class="cm-card" id="chalkHelperCard">
+          <header class="cm-card-head">Chalk Line Helper</header>
+          <p class="cm-card-sub">
+            Enter the door width and get 24&quot; chalk marks across the back.
+          </p>
+
+          <div class="chalk-door-toggle" role="group" aria-label="Door type">
+            <button type="button" class="chalk-door-btn is-active" data-door="single">
+              <span class="chalk-door-icon chalk-door-single" aria-hidden="true"></span>
+              <span class="chalk-door-label">Single door (4 sections)</span>
+            </button>
+            <button type="button" class="chalk-door-btn" data-door="double">
+              <span class="chalk-door-icon chalk-door-double" aria-hidden="true"></span>
+              <span class="chalk-door-label">Double door (8 sections)</span>
+            </button>
+          </div>
+
+          <div class="chalk-width-grid">
+            <div class="chalk-field">
+              <label for="chalkFeet">Feet</label>
+              <input id="chalkFeet" type="number" inputmode="numeric" min="0" step="1" placeholder="16" />
+            </div>
+            <div class="chalk-field">
+              <label for="chalkInches">Inches</label>
+              <input id="chalkInches" type="number" inputmode="numeric" min="0" max="11" step="1" placeholder="2" />
+            </div>
+          </div>
+
+          <button id="chalkCalcBtn" class="cm-tile chalk-calc-btn" type="button">
+            Calculate chalk marks
+          </button>
+
+          <p id="chalkModeStatus" class="chalk-mode-status" aria-live="polite"></p>
+          <div id="chalkResults" class="chalk-results" aria-live="polite">
+            <p class="chalk-results-empty">Enter a door width to see chalk marks.</p>
           </div>
         </section>
 
@@ -2867,6 +3011,118 @@ mcBtn.addEventListener('keydown', (e)=>{
     }
   }
 
+  // Chalk Line Helper (tools modal)
+  function initChalkLineHelper(){
+    const card = document.getElementById('chalkHelperCard');
+    const chalkFeet = document.getElementById('chalkFeet');
+    const chalkInches = document.getElementById('chalkInches');
+    const calcBtn = document.getElementById('chalkCalcBtn');
+    const resultsEl = document.getElementById('chalkResults');
+    const modeLabelEl = document.getElementById('chalkModeStatus');
+    const doorButtons = card?.querySelectorAll('.chalk-door-btn') ?? [];
+    const tileBtn = document.getElementById('chalkHelperTile');
+
+    if (tileBtn){
+      tileBtn.addEventListener('click', () => {
+        if (typeof window._cmOpen === 'function') window._cmOpen();
+        if (typeof window._cmIndexOf === 'function' && typeof window._cmGoTo === 'function' && card){
+          const idx = window._cmIndexOf(card);
+          if (idx >= 0) window._cmGoTo(idx);
+        }
+      });
+    }
+
+    if (!card || !resultsEl) return;
+
+    let chalkDoorMode = 'single';
+    const DOOR_DESCRIPTIONS = {
+      single: 'Single door (4 sections)',
+      double: 'Double door (8 sections)'
+    };
+
+    const stripArrow = (text) => text.replace(/^\s*[▴▾]\s*/, '');
+    const formatFeetLabel = (inches) => stripArrow(formatResultFeet(inches).fraction);
+    const formatInchLabel = (inches) => stripArrow(formatResultInch(inches).fraction);
+
+    function renderMessage(msg){
+      resultsEl.innerHTML = `<p class="chalk-results-empty">${msg}</p>`;
+    }
+
+    function renderMarks(marks){
+      if (!marks.length){
+        renderMessage('Width is under 24″ — no chalk lines needed.');
+        return;
+      }
+      const rows = marks.map(pos => {
+        const left = formatInchLabel(pos);
+        const right = formatFeetLabel(pos);
+        return `<div class="chalk-row"><div class="chalk-pos-in">${left}</div><div class="chalk-pos-ft">${right}</div></div>`;
+      }).join('');
+      resultsEl.innerHTML = rows;
+    }
+
+    function updateModeLabel(){
+      if (modeLabelEl){
+        modeLabelEl.textContent = `Mode: ${DOOR_DESCRIPTIONS[chalkDoorMode]}`;
+      }
+    }
+
+    function calculateMarks(){
+      const feetVal = Number(chalkFeet?.value);
+      const inchVal = Number(chalkInches?.value);
+      let safeFeet = Number.isFinite(feetVal) ? feetVal : 0;
+      if (safeFeet < 0) safeFeet = 0;
+      let safeInches = Number.isFinite(inchVal) ? inchVal : 0;
+      safeInches = clamp(Math.round(safeInches), 0, 11);
+
+      if (chalkFeet && Number.isFinite(feetVal) && feetVal < 0){
+        chalkFeet.value = String(safeFeet);
+      }
+      if (chalkInches && chalkInches.value !== ''){
+        chalkInches.value = String(safeInches);
+      }
+
+      const totalInches = safeFeet * 12 + safeInches;
+      if (!totalInches){
+        renderMessage('Enter a door width to see chalk marks.');
+        return;
+      }
+      if (totalInches < 24){
+        renderMessage('Width is under 24″ — no chalk lines needed.');
+        return;
+      }
+
+      const marks = [];
+      for (let pos = 24; pos < totalInches; pos += 24){
+        marks.push(pos);
+      }
+      renderMarks(marks);
+    }
+
+    doorButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        doorButtons.forEach(b => b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        chalkDoorMode = btn.dataset.door === 'double' ? 'double' : 'single';
+        updateModeLabel();
+        calculateMarks();
+      });
+    });
+
+    calcBtn?.addEventListener('click', calculateMarks);
+    [chalkFeet, chalkInches].forEach(input => {
+      input?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter'){
+          e.preventDefault();
+          calculateMarks();
+        }
+      });
+    });
+
+    updateModeLabel();
+    renderMessage('Enter a door width to see chalk marks.');
+  }
+
   /* ===== Carousel Modal (cards only, not full-screen screenshot) ===== */
 (function carouselModal(){
   const backdrop = document.getElementById('cmBackdrop');
@@ -3163,6 +3419,7 @@ mcBtn.addEventListener('keydown', (e)=>{
   renderMemoryLiveRow();
   renderMemorySets();
   renderSavedEq();
+  initChalkLineHelper();
   attachRipples();
   attachPressState();
   applyFractionPalettes();
