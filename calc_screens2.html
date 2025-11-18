@@ -2756,6 +2756,116 @@ mcBtn.addEventListener('keydown', (e)=>{
       });
     });
   }
+  // Generic direction-lock gesture helper for touch + pointer events
+  function attachDirectionLockedGestures(container, options = {}){
+    const LOCK_THRESHOLD = options.lockThreshold ?? 10;     // px needed before we decide
+    const DIRECTION_BIAS = options.directionBias ?? 4;      // px the leading axis must beat the other by
+    let active = false;
+    let gestureDirection = null;
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let pointerId = null;
+    let lastDx = 0;
+    let lastDy = 0;
+
+    const getPoint = (evt) => {
+      if (evt.touches && evt.touches[0]) return evt.touches[0];
+      if (evt.changedTouches && evt.changedTouches[0]) return evt.changedTouches[0];
+      return evt;
+    };
+    const reset = () => {
+      active = false;
+      gestureDirection = null;
+      pointerId = null;
+      lastDx = 0;
+      lastDy = 0;
+      startTime = 0;
+    };
+
+    function handleStart(evt){
+      if (evt.pointerType === 'mouse' && evt.button !== 0) return;
+      if (evt.touches && evt.touches.length > 1) return; // ignore pinch/zoom
+      if (active) return; // ignore secondary touches while a gesture is running
+      if (typeof options.shouldStart === 'function' && options.shouldStart(evt) === false) return;
+
+      const point = getPoint(evt);
+      if (!point) return;
+
+      startX = point.clientX;
+      startY = point.clientY;
+      startTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      pointerId = evt.pointerId ?? null;
+      active = true;
+      gestureDirection = null;
+      lastDx = 0;
+      lastDy = 0;
+
+      options.onStart?.(evt, { startX, startY, startTime });
+    }
+
+    function handleMove(evt){
+      if (!active) return;
+      if (evt.touches && evt.touches.length > 1) return;
+      if (pointerId != null && evt.pointerId != null && evt.pointerId !== pointerId) return;
+
+      const point = getPoint(evt);
+      if (!point) return;
+
+      const dx = point.clientX - startX;
+      const dy = point.clientY - startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      lastDx = dx;
+      lastDy = dy;
+
+      if (!gestureDirection){
+        if (absX < LOCK_THRESHOLD && absY < LOCK_THRESHOLD) return;
+
+        if (absX - absY >= DIRECTION_BIAS){
+          gestureDirection = 'horizontal';
+        } else if (absY - absX >= DIRECTION_BIAS){
+          gestureDirection = 'vertical';
+        } else {
+          return; // keep waiting until one axis clearly wins
+        }
+        options.onDirectionLocked?.(gestureDirection, evt, { dx, dy });
+      }
+
+      if (gestureDirection === 'horizontal'){
+        options.onHorizontalMove?.(evt, { dx, dy });
+        if (!options.passiveHorizontal && evt.cancelable){
+          evt.preventDefault();
+          if (options.stopHorizontalPropagation) evt.stopPropagation();
+        }
+      } else if (gestureDirection === 'vertical'){
+        options.onVerticalMove?.(evt, { dx, dy });
+        if (options.preventVerticalDefault && evt.cancelable){
+          evt.preventDefault();
+        }
+      }
+    }
+
+    function handleEnd(evt){
+      if (!active) return;
+      if (pointerId != null && evt.pointerId != null && evt.pointerId !== pointerId) return;
+      options.onEnd?.(evt, { direction: gestureDirection, dx: lastDx, dy: lastDy, startTime });
+      reset();
+    }
+
+    const supportsPointer = 'PointerEvent' in window;
+    if (supportsPointer){
+      container.addEventListener('pointerdown', handleStart, { passive: true });
+      container.addEventListener('pointermove', handleMove, { passive: false });
+      container.addEventListener('pointerup', handleEnd, { passive: true });
+      container.addEventListener('pointercancel', handleEnd, { passive: true });
+    } else {
+      container.addEventListener('touchstart', handleStart, { passive: true });
+      container.addEventListener('touchmove', handleMove, { passive: false });
+      container.addEventListener('touchend', handleEnd, { passive: true });
+      container.addEventListener('touchcancel', handleEnd, { passive: true });
+    }
+  }
 
   /* ===== Carousel Modal (cards only, not full-screen screenshot) ===== */
 (function carouselModal(){
@@ -2834,52 +2944,55 @@ mcBtn.addEventListener('keydown', (e)=>{
     if (e.key === 'ArrowLeft') prev();
   });
 
-  // Swipe (only the track moves)
+  // Swipe (track moves horizontally, cards scroll vertically)
   (function enableSwipe(){
     const viewport = backdrop?.querySelector('.cm-viewport');
     if (!viewport || !track) return;
 
-    let startX = 0, curX = 0, dragging = false, width = 1;
+    let width = 1;
+    let dragging = false;
     const shouldIgnoreDrag = (target) => target?.closest?.('#memSetsList');
 
-    function onDown(e){
-      if (shouldIgnoreDrag(e.target)){
-        e.stopImmediatePropagation?.();
-        e.stopPropagation?.();
-        return;
+    attachDirectionLockedGestures(viewport, {
+      lockThreshold: 10,
+      directionBias: 4,
+      stopHorizontalPropagation: true,
+      shouldStart(evt){
+        return !shouldIgnoreDrag(evt.target);
+      },
+      onStart(){
+        width = viewport.clientWidth || 1;
+        dragging = false;
+        track.classList.remove('dragging');
+      },
+      onDirectionLocked(dir){
+        if (dir === 'horizontal'){
+          dragging = true;
+          track.classList.add('dragging');
+        } else {
+          dragging = false;
+          track.classList.remove('dragging');
+        }
+      },
+      onHorizontalMove(_, { dx }){
+        if (!dragging) return;
+        const pct = (dx / width) * 100;
+        track.style.transform = `translateX(${(-idx*100 + pct)}%)`;
+      },
+      onEnd(_, { direction, dx }){
+        if (!dragging || direction !== 'horizontal'){
+          track.classList.remove('dragging');
+          dragging = false;
+          return;
+        }
+        dragging = false;
+        track.classList.remove('dragging');
+        const threshold = Math.max(60, width * 0.18); // pixels
+        if (dx > threshold) prev();
+        else if (dx < -threshold) next();
+        else syncUI(); // snap back
       }
-      const p = e.touches ? e.touches[0] : e;
-      startX = curX = p.clientX;
-      width = viewport.clientWidth || 1;
-      dragging = true;
-      track.classList.add('dragging');
-    }
-    function onMove(e){
-      if (!dragging) return;
-      const p = e.touches ? e.touches[0] : e;
-      curX = p.clientX;
-      const dx = curX - startX;
-      const pct = (dx / width) * 100;
-      // slide position + drag offset
-      track.style.transform = `translateX(${(-idx*100 + pct)}%)`;
-    }
-    function onUp(){
-      if (!dragging) return;
-      dragging = false;
-      track.classList.remove('dragging');
-      const dx = curX - startX;
-      const threshold = Math.max(60, width * 0.18); // pixels
-      if (dx > threshold) prev();
-      else if (dx < -threshold) next();
-      else syncUI(); // snap back
-    }
-
-    viewport.addEventListener('pointerdown', onDown);
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    viewport.addEventListener('touchstart', onDown, {passive:true});
-    window.addEventListener('touchmove', onMove, {passive:false});
-    window.addEventListener('touchend', onUp);
+    });
   })();
 
   // Dynamic memory preview (reads your existing memorySlots)
