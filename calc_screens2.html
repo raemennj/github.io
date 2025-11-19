@@ -746,7 +746,7 @@
 }
 .mem-live-row{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:8px;
 }
 .mem-sets{
@@ -812,7 +812,7 @@
 .mem-set-action:focus-visible{ outline:2px solid #0ea5a5; outline-offset:2px; }
 .mem-set-buttons{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
   gap:8px;
 }
 .mem-set-slot{
@@ -979,11 +979,11 @@
   <!-- Memory (5×1) -->
   <div class="panel memory pad">
     <div class="memory-grid">
-      <button class="btn clear" data-action="mc"><span class="btn-label">MC</span></button>
       <button class="btn mem" data-mem="0"><span class="btn-label">M1</span></button>
       <button class="btn mem" data-mem="1"><span class="btn-label">M2</span></button>
       <button class="btn mem" data-mem="2"><span class="btn-label">M3</span></button>
       <button class="btn mem" data-mem="3"><span class="btn-label">M4</span></button>
+      <button class="btn mem" data-mem="4"><span class="btn-label">M5</span></button>
     </div>
 </div>
 
@@ -1059,7 +1059,7 @@
           <ul class="cm-list">
             <li><b>Chain math:</b> 42 1/4 + 2.375 + 9/16</li>
             <li><b>Instant Results:</b>  mixed fraction (1/16″), precise decimal</li>
-            <li><b>Memory:</b> long-press M1–M4 to save; tap to recall; MC to clear</li>
+            <li><b>Memory:</b> tap M1–M5 to recall; double-click or hold to overwrite</li>
           </ul>
 
           <div class="cm-tiles">
@@ -1084,7 +1084,7 @@
         <!-- Slide 2: Memory Center -->
         <section class="cm-card" id="memCenter">
           <header class="cm-card-head">Memory Center</header>
-          <p class="cm-card-sub">Save different mixes of M1–M4 as rows you can tap later.</p>
+          <p class="cm-card-sub">Save different mixes of M1–M5 as rows you can tap later.</p>
 
           <div class="cm-tiles" id="mcControls" style="margin-bottom:10px;">
             <button id="mcClear" class="cm-tile">Clear Slots</button>
@@ -1095,7 +1095,7 @@
           <div class="mem-livegrid">
             <div class="mem-live-head">
               <span>Current memory buttons</span>
-              <span class="mem-live-note">Edit via M1–M4 on the keypad</span>
+              <span class="mem-live-note">Edit via M1–M5 on the keypad</span>
             </div>
             <div class="mem-live-row" id="memLiveRow"></div>
           </div>
@@ -1106,7 +1106,7 @@
             </div>
             <div class="mem-sets-list" id="memSetsList" role="list"></div>
             <p class="cm-note mem-sets-empty" id="memSetsEmpty">
-              No saved sets yet. Tap “Save Slots” to capture the current four memory buttons.
+              No saved sets yet. Tap “Save Slots” to capture the current five memory buttons.
             </p>
           </div>
         </section>
@@ -1303,8 +1303,20 @@ function renderOutputs(leftFractionText, rightDecimalText){
 
 	
 	
+  const MEMORY_SLOT_COUNT = 5;
   const MEMORY_KEY = 'calcMemorySlots_uniform420';
-  let memorySlots = [null,null,null,null];
+  let memorySlots = Array(MEMORY_SLOT_COUNT).fill(null);
+  const parseStoredMemoryValue = (val) => {
+    if (val == null) return null;
+    if (typeof val === 'number' && Number.isFinite(val)) return val;
+    if (typeof val === 'string'){
+      const direct = parseFloat(val);
+      if (Number.isFinite(direct)) return direct;
+      const mixed = parseMixedInchString(val);
+      if (Number.isFinite(mixed)) return mixed;
+    }
+    return null;
+  };
 
   let tokens = [];                 // raw tokens for math
   let tokenDisplays = [];          // pretty display for measurement tokens
@@ -1700,27 +1712,16 @@ function drawTape(center){
 function loadMemory(){
   try{
     const raw = localStorage.getItem(MEMORY_KEY);
-    if (!raw){ refreshMemLabels(); return; }
-    const arr = JSON.parse(raw);
+    const arr = raw ? JSON.parse(raw) : null;
 
-    memorySlots = (Array.isArray(arr) ? arr : [null,null,null,null]).map(x=>{
-      if (x == null) return null;
-      if (typeof x === 'number' && isFinite(x)) return x;   // already exact inches
-      if (typeof x === 'string'){
-        // try simple number first
-        const f = parseFloat(x);
-        if (isFinite(f)) return f;
-        // try mixed fraction/feet formats: "1 11/32", "2′ 3 1/2″", "19/32″"
-        const p = parseMixedInchString(x);
-        if (p != null && isFinite(p)) return p;
-      }
-      return null; // anything else becomes empty slot
-    });
+    memorySlots = Array.from({ length: MEMORY_SLOT_COUNT }, (_, idx) =>
+      parseStoredMemoryValue(Array.isArray(arr) ? arr[idx] : null)
+    );
 
     // Save back migrated format (numbers/null only)
     saveMemory();
   } catch {
-    memorySlots = [null,null,null,null];
+    memorySlots = Array(MEMORY_SLOT_COUNT).fill(null);
   }
   refreshMemLabels();
 }
@@ -2051,9 +2052,10 @@ function loadMemorySets(){
     memorySets = parsed.map(item => {
       const rawVals = Array.isArray(item?.values) ? item.values : [];
       const values = [];
-      for (let i=0;i<4;i++){
+      for (let i=0;i<MEMORY_SLOT_COUNT;i++){
         const raw = rawVals[i];
-        values.push(sanitizeMemoryValue(typeof raw === 'number' ? raw : parseFloat(raw)));
+        const numeric = (typeof raw === 'number') ? raw : parseFloat(raw);
+        values.push(sanitizeMemoryValue(numeric));
       }
       return {
         id: item?.id || uid(),
@@ -2081,7 +2083,7 @@ function renderMemoryLiveRow(){
   if (!row) return;
   const scrollLock = row.scrollTop;
   row.textContent = '';
-  for (let i=0;i<4;i++){
+  for (let i=0;i<MEMORY_SLOT_COUNT;i++){
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'mem-set-slot mem-live-slot';
@@ -2140,7 +2142,7 @@ function renderMemorySets(){
     const buttonsWrap = document.createElement('div');
     buttonsWrap.className = 'mem-set-buttons';
 
-    for (let i=0;i<4;i++){
+    for (let i=0;i<MEMORY_SLOT_COUNT;i++){
       const slotBtn = document.createElement('button');
       slotBtn.type = 'button';
       slotBtn.className = 'mem-set-slot';
@@ -2176,23 +2178,15 @@ function renderMemorySets(){
   }
 }
 
-// Entry point when opening Memory Center
-function openMemoryCenterInit(){
-  loadMemorySets();
-  renderMemoryLiveRow();
-  renderMemorySets();
-}
-
 function clearMemorySlots(){
-  const memCount = document.querySelectorAll('.btn.mem').length || 4;
-  memorySlots = new Array(memCount).fill(null);
+  memorySlots = Array(MEMORY_SLOT_COUNT).fill(null);
   saveMemory();
   refreshMemLabels();
   showToast('Memory cleared');
 }
 
 function addCurrentSlotsAsSet(){
-  const values = memorySlots.slice(0,4).map(v => sanitizeMemoryValue(v));
+  const values = memorySlots.map(v => sanitizeMemoryValue(v));
   if (!values.some(v => v != null)){
     showToast('Nothing to save');
     return;
@@ -2223,7 +2217,7 @@ function loadMemorySetById(id){
   if (setIndex < 0) return;
   const set = memorySets[setIndex];
   const cleaned = (set.values || []).map(v => sanitizeMemoryValue(v));
-  for (let i=0;i<4;i++){
+  for (let i=0;i<MEMORY_SLOT_COUNT;i++){
     memorySlots[i] = cleaned[i] ?? null;
   }
   saveMemory();
@@ -2611,8 +2605,9 @@ function storeToMem(btn){
              + (measure.active ? measureTotal() : 0);
 
   const i = +btn.dataset.mem;
+  const existingLabel = memorySlots[i]==null ? null : formatResultInchOnlyLabel(memorySlots[i]);
   const confirmReplace = memorySlots[i]!=null
-    ? confirm(`M${i+1} has ${formatResultInchOnlyLabel(memorySlots[i])}. Replace?`)
+    ? confirm(`Overwrite M${i+1}${existingLabel ? ` (${existingLabel})` : ''} with the current value?`)
     : true;
   if (!confirmReplace) return;
 
@@ -2686,32 +2681,6 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   }
   btn.addEventListener('touchend', clearLP, { passive: true });
   btn.addEventListener('touchcancel', clearLP, { passive: true });
-});
-
-// ----- MC: Tap = open Memory Center slide -----
-const mcBtn = document.querySelector('.btn.clear[data-action="mc"]');
-
-function openMemoryCenter(){
-  const memEl = document.getElementById('memCenter');
-  // requires modal helpers (Step 5); falls back to menu open if not available
-  if (window._cmOpen && window._cmGoTo && window._cmIndexOf && memEl){
-    window._cmOpen();
-    const i = window._cmIndexOf(memEl);
-if (i >= 0) window._cmGoTo(i);
-openMemoryCenterInit();     // ✅ new
-
-  } else {
-    // Fallback: open the menu; user can swipe to the Memory Center card
-    document.getElementById('menuBtn')?.click();
-  }
-}
-
-mcBtn.addEventListener('click', openMemoryCenter);
-mcBtn.addEventListener('keydown', (e)=>{
-  if (e.key==='Enter' || e.key===' '){
-    e.preventDefault();
-    openMemoryCenter();
-  }
 });
 
 /* ===== FRACTION BUTTON PALETTES ===== */
@@ -3201,7 +3170,7 @@ mcBtn.addEventListener('keydown', (e)=>{
   function renderMemoryPreview(){
     if (!memPreview) return;
     const cells = [];
-    for (let i=0;i<4;i++){
+    for (let i=0;i<MEMORY_SLOT_COUNT;i++){
       const v = memorySlots[i];
       const display = (v==null) ? '—' : formatResultInch(v).fraction.replace('″','');
       cells.push(`<div class="cm-memcell"><span class="k">M${i+1}</span><span class="v">${display}</span></div>`);
