@@ -922,6 +922,30 @@
   color:#e8fff0;
 }
 
+.segment-card{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.segment-card__frame{
+  width:100%;
+  border:0;
+  border-radius:12px;
+  background:#031516;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);
+  height:min(920px, 78vh);
+  min-height:520px;
+}
+.segment-card__note{
+  font-size:13px;
+  opacity:.75;
+}
+@media (max-height: 640px){
+  .segment-card__frame{
+    min-height:460px;
+  }
+}
+
 	  
 	  
 	  
@@ -1063,7 +1087,7 @@
           </ul>
 
           <div class="cm-tiles">
-            <a href="segment_tape.html" class="cm-tile">Segment Calculator ↗</a>
+            <button id="segmentCalcTile" class="cm-tile" type="button">Segment Calculator ↗</button>
             <button id="installBtn" class="cm-tile" style="display:none;">Install App</button>
             <button id="chalkHelperTile" class="cm-tile" type="button">Chalk Line Helper</button>
           </div>
@@ -1140,7 +1164,23 @@
           </div>
         </section>
 
-        <!-- Slide 4: How Inch Calc Works -->
+        <!-- Slide 4: Segment Calculator -->
+        <section class="cm-card segment-card" id="segmentCalcCard">
+          <header class="cm-card-head">Segment Calculator</header>
+          <p class="cm-card-sub">Equal and near-equal layout helper.</p>
+          <p class="segment-card__note">
+            Scroll inside the embedded panel for the tape navigator, tabs, inputs, and detailed instructions.
+            Need more room? <a href="Untitled-1.html" target="_blank" rel="noopener">Open it in a new tab.</a>
+          </p>
+          <iframe
+            class="segment-card__frame"
+            src="Untitled-1.html"
+            title="Segment Calculator"
+            loading="lazy"
+          ></iframe>
+        </section>
+
+        <!-- Slide 5: How Inch Calc Works -->
         <section class="cm-card" id="cmInfoCombined">
           <header class="cm-card-head">How Inch Calc Works</header>
           <p class="cm-card-sub">Basics, results, and tips in one place.</p>
@@ -1202,6 +1242,15 @@
     const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     const n = parseFloat(v); return Number.isFinite(n) ? n : fallback;
   };
+
+  function goToModalCard(card){
+    if (!card) return;
+    if (typeof window._cmOpen === 'function') window._cmOpen();
+    if (typeof window._cmIndexOf === 'function' && typeof window._cmGoTo === 'function'){
+      const idx = window._cmIndexOf(card);
+      if (idx >= 0) window._cmGoTo(idx);
+    }
+  }
 
   /* Keep last good number handy for redraws during layout changes */
   let lastGood = { value: 0, fraction: '', decimal: '' };
@@ -2941,13 +2990,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
     const tileBtn = document.getElementById('chalkHelperTile');
 
     if (tileBtn){
-      tileBtn.addEventListener('click', () => {
-        if (typeof window._cmOpen === 'function') window._cmOpen();
-        if (typeof window._cmIndexOf === 'function' && typeof window._cmGoTo === 'function' && card){
-          const idx = window._cmIndexOf(card);
-          if (idx >= 0) window._cmGoTo(idx);
-        }
-      });
+      tileBtn.addEventListener('click', () => goToModalCard(card));
     }
 
     if (!card || !resultsEl) return;
@@ -3036,6 +3079,13 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
 
     updateModeLabel();
     renderMessage('Enter a door width to see chalk marks.');
+  }
+
+  function initSegmentCalcCard(){
+    const tileBtn = document.getElementById('segmentCalcTile');
+    const card = document.getElementById('segmentCalcCard');
+    if (!tileBtn || !card) return;
+    tileBtn.addEventListener('click', () => goToModalCard(card));
   }
 
   /* ===== Carousel Modal (cards only, not full-screen screenshot) ===== */
@@ -3334,6 +3384,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   renderMemoryLiveRow();
   renderMemorySets();
   renderSavedEq();
+  initSegmentCalcCard();
   initChalkLineHelper();
   attachRipples();
   attachPressState();
@@ -3473,6 +3524,13 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
 </body>
 
 </html>
+
+
+
+
+
+
+
 
 
 
