@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -144,10 +144,48 @@
   }
   @keyframes sweep{ 0%{left:100%;opacity:.6} 100%{left:-100%;opacity:0} }
   .sweep.animate::before{ animation:sweep .8s ease-in-out forwards; }
+  /* === GLASS TUBE DISPLAY START === */
   /* ---------- Results ---------- */
-  .results{ background:var(--display-bg); color:var(--display-text); min-height:0; }
+  .results{
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(24,104,104,.32), transparent 58%),
+      linear-gradient(180deg, #041414 0%, #010405 80%);
+    color:var(--display-text);
+    min-height:0;
+    position:relative;
+    overflow:hidden;
+    box-shadow:inset 0 18px 36px rgba(0,0,0,.85), inset 0 -24px 34px rgba(0,0,0,.78);
+  }
+  .results::before{
+    content:"";
+    position:absolute;
+    inset:3px 3px 4px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.03);
+    box-shadow:inset 0 14px 28px rgba(0,0,0,.65), inset 0 -20px 34px rgba(0,0,0,.82);
+    background:radial-gradient(160% 80% at 15% 0%, rgba(255,255,255,.04), transparent 60%);
+    pointer-events:none;
+  }
+  .results::after{
+    content:"";
+    position:absolute;
+    top:6px;
+    left:14px;
+    right:14px;
+    height:42%;
+    border-radius:28px;
+    background:linear-gradient(120deg, rgba(255,255,255,.16), rgba(255,255,255,0) 65%);
+    opacity:.28;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
   .results .pad{
-    display:flex; flex-direction:column; gap:8px; height:100%;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    height:100%;
+    position:relative;
+    z-index:1;
   }
   .history-row{
     display:flex;
@@ -155,22 +193,190 @@
     gap:8px;
   }
   .history{
-    min-height:var(--history-min); flex:1 1 auto; max-height:100%;
+    min-height:var(--history-min);
+    flex:1 1 auto;
+    max-height:100%;
     overflow:auto;
     font-size:clamp(26px, 3.35vw, 28px);
-    display:flex; flex-direction:column; gap:4px;
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    color:#9fcbbf;
+    text-shadow:0 1px 0 rgba(0,0,0,.55);
   }
-  .row.input{ letter-spacing:.04em; font-size:clamp(20px, 3.1vw, 26px); opacity:.9; }
+  .row.input{
+    letter-spacing:.04em;
+    font-size:clamp(20px, 3.1vw, 26px);
+    opacity:.95;
+    color:#d7eee5;
+  }
   #inputLine{ display:block; }
   .output{
-    display:flex; justify-content:space-between; gap:8px;
-    font-size:clamp(24px, 3.1vw, 26px);
-    color:#bdfcb7; padding-top:6px;
-    border-top:1px solid rgba(255,255,255,.1);
+    display:flex;
+    justify-content:space-between;
+    align-items:stretch;
+    gap:14px;
+    font-size:clamp(24px, 3.1vw, 30px);
+    padding-top:6px;
     min-height:var(--output-min);
+    isolation:isolate;
+    position:relative;
   }
   /* Re-enable selection for history and outputs */
   .history, .output, .output *{ -webkit-user-select:text; user-select:text; }
+
+  .glass-tube{
+    position:relative;
+    padding:16px 20px;
+    border-radius:26px;
+    background:
+      radial-gradient(140% 130% at 18% 0%, rgba(56,148,138,.32), rgba(3,12,12,.62) 55%),
+      linear-gradient(180deg, rgba(2,10,12,.94) 0%, rgba(0,0,0,.88) 100%);
+    border:1px solid rgba(76,135,130,.55);
+    box-shadow:inset 0 2px 12px rgba(255,255,255,.08),
+               inset 0 -22px 34px rgba(0,0,0,.86),
+               inset 0 0 0 1px rgba(0,0,0,.82),
+               0 18px 44px rgba(0,0,0,.65);
+    overflow:hidden;
+  }
+  .glass-tube::before{
+    content:"";
+    position:absolute;
+    inset:5px 8px 4px;
+    border-radius:22px;
+    background:linear-gradient(125deg, rgba(255,255,255,.28), rgba(255,255,255,0) 60%);
+    opacity:.35;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+  .glass-tube::after{
+    content:"";
+    position:absolute;
+    inset:-2px;
+    border-radius:inherit;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04);
+    background:radial-gradient(120% 120% at 80% 0%, rgba(92,218,198,.16), transparent 65%);
+    opacity:.45;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+  .results-tube-shell{
+    backdrop-filter:blur(3px) saturate(125%);
+  }
+  .tube-display{
+    flex:1 1 0;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-end;
+    min-width:0;
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+    gap:.075em;
+    position:relative;
+    border-radius:999px;
+    padding:12px 18px;
+    font-family:"aktiv-grotesk","IBM Plex Mono","SFMono-Regular","Segoe UI Mono",monospace;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:none;
+    min-height:62px;
+    background:
+      radial-gradient(140% 120% at 50% 18%, var(--tube-haze, rgba(120,230,210,.2)), transparent 60%),
+      linear-gradient(180deg, rgba(6,22,24,.94), rgba(1,5,7,.88));
+    border:1px solid var(--tube-rim, rgba(72,140,132,.55));
+    box-shadow:inset 0 1px 16px rgba(255,255,255,.05),
+               inset 0 -16px 28px rgba(0,0,0,.85),
+               0 0 32px var(--tube-bloom, rgba(140,240,215,.3));
+    color:var(--tube-color, #bdfcb7);
+    filter:url(#textInnerShadow);
+    overflow:hidden;
+    transition:box-shadow .24s ease, border-color .24s ease;
+  }
+  .tube-display::before{
+    content:"";
+    position:absolute;
+    inset:4px;
+    border-radius:inherit;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),
+               inset 0 12px 18px rgba(255,255,255,.08),
+               inset 0 -14px 18px rgba(0,0,0,.75);
+    pointer-events:none;
+  }
+  .tube-display::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    background:linear-gradient(120deg, rgba(255,255,255,.25), rgba(255,255,255,0) 50%);
+    opacity:.45;
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+  .tube-main{
+    font-size:clamp(36px, 5vw, 56px);
+    justify-content:flex-start;
+    --tube-color:#ffe0b6;
+    --tube-haze:rgba(255,190,121,.25);
+    --tube-rim:rgba(255,188,118,.5);
+    --tube-bloom:rgba(255,168,90,.55);
+    --tube-shadow: 0 0 8px rgba(255,186,108,.95),
+                   0 0 24px rgba(255,158,74,.6),
+                   0 0 52px rgba(255,140,40,.4);
+  }
+  .tube-secondary{
+    justify-content:flex-end;
+    font-size:clamp(24px, 3.4vw, 34px);
+    opacity:.98;
+    --tube-color:#a0ffe5;
+    --tube-haze:rgba(130,255,230,.28);
+    --tube-rim:rgba(112,205,188,.58);
+    --tube-bloom:rgba(122,245,214,.5);
+    --tube-shadow: 0 0 8px rgba(156,243,220,.9),
+                   0 0 24px rgba(73,205,180,.55),
+                   0 0 40px rgba(33,167,143,.4);
+  }
+  .tube-digit{
+    display:inline-block;
+    min-width:.55ch;
+    padding:0 .015em;
+    text-shadow:var(--tube-shadow);
+    color:inherit;
+    filter:drop-shadow(0 0 8px rgba(0,0,0,.55));
+    transition:text-shadow .2s ease, transform .2s ease;
+  }
+  .tube-digit.tube-space{
+    min-width:.35ch;
+  }
+  .arrow{
+    margin-right:.3rem;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.1em;
+    padding:0 .2rem;
+    color:#f5f0ce;
+    text-shadow:0 0 12px rgba(255,186,108,.5);
+  }
+  .tube-flash{
+    box-shadow:inset 0 2px 18px rgba(255,255,255,.18),
+               inset 0 -18px 32px rgba(0,0,0,.8),
+               0 0 42px var(--tube-bloom, rgba(140,240,215,.55));
+  }
+  .tube-flash::after{
+    opacity:.7;
+  }
+  .tube-flash .tube-digit{
+    animation:tubeDigitFlare 200ms ease-out;
+  }
+  @keyframes tubeDigitFlare{
+    0%{ text-shadow:0 0 22px currentColor, 0 0 52px currentColor; opacity:1; transform:scale(1.03); }
+    60%{ text-shadow:0 0 16px currentColor, 0 0 28px rgba(255,255,255,.5); opacity:.94; transform:scale(1.01); }
+    100%{ text-shadow:var(--tube-shadow); opacity:1; transform:scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .tube-flash .tube-digit{ animation:none; }
+  }
+  /* === GLASS TUBE DISPLAY END === */
 
   .eq-save-btn{
     width:40px; height:40px;
@@ -202,7 +408,7 @@
   .memory{ grid-area:memory }
   .memory-grid{ display:grid; gap:var(--gap); grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(1,var(--tile)); }
 
-  /* ---------- Console (5×4) ---------- */
+  /* ---------- Console (5Ã—4) ---------- */
   .console{ grid-area:console }
   .console-grid{
     margin-top:-8px; display:grid; gap:var(--gap);
@@ -212,7 +418,7 @@
   .r1{grid-row:1}.r2{grid-row:2}.r3{grid-row:3}.r4{grid-row:4}
   .c1{grid-column:1}.c2{grid-column:2}.c3{grid-column:3}.c4{grid-column:4}.c5{grid-column:5}
 
-  /* ---------- Fractions (5×3) ---------- */
+  /* ---------- Fractions (5Ã—3) ---------- */
   .fractions{ grid-area:fractions }
   .fract-grid{
     margin-top:8px; display:grid; gap:var(--gap);
@@ -264,7 +470,7 @@
     .btn.frac:hover{ --btn-bg: color-mix(in oklab, var(--btn-bg), white 12%); }
   }
 
-  /* Pressed while finger is down — fades back via the base transition */
+  /* Pressed while finger is down â€” fades back via the base transition */
   .btn:active{
     filter: brightness(.82) saturate(1.05);
     transform: translateY(1px) scale(.985);
@@ -301,14 +507,14 @@
   .btn.hold{ box-shadow:0 0 0 0 rgba(14,165,165,.55); animation:pulseRing 1s ease-out infinite; }
   @keyframes pulseRing{ 0%{box-shadow:0 0 0 0 rgba(14,165,165,.55)} 100%{box-shadow:0 0 0 12px rgba(14,165,165,0)} }
 
-  /* Memory “saved” flash */
+  /* Memory â€œsavedâ€ flash */
   .btn.mem.saved{
     --btn-bg: color-mix(in oklab, var(--mem), #22c55e 46%);
     box-shadow:0 0 0 2px #22c55e inset, 0 0 16px rgba(34,197,94,.35);
     animation:pop .16s ease;
   }
   .btn.mem.saved::after{
-    content:"✓"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    content:"âœ“"; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
     font-weight:800; font-size:1.1em; color:#063; opacity:.95; pointer-events:none;
   }
   @keyframes pop{ from{transform:scale(.97)} to{transform:scale(1)} }
@@ -671,27 +877,6 @@
   outline:2px solid #0ea5a5;
   outline-offset:2px;
 }
-
-	  /* Fraction rounding arrow polish */
-#fractionLine::first-letter {}
-#fractionLine {
-  letter-spacing: .01em;
-}
-#fractionLine:has(> .arrow) { /* optional if you wrap the arrow in a span */
-  gap: .35rem;
-}
-.arrow {
-  opacity: .9;
-  margin-right: .35rem;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.2em;
-  line-height:1;
-  padding:0 .15rem;
-}
-
-#fractionLine { display:inline-flex; align-items:baseline; gap:.3rem; }
 	  
 	  
 /* Motion preferences */
@@ -852,8 +1037,8 @@
 .mem-sets-empty{
   font-size:13px;
 
-      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">‹</button>
-      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">›</button>  opacity:.75;
+      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">â€¹</button>
+      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">â€º</button>  opacity:.75;
 }
 
 .chalk-width-grid{
@@ -963,11 +1148,11 @@
             <div class="history" id="history">
               <div class="row input" id="inputLine"></div>
             </div>
-            <button id="eqSaveBtn" class="eq-save-btn" aria-label="Save equation" type="button">⧉</button>
+            <button id="eqSaveBtn" class="eq-save-btn" aria-label="Save equation" type="button">â§‰</button>
           </div>
-          <div class="output">
-            <div id="fractionLine" title="Tap to copy"></div>
-            <div id="decimalLine" title="Tap to copy"></div>
+          <div class="output glass-tube results-tube-shell">
+            <div id="fractionLine" class="tube-main tube-display" title="Tap to copy"></div>
+            <div id="decimalLine" class="tube-secondary tube-display" title="Tap to copy"></div>
           </div>
         </div>
       </div>
@@ -976,7 +1161,7 @@
   </div>
   <!-- ===== /BEZEL ===== -->
 
-  <!-- Memory (5×1) -->
+  <!-- Memory (5Ã—1) -->
   <div class="panel memory pad">
     <div class="memory-grid">
       <button class="btn mem" data-mem="0"><span class="btn-label">M1</span></button>
@@ -991,12 +1176,12 @@
 <div class="panel keypad pad">
     <div class="console-grid">
       <!-- Utility rail (col 1) -->
-      <button class="btn back r1 c1" data-action="back"><span class="btn-label">←</span></button>
+      <button class="btn back r1 c1" data-action="back"><span class="btn-label">â†</span></button>
       <button class="btn clear r2 c1" data-action="clear"><span class="btn-label">C</span></button>
       <button class="btn r3 c1" id="menuBtn"><span class="btn-label">Tools</span></button>
       <button class="btn operator r4 c1" id="feetBtn"><span class="btn-label">Ft</span></button>
 
-      <!-- Numbers (cols 2–4) -->
+      <!-- Numbers (cols 2â€“4) -->
       <button class="btn r1 c2" data-val="7"><span class="btn-label">7</span></button>
       <button class="btn r1 c3" data-val="8"><span class="btn-label">8</span></button>
       <button class="btn r1 c4" data-val="9"><span class="btn-label">9</span></button>
@@ -1008,15 +1193,15 @@
       <button class="btn r3 c4" data-val="3"><span class="btn-label">3</span></button>
 
       <!-- Repeat button -->
-      <button class="btn operator r4 c2" id="repeatBtn" title="Repeat last op+term" disabled><span class="btn-label">↻</span></button>
+      <button class="btn operator r4 c2" id="repeatBtn" title="Repeat last op+term" disabled><span class="btn-label">â†»</span></button>
       <button class="btn r4 c3" data-val="0"><span class="btn-label">0</span></button>
       <button class="btn dec r4 c4" data-val="."><span class="btn-label">.</span></button>
 
       <!-- Operator rail (col 5) -->
       <button class="btn operator r1 c5" data-op="+"><span class="btn-label">+</span></button>
-      <button class="btn operator r2 c5" data-op="-"><span class="btn-label">−</span></button>
-      <button class="btn operator r3 c5" data-op="*"><span class="btn-label">×</span></button>
-      <button class="btn operator r4 c5" data-op="/"><span class="btn-label">÷</span></button>
+      <button class="btn operator r2 c5" data-op="-"><span class="btn-label">âˆ’</span></button>
+      <button class="btn operator r3 c5" data-op="*"><span class="btn-label">Ã—</span></button>
+      <button class="btn operator r4 c5" data-op="/"><span class="btn-label">Ã·</span></button>
     </div>
 
     <div class="fract-grid">
@@ -1044,8 +1229,8 @@
 <div id="cmBackdrop" class="cm-backdrop" aria-hidden="true">
   <div class="cm-modal panel" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
     <div class="cm-headbar">
-      <h2 id="cmTitle">Inch Calc — Guide & Tools</h2>
-      <button id="cmClose" class="cm-iconbtn" aria-label="Close">✕</button>
+      <h2 id="cmTitle">Inch Calc â€” Guide & Tools</h2>
+      <button id="cmClose" class="cm-iconbtn" aria-label="Close">âœ•</button>
     </div>
 
     <div class="cm-viewport">
@@ -1058,12 +1243,12 @@
 
           <ul class="cm-list">
             <li><b>Chain math:</b> 42 1/4 + 2.375 + 9/16</li>
-            <li><b>Instant Results:</b>  mixed fraction (1/16″), precise decimal</li>
-            <li><b>Memory:</b> tap M1–M5 to recall; double-click or hold to overwrite</li>
+            <li><b>Instant Results:</b>  mixed fraction (1/16â€³), precise decimal</li>
+            <li><b>Memory:</b> tap M1â€“M5 to recall; double-click or hold to overwrite</li>
           </ul>
 
           <div class="cm-tiles">
-            <a href="segment_tape.html" class="cm-tile">Segment Calculator ↗</a>
+            <a href="segment_tape.html" class="cm-tile">Segment Calculator â†—</a>
             <button id="installBtn" class="cm-tile" style="display:none;">Install App</button>
             <button id="chalkHelperTile" class="cm-tile" type="button">Chalk Line Helper</button>
           </div>
@@ -1077,14 +1262,14 @@
           </p>
           <div id="eqList" class="eq-list"></div>
           <p class="cm-note">
-            Use the ⧉ button next to the history to add equations.
+            Use the â§‰ button next to the history to add equations.
           </p>
         </section>
 
         <!-- Slide 2: Memory Center -->
         <section class="cm-card" id="memCenter">
           <header class="cm-card-head">Memory Center</header>
-          <p class="cm-card-sub">Save different mixes of M1–M5 as rows you can tap later.</p>
+          <p class="cm-card-sub">Save different mixes of M1â€“M5 as rows you can tap later.</p>
 
           <div class="cm-tiles" id="mcControls" style="margin-bottom:10px;">
             <button id="mcClear" class="cm-tile">Clear Slots</button>
@@ -1095,7 +1280,7 @@
           <div class="mem-livegrid">
             <div class="mem-live-head">
               <span>Current memory buttons</span>
-              <span class="mem-live-note">Edit via M1–M5 on the keypad</span>
+              <span class="mem-live-note">Edit via M1â€“M5 on the keypad</span>
             </div>
             <div class="mem-live-row" id="memLiveRow"></div>
           </div>
@@ -1106,7 +1291,7 @@
             </div>
             <div class="mem-sets-list" id="memSetsList" role="list"></div>
             <p class="cm-note mem-sets-empty" id="memSetsEmpty">
-              No saved sets yet. Tap “Save Slots” to capture the current five memory buttons.
+              No saved sets yet. Tap â€œSave Slotsâ€ to capture the current five memory buttons.
             </p>
           </div>
         </section>
@@ -1147,28 +1332,28 @@
 
           <h3>Basics</h3>
           <ul class="cm-list">
-            <li><b>Operators + − × ÷</b> behave like a tape calculator; <b>C</b> clears everything.</li>
+            <li><b>Operators + âˆ’ Ã— Ã·</b> behave like a tape calculator; <b>C</b> clears everything.</li>
             <li><b>Easy fractions:</b> tap 1/16 through 15/16 for common inch fractions.</li>
             <li><b>Feet (Ft):</b> type a whole or decimal number then tap <b>Ft</b>; hold <b>Ft</b> for ~1s to preview feet without changing the math.</li>
             <li><b>Copy:</b> tap a result to copy it.</li>
-            <li><b>Repeat (↻):</b> repeats the last operator + term whenever it’s enabled.</li>
-            <li><b>Undo (hold ←):</b> removes the last “number + its operator” pair.</li>
+            <li><b>Repeat (â†»):</b> repeats the last operator + term whenever itâ€™s enabled.</li>
+            <li><b>Undo (hold â†):</b> removes the last â€œnumber + its operatorâ€ pair.</li>
           </ul>
 
-          <h3>Results — 3 views</h3>
+          <h3>Results â€” 3 views</h3>
           <ul class="cm-list">
             <li><b>Tape view:</b> the red line marks the exact decimal position and the tape auto-fits around your result.</li>
-            <li><b>Left result:</b> a mixed fraction rounded to the nearest 1/16″.</li>
+            <li><b>Left result:</b> a mixed fraction rounded to the nearest 1/16â€³.</li>
             <li><b>Right result:</b> the precise decimal to 0.0000.</li>
           </ul>
           <p class="cm-note">
-            When feet appear anywhere in the expression, inch-only numbers in history get a <b>″</b> mark for clarity.
+            When feet appear anywhere in the expression, inch-only numbers in history get a <b>â€³</b> mark for clarity.
           </p>
 
           <h3>Updates & tips</h3>
           <ul class="cm-list">
             <li>History now shows <b>exact decimals as typed</b> without forcing mixed fractions.</li>
-            <li>Mixed numbers form when you type a whole number and then tap a fraction (e.g., <code>1</code> + <code>1/2</code> → <b>1 1/2</b>).</li>
+            <li>Mixed numbers form when you type a whole number and then tap a fraction (e.g., <code>1</code> + <code>1/2</code> â†’ <b>1 1/2</b>).</li>
        
           </ul>
 
@@ -1178,8 +1363,8 @@
       </div>
 
       <!-- Nav controls -->
-      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">‹</button>
-      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">›</button>
+      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">â€¹</button>
+      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">â€º</button>
       <div id="cmDots" class="cm-dots" role="tablist" aria-label="Slides"></div>
     </div>
   </div>
@@ -1278,24 +1463,88 @@
   const fractionLine = document.getElementById('fractionLine');
   const decimalLine = document.getElementById('decimalLine');
 
+// === GLASS TUBE DISPLAY START ===
+const TUBE_FLASH_CLASS = 'tube-flash';
+const TUBE_FLASH_DURATION = 200;
+
+function wrapTubeDigits(el){
+  if (!el || typeof document === 'undefined' || typeof document.createTreeWalker !== 'function') return;
+  const showText = (typeof NodeFilter !== 'undefined' && NodeFilter.SHOW_TEXT) || 4;
+  const walker = document.createTreeWalker(el, showText, null);
+  const targets = [];
+  while (walker.nextNode()){
+    const node = walker.currentNode;
+    if (!node) continue;
+    const parent = node.parentElement;
+    if (parent && parent.classList && parent.classList.contains('arrow')) continue;
+    targets.push(node);
+  }
+  targets.forEach(node => {
+    const textValue = node.textContent || '';
+    if (!textValue.length){
+      node.remove();
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    for (const ch of textValue){
+      const normalized = (ch === '\n' || ch === '\r' || ch === '\t') ? ' ' : ch;
+      if (!normalized) continue;
+      const isSpace = normalized === ' ';
+      const span = document.createElement('span');
+      span.className = 'tube-digit' + (isSpace ? ' tube-space' : '');
+      span.textContent = isSpace ? '\u00A0' : normalized;
+      frag.appendChild(span);
+    }
+    node.replaceWith(frag);
+  });
+}
+
+function flashTube(el){
+  if (!el) return;
+  el.classList.remove(TUBE_FLASH_CLASS);
+  void el.offsetWidth;
+  el.classList.add(TUBE_FLASH_CLASS);
+  clearTimeout(el._tubeFlashTimer);
+  el._tubeFlashTimer = setTimeout(() => {
+    el.classList.remove(TUBE_FLASH_CLASS);
+  }, TUBE_FLASH_DURATION);
+}
+
 /* ---- Render helper for arrow span (robust) ---- */
 function renderOutputs(leftFractionText, rightDecimalText){
   const raw = String(leftFractionText || '');
-  // Wrap a leading ▴/▾ *after optional sign* with a span.arrow
+  // Wrap a leading �-'/�-_ *after optional sign* with a span.arrow
   let html = raw.replace(
-    /^(\s*[−-]?)\s*([▴▾])\s*/,
+    /^(\s*[�^'-]?)\s*([�-'�-_])\s*/,
     (_, sign, arr) => `${sign}<span class="arrow" aria-hidden="true">${arr}</span> `
   );
   // Normalize accidental double spaces
   html = html.replace(/\s{2,}/g, ' ').trim();
 
   // Flag whether we're rounded (useful if you want styles like blinking, etc.)
-  const rounded = /^(\s*[−-]?)\s*<span class="arrow/.test(html);
+  const rounded = /^(\s*[�^'-]?)\s*<span class="arrow/.test(html);
   fractionLine.setAttribute('data-rounded', rounded ? 'true' : 'false');
 
-  fractionLine.innerHTML = html;
-  decimalLine.textContent = rightDecimalText || '';
+  const nextDecimal = rightDecimalText || '';
+  const fractionChanged = fractionLine.dataset.tubeRaw !== html;
+  const decimalChanged = decimalLine.dataset.tubeRaw !== nextDecimal;
+
+  if (fractionChanged){
+    fractionLine.dataset.tubeRaw = html;
+    fractionLine.innerHTML = html;
+    wrapTubeDigits(fractionLine);
+    flashTube(fractionLine);
+  }
+
+  if (decimalChanged){
+    decimalLine.dataset.tubeRaw = nextDecimal;
+    decimalLine.textContent = nextDecimal;
+    wrapTubeDigits(decimalLine);
+    flashTube(decimalLine);
+  }
 }
+// === GLASS TUBE DISPLAY END ===
+
 
 
 
@@ -1335,12 +1584,12 @@ function renderOutputs(leftFractionText, rightDecimalText){
   const isDec = s => /^-?\d+\.\d+$/.test(s);
   const splitDec = s => { const [w, d='0'] = s.split('.'); return [parseInt(w,10), parseFloat('0.'+d)]; };
   const fracFromDec = d => { const D=16; let n=Math.round(d*D), g=gcd(n,D); return `${n/g}/${D/g}`; };
-  const prettyOp = (op) => ({ '*':'×', '/':'÷', '-':'−', '+':'+' }[op] || op);
+  const prettyOp = (op) => ({ '*':'Ã—', '/':'Ã·', '-':'âˆ’', '+':'+' }[op] || op);
   const roundToSixteenth = (x)=> Math.round(x*16)/16;
 
   // ---------- Result formatters ----------
 function formatResultInch(value){
-  // LEFT: 1/16″ fraction (rounded), with arrow when rounded
+  // LEFT: 1/16â€³ fraction (rounded), with arrow when rounded
   const rounded = roundToSixteenth(value);
   const sign = rounded < 0 ? '-' : '';
   const abs  = Math.abs(rounded);
@@ -1348,13 +1597,13 @@ function formatResultInch(value){
   const f    = abs - w;
 
   let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
-  const fracCore = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
+  const fracCore = (n===0) ? `${w}â€³` : (w ? `${w} ${n}/${d}â€³` : `${n}/${d}â€³`);
 
   const arrow = roundingArrow(value, rounded);
   const fraction = sign + arrow + fracCore;
 
   // RIGHT: exact decimal (no 1/16 snap)
-  const decimal = formatExactDecimalNumber(value) + '″';
+  const decimal = formatExactDecimalNumber(value) + 'â€³';
 
   return { fraction, decimal };
 }
@@ -1372,7 +1621,7 @@ function replaceHistoryWith(valueInInches){
                                      : formatResultInch(valueInInches);
 
   // strip any rounding arrow from the human label
-  const cleanedLeft = (fmt.fraction || '').replace(/^\s*(?:▴|▾)\s*/, '');
+  const cleanedLeft = (fmt.fraction || '').replace(/^\s*(?:â–´|â–¾)\s*/, '');
 
   tokens.push(String(valueInInches));
   tokenDisplays.push(cleanedLeft);  // history shows a nice human label
@@ -1384,7 +1633,7 @@ function replaceHistoryWith(valueInInches){
 
 
 function formatResultFeet(value){
-  // Arrow computed against INCH value rounded to 1/16″
+  // Arrow computed against INCH value rounded to 1/16â€³
   const rounded = roundToSixteenth(value);
   const arrow   = roundingArrow(value, rounded);
 
@@ -1402,15 +1651,15 @@ function formatResultFeet(value){
 
   let inchStr = '';
   if (wholeIn === 0 && n === 0) inchStr = '';
-  else if (n === 0)            inchStr = ` ${wholeIn}″`;
-  else if (wholeIn === 0)      inchStr = ` ${n}/${d}″`;
-  else                         inchStr = ` ${wholeIn} ${n}/${d}″`;
+  else if (n === 0)            inchStr = ` ${wholeIn}â€³`;
+  else if (wholeIn === 0)      inchStr = ` ${n}/${d}â€³`;
+  else                         inchStr = ` ${wholeIn} ${n}/${d}â€³`;
 
   // LEFT: feet + (rounded) inches with arrow if rounded
-  const fraction = `${sign}${arrow}${feet}′${inchStr}`;
+  const fraction = `${sign}${arrow}${feet}â€²${inchStr}`;
 
   // RIGHT: exact decimal in feet (no rounding)
-  const decimal = formatExactDecimalNumber(value/12) + '′';
+  const decimal = formatExactDecimalNumber(value/12) + 'â€²';
 
   return { fraction, decimal };
 }
@@ -1434,7 +1683,7 @@ function formatResultFeet(value){
     const w = Math.floor(r);
     const f = r - w;
     let n = Math.round(f*16), d = 16, g = gcd(n,d); n/=g; d/=g;
-    const inchStr = (n===0) ? `${w}″` : (w ? `${w} ${n}/${d}″` : `${n}/${d}″`);
+    const inchStr = (n===0) ? `${w}â€³` : (w ? `${w} ${n}/${d}â€³` : `${n}/${d}â€³`);
     return `${feetStr} ${inchStr}`;
   }
 
@@ -1448,7 +1697,7 @@ function formatResultFeet(value){
   }
 
 	// old -- Exact decimal formatter (no 1/16 snap)
-// Exact decimal formatter — always 4 places (normalizes "-0.0000" → "0.0000")
+// Exact decimal formatter â€” always 4 places (normalizes "-0.0000" â†’ "0.0000")
 function formatExactDecimalNumber(x) {
   const s = Number(x).toFixed(4);
   return s === '-0.0000' ? '0.0000' : s;
@@ -1462,28 +1711,28 @@ function roundingArrow(exact, rounded){
   const EPS = 1e-6;
   const delta = exact - rounded;
   if (Math.abs(delta) < EPS) return '';
-  return (delta > 0) ? '▴ ' : '▾ ';
+  return (delta > 0) ? 'â–´ ' : 'â–¾ ';
 }
 
 
-	// Parse strings like: "1 11/32", "2 1/2″", "19/32″", "1′ 6″", "1′ 6 1/2″"
+	// Parse strings like: "1 11/32", "2 1/2â€³", "19/32â€³", "1â€² 6â€³", "1â€² 6 1/2â€³"
 function parseMixedInchString(s){
   if (!s || typeof s !== 'string') return null;
   const str = s.trim()
-    .replace(/[””"]/g,'″')
-    .replace(/[’’']/g,'′');
+    .replace(/[â€â€"]/g,'â€³')
+    .replace(/[â€™â€™']/g,'â€²');
 
   let feet = 0, whole = 0, num = 0, den = 1;
 
   // Feet (optional)
-  const feetMatch = str.match(/(-?\d+)\s*′/);
+  const feetMatch = str.match(/(-?\d+)\s*â€²/);
   if (feetMatch) feet = parseInt(feetMatch[1],10);
 
   // Portion after feet
-  const afterFeet = str.replace(/.*′/,'').trim();
+  const afterFeet = str.replace(/.*â€²/,'').trim();
 
   // Whole inches (optional)
-  const wholeMatch = afterFeet.match(/(-?\d+)(?=\s*(?:″|$|\s+\d+\/\d+))/);
+  const wholeMatch = afterFeet.match(/(-?\d+)(?=\s*(?:â€³|$|\s+\d+\/\d+))/);
   if (wholeMatch) whole = parseInt(wholeMatch[1],10);
 
   // Fraction inches (optional)
@@ -1525,21 +1774,21 @@ function parseMixedInchString(s){
     if (measure.active){
       arr.push({type:'num', value: String(measureTotal()), display: measureDisplay()});
     } else if (currentEntry){
-  // Show exactly what the user typed (no decimal → fraction conversion here)
+  // Show exactly what the user typed (no decimal â†’ fraction conversion here)
   arr.push({ type:'num', value: currentEntry, display: currentEntry });
 }
 
 
-    // Keep trailing operator visible, but don’t include it in grouping
+    // Keep trailing operator visible, but donâ€™t include it in grouping
     let trailingOp = null;
     if (arr.length && arr[arr.length-1].type==='op'){
       trailingOp = arr.pop().value;
     }
 
-    // Unary leading minus → merge into first number for display
+    // Unary leading minus â†’ merge into first number for display
     if (arr.length>=2 && arr[0].type==='op' && arr[0].value==='-' && arr[1].type==='num'){
       arr.shift();
-      arr[0].display = '−' + arr[0].display;
+      arr[0].display = 'âˆ’' + arr[0].display;
     }
 
     return {arr, trailingOp};
@@ -1552,20 +1801,20 @@ function parseMixedInchString(s){
       return;
     }
 
-    // If ANY feet are present in the expression, show explicit inches (″) on inch-only terms
-    const feetPresent = arr.some(n => n.type==='num' && typeof n.display==='string' && n.display.includes('′'));
+    // If ANY feet are present in the expression, show explicit inches (â€³) on inch-only terms
+    const feetPresent = arr.some(n => n.type==='num' && typeof n.display==='string' && n.display.includes('â€²'));
     const markInches = (txt) => {
       if (!feetPresent) return txt;
       if (!txt) return txt;
-      if (txt.includes('′') || txt.includes('″')) return txt;
-      return txt + '″';
+      if (txt.includes('â€²') || txt.includes('â€³')) return txt;
+      return txt + 'â€³';
     };
 
     const hasHigh = arr.some(n => n.type==='op' && (n.value==='*' || n.value==='/'));
     const hasLow  = arr.some(n => n.type==='op' && (n.value==='+' || n.value==='-'));
     const mixed   = hasHigh && hasLow;
 
-    // Build with minimal parentheses around ×/÷ runs when mixed
+    // Build with minimal parentheses around Ã—/Ã· runs when mixed
     let s = '';
     for (let i=0;i<arr.length;){
       const node = arr[i];
@@ -1751,8 +2000,8 @@ function formatResultInchOnlyLabel(v){
   // Build from the rounded fraction but strip arrow + inch mark for compact labels
   return formatResultInch(v)
     .fraction
-    .replace(/^(?:▴ |▾ )/, '') // remove leading arrow if present
-    .replace(/″/g, '');
+    .replace(/^(?:â–´ |â–¾ )/, '') // remove leading arrow if present
+    .replace(/â€³/g, '');
 }
 
 
@@ -1836,8 +2085,8 @@ function renderSavedEq(){
           <div class="eq-meta" data-id="${item.id}">${meta}</div>
         </button>
         <div class="eq-actions">
-          <button class="eq-load" type="button" aria-label="Load equation" data-id="${item.id}">⤓</button>
-          <button class="eq-delete" type="button" aria-label="Delete equation" data-id="${item.id}">🗑</button>
+          <button class="eq-load" type="button" aria-label="Load equation" data-id="${item.id}">â¤“</button>
+          <button class="eq-delete" type="button" aria-label="Delete equation" data-id="${item.id}">ðŸ—‘</button>
         </div>
       </div>
     `;
@@ -1985,7 +2234,7 @@ function parseSavedValue(item){
   if (!decText) return null;
   let num = parseFloat(decText);
   if (!Number.isFinite(num)) return null;
-  if (decText.includes('′')) num *= 12;
+  if (decText.includes('â€²')) num *= 12;
   return num;
 }
 
@@ -2127,14 +2376,14 @@ function renderMemorySets(){
     loadBtn.type = 'button';
     loadBtn.className = 'mem-set-action mem-set-load';
     loadBtn.setAttribute('aria-label', 'Load saved set into memory slots');
-    loadBtn.textContent = '⤓';
+    loadBtn.textContent = 'â¤“';
     headActions.appendChild(loadBtn);
 
     const deleteBtn = document.createElement('button');
     deleteBtn.type = 'button';
     deleteBtn.className = 'mem-set-action mem-set-delete';
     deleteBtn.setAttribute('aria-label', 'Delete saved set');
-    deleteBtn.textContent = '🗑';
+    deleteBtn.textContent = 'ðŸ—‘';
     headActions.appendChild(deleteBtn);
 
     header.appendChild(headActions);
@@ -2150,7 +2399,7 @@ function renderMemorySets(){
       const value = set.values?.[i];
       if (!Number.isFinite(value)){
         slotBtn.classList.add('empty');
-        slotBtn.textContent = '—';
+        slotBtn.textContent = 'â€”';
         slotBtn.disabled = true;
         slotBtn.setAttribute('aria-disabled','true');
       } else {
@@ -2455,7 +2704,7 @@ function lastNumericIndex(){
   return i;
 }
 
-// --- click → commit feet (whole/decimal/fraction or convert last mixed token) ---
+// --- click â†’ commit feet (whole/decimal/fraction or convert last mixed token) ---
 let suppressFeetClick = false;
 feetBtn.addEventListener('click', (e) => {
   if (suppressFeetClick) {        // swallow the click that follows a long-press
@@ -2465,13 +2714,13 @@ feetBtn.addEventListener('click', (e) => {
     return;
   }
 
-  // A) Current entry is a fraction → treat it as feet (e.g., "1/2" Ft → 6")
+  // A) Current entry is a fraction â†’ treat it as feet (e.g., "1/2" Ft â†’ 6")
   if (currentEntry && isTypedFraction(currentEntry)){
     const ft = fracToDecimal(currentEntry);           // feet as decimal
     if (ft != null){
       const totalIn = ft * 12;
       tokens.push(String(totalIn));
-      tokenDisplays.push(`${currentEntry}\u2032`);     // show 1/2′ in history
+      tokenDisplays.push(`${currentEntry}\u2032`);     // show 1/2â€² in history
       currentEntry = '';
       updateInput(); qEval();
       return;
@@ -2485,12 +2734,12 @@ feetBtn.addEventListener('click', (e) => {
       const disp = tokenDisplays[i];
       const looksMixed = disp && /^\s*[+-]?\d+\s+\d+\/\d+\s*$/.test(disp);   // "1 1/2"
       const looksFrac  = disp && /^\s*[+-]?\d+\/\d+\s*$/.test(disp);         // "1/2"
-      const alreadyFeet = disp && disp.includes('′');
+      const alreadyFeet = disp && disp.includes('â€²');
 
       if (!alreadyFeet && (looksMixed || looksFrac)){
         const val = parseFloat(tokens[i]);            // numeric inches (e.g., 1.5)
         if (!Number.isNaN(val)){
-          tokens[i] = String(val * 12);               // reinterpret as feet ⇒ inches
+          tokens[i] = String(val * 12);               // reinterpret as feet â‡’ inches
           tokenDisplays[i] = disp + '\u2032';         // add prime to the label
           updateInput(); qEval();
           return;
@@ -2530,7 +2779,7 @@ feetBtn.addEventListener('click', (e) => {
   }
 });
 
-// --- long-press (600ms) → temporarily show results in feet while held
+// --- long-press (600ms) â†’ temporarily show results in feet while held
 let feetHoldTimer = null;
 let feetPeekActive = false;
 
@@ -2566,7 +2815,7 @@ feetBtn.addEventListener('pointerup', clearFeetHold);
 feetBtn.addEventListener('pointercancel', clearFeetHold);
 feetBtn.addEventListener('pointerleave', clearFeetHold);
 
-// Optional: keyboard “hold to peek” (Space)
+// Optional: keyboard â€œhold to peekâ€ (Space)
 feetBtn.addEventListener('keydown', (e) => {
   if (e.code === 'Space'){
     e.preventDefault();
@@ -2630,7 +2879,7 @@ function recallFromMem(btn){
     return;
   }
 
-  // Filled slot → recall (existing behavior)
+  // Filled slot â†’ recall (existing behavior)
   insertValueIntoEntry(v);
 }
 
@@ -2640,7 +2889,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   btn._recallTimer = null;
   btn._preventNextClick = false;   // set true by LP or dblclick to block ensuing click
 
-  // Tap = recall (debounced so a dblclick won’t recall first)
+  // Tap = recall (debounced so a dblclick wonâ€™t recall first)
   btn.addEventListener('click', (e) => {
     if (btn._preventNextClick){
       btn._preventNextClick = false;
@@ -2709,7 +2958,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
     const [n,d] = frac.split('/').map(Number);
     if (!n || !d) return { bg: 'hsl(210 70% 50%)', fg:'#fff' };
     const t = Math.max(0, Math.min(1, n/d));
-    const h = 210 + t * 120; /* blue → magenta */
+    const h = 210 + t * 120; /* blue â†’ magenta */
     const s = 70, l = 50;
     return { bg: `hsl(${h} ${s}% ${l}%)`, fg:'#fff' };
   }
@@ -2952,7 +3201,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
 
     if (!card || !resultsEl) return;
 
-    const stripArrow = (text) => text.replace(/^\s*[▴▾]\s*/, '');
+    const stripArrow = (text) => text.replace(/^\s*[â–´â–¾]\s*/, '');
     const formatInchLabel = (inches) => stripArrow(formatResultInch(inches).fraction);
 
     function renderMessage(msg){
@@ -2961,7 +3210,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
 
     function renderMarks(marks){
       if (!marks.length){
-        renderMessage('Width is under 24″ — no chalk lines needed.');
+        renderMessage('Width is under 24â€³ â€” no chalk lines needed.');
         return;
       }
       const rows = marks.map(pos => {
@@ -2977,7 +3226,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
       if (modeLabelEl){
         if (lastStepInches){
           const spacing = formatInchLabel(lastStepInches);
-          modeLabelEl.textContent = `Spacing ≈ ${spacing}`;
+          modeLabelEl.textContent = `Spacing â‰ˆ ${spacing}`;
         } else {
           modeLabelEl.textContent = 'Spacing will appear after you enter a width.';
         }
@@ -3009,7 +3258,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
       if (totalInches < 24){
         lastStepInches = null;
         updateModeLabel();
-        renderMessage('Width is under 24″ — no chalk lines needed.');
+        renderMessage('Width is under 24â€³ â€” no chalk lines needed.');
         return;
       }
 
@@ -3172,7 +3421,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
     const cells = [];
     for (let i=0;i<MEMORY_SLOT_COUNT;i++){
       const v = memorySlots[i];
-      const display = (v==null) ? '—' : formatResultInch(v).fraction.replace('″','');
+      const display = (v==null) ? 'â€”' : formatResultInch(v).fraction.replace('â€³','');
       cells.push(`<div class="cm-memcell"><span class="k">M${i+1}</span><span class="v">${display}</span></div>`);
     }
     memPreview.innerHTML = cells.join('');
@@ -3409,7 +3658,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
 
 })();
   
-  /* ---- Long-press on results → replace history ---- */
+  /* ---- Long-press on results â†’ replace history ---- */
 (function bindResultLongPress(){
   const outWrap   = document.querySelector('.output');
   const fracEl    = document.getElementById('fractionLine');
@@ -3420,7 +3669,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   let lpTimer = null;
   let suppressNextClick = false;
 
-  // Reuse your “hold pulse” vibe by toggling a simple class on the output row
+  // Reuse your â€œhold pulseâ€ vibe by toggling a simple class on the output row
   function armHold(){
     clearTimeout(lpTimer);
     outWrap?.classList.add('hold');
@@ -3446,7 +3695,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
     el.addEventListener('pointercancel', disarmHold);
     el.addEventListener('pointerleave',  disarmHold);
 
-    // If a long-press fired, swallow the following synthetic click (so it doesn’t copy text)
+    // If a long-press fired, swallow the following synthetic click (so it doesnâ€™t copy text)
     el.addEventListener('click', (e) => {
       if (suppressNextClick){
         suppressNextClick = false;
@@ -3461,7 +3710,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
     el.addEventListener('touchcancel',disarmHold);
 
     // Nice hint
-    el.setAttribute('title', 'Tap to copy • Hold to replace history');
+    el.setAttribute('title', 'Tap to copy â€¢ Hold to replace history');
   }
 
   attach(fracEl);
@@ -3473,6 +3722,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
 </body>
 
 </html>
+
 
 
 
