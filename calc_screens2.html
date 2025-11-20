@@ -1058,20 +1058,35 @@
 
         <!-- Slide 0: Home / Hub -->
         <section class="cm-card">
-          <header class="cm-card-head">Tape Measure Calculator</header>
-          <p class="cm-card-sub">A tape-measure companion.</p>
+          <header class="cm-card-head">Inch Calc &mdash; Tape Measure Calculator</header>
+          <p class="cm-card-sub">Chain inches + feet math built for carpenters.</p>
 
+          <p>Inch Calc keeps the tape-measure rhythm: punch 42 1/4 + 2.375 + 9/16 and it instantly shows the answer as a clean mixed fraction (snapped to 1/16″) plus the precise decimal.</p>
+          <p>The live tape view keeps a red center line locked on your result, while 1/16th fraction tiles, quick feet entry, and tap-to-copy outputs make it faster than scribbling on a scrap.</p>
+
+          <h3>What Inch Calc Does</h3>
           <ul class="cm-list">
-            <li><b>Chain math:</b> 42 1/4 + 2.375 + 9/16</li>
-            <li><b>Instant Results:</b>  mixed fraction (1/16″), precise decimal</li>
-            <li><b>Memory:</b> tap M1–M5 to recall; double-click or hold to overwrite</li>
+            <li>Runs chain math in inches and feet with tape-calculator operators (+ − × ÷, C to clear).</li>
+            <li>Shows history the way you typed it (mixed numbers, decimals, inch marks) so you never lose context.</li>
           </ul>
 
+          <h3>Why it beats a phone calculator</h3>
+          <ul class="cm-list">
+            <li>Mixed fraction + decimal results, both copy-on-tap.</li>
+            <li>Live tape visualization with a red pointer so you can pull the mark without guessing.</li>
+            <li>Dedicated Ft button (tap to enter feet, hold to preview) and every common 1/16th tile a thumb away.</li>
+          </ul>
+
+          <h3>Every-day shop workflow</h3>
+          <p>Tap a whole number, add a fraction tile, convert to feet mid-stream, recall M1–M5, then copy the answer straight to your cut list.</p>
+
           <div class="cm-tiles">
-            <a href="segment_tape.html" class="cm-tile">Segment Calculator ↗</a>
-            <button id="installBtn" class="cm-tile" style="display:none;">Install App</button>
-            <button id="chalkHelperTile" class="cm-tile" type="button">Hinge/Style Marker</button>
+            <button id="savedEqTile" class="cm-tile" type="button">Saved Equations &mdash; bookmark full problems</button>
+            <button id="memCenterTile" class="cm-tile" type="button">Memory Center &mdash; reusable M1–M5 sets</button>
+            <button id="chalkHelperTile" class="cm-tile" type="button">Hinge/Style Marker &mdash; quick door spacing</button>
+            <a href="segment_tape.html" class="cm-tile">Segment Calculator &mdash; break spans into equal pieces ↗</a>
           </div>
+          <button id="installBtn" class="cm-tile" style="display:none;">Install App</button>
         </section>
 
         <!-- Slide 1: Saved Equations -->
@@ -1143,40 +1158,6 @@
           <div id="chalkResults" class="chalk-results" aria-live="polite">
             <p class="chalk-results-empty">Enter a door width to see marks.</p>
           </div>
-        </section>
-
-        <!-- Slide 4: How Inch Calc Works -->
-        <section class="cm-card" id="cmInfoCombined">
-          <header class="cm-card-head">How Inch Calc Works</header>
-          <p class="cm-card-sub">Basics, results, and tips in one place.</p>
-
-          <h3>Basics</h3>
-          <ul class="cm-list">
-            <li><b>Operators + − × ÷</b> behave like a tape calculator; <b>C</b> clears everything.</li>
-            <li><b>Easy fractions:</b> tap 1/16 through 15/16 for common inch fractions.</li>
-            <li><b>Feet (Ft):</b> type a whole or decimal number then tap <b>Ft</b>; hold <b>Ft</b> for ~1s to preview feet without changing the math.</li>
-            <li><b>Copy:</b> tap a result to copy it.</li>
-            <li><b>Repeat (↻):</b> repeats the last operator + term whenever it’s enabled.</li>
-            <li><b>Undo (hold ←):</b> removes the last “number + its operator” pair.</li>
-          </ul>
-
-          <h3>Results — 3 views</h3>
-          <ul class="cm-list">
-            <li><b>Tape view:</b> the red line marks the exact decimal position and the tape auto-fits around your result.</li>
-            <li><b>Left result:</b> a mixed fraction rounded to the nearest 1/16″.</li>
-            <li><b>Right result:</b> the precise decimal to 0.0000.</li>
-          </ul>
-          <p class="cm-note">
-            When feet appear anywhere in the expression, inch-only numbers in history get a <b>″</b> mark for clarity.
-          </p>
-
-          <h3>Updates & tips</h3>
-          <ul class="cm-list">
-            <li>History now shows <b>exact decimals as typed</b> without forcing mixed fractions.</li>
-            <li>Mixed numbers form when you type a whole number and then tap a fraction (e.g., <code>1</code> + <code>1/2</code> → <b>1 1/2</b>).</li>
-       
-          </ul>
-
         </section>
 
 
@@ -3416,7 +3397,20 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
     }
   }
 
+  function openMemCenterCard(){
+    const memCard = document.getElementById('memCenter');
+    if (typeof window._cmOpen === 'function'){
+      window._cmOpen();
+      if (typeof window._cmIndexOf === 'function' && typeof window._cmGoTo === 'function' && memCard){
+        const idx = window._cmIndexOf(memCard);
+        if (idx >= 0) window._cmGoTo(idx);
+      }
+    }
+  }
+
   document.getElementById('eqClearBtn')?.addEventListener('click', clearSavedEq);
+  document.getElementById('savedEqTile')?.addEventListener('click', openSavedEqCard);
+  document.getElementById('memCenterTile')?.addEventListener('click', openMemCenterCard);
 
 })();
   
