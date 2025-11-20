@@ -635,6 +635,9 @@
   font-size:clamp(16px, 2.6vw, 20px);
   line-height:1.35;
 }
+.eq-equation .eq-result-group{
+  color:#bdfcb7;
+}
 .eq-meta{
   font-size:12px;
   opacity:.75;
@@ -1826,8 +1829,14 @@ function renderSavedEq(){
   const esc = (s='') => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
   list.innerHTML = savedEq.map(item => {
-    const eqParts = [item.expr, item.frac].filter(Boolean).map(esc);
-    const line = eqParts.join(' = ');
+    const exprText = item.expr ? esc(item.expr) : '';
+    const fracText = item.frac ? esc(item.frac) : '';
+    let line = '';
+    if (exprText && fracText){
+      line = `${exprText}<span class="eq-result-group"> = ${fracText}</span>`;
+    } else {
+      line = exprText || fracText;
+    }
     const meta = esc(item.label && item.label.trim() ? item.label : formatEqTimestamp(item.ts));
     return `
       <div class="eq-row" data-id="${item.id}">
