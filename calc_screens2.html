@@ -631,50 +631,9 @@
   outline-offset:2px;
 }
 .eq-equation{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  color:#bdfcb7;
-  font-size:clamp(24px, 3.1vw, 26px);
-  line-height:1.25;
-  font-weight:600;
-  font-feature-settings:'tnum' 1;
-}
-.eq-expression{
-  font-size:clamp(18px, 2.4vw, 20px);
-  opacity:.9;
-  letter-spacing:.02em;
-}
-.eq-output{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-end;
-  gap:8px;
-  font-size:inherit;
-}
-.eq-result-line{
-  display:inline-flex;
-  align-items:baseline;
-  gap:.35rem;
-}
-.eq-result-symbol{
-  font-size:.85em;
-  letter-spacing:.08em;
   font-weight:700;
-  color:inherit;
-  opacity:.95;
-}
-.eq-frac{
-  display:inline-flex;
-  align-items:baseline;
-  gap:.3rem;
-}
-.eq-decimal{
-  font-size:clamp(21px, 3vw, 24px);
-  letter-spacing:.02em;
-  opacity:.95;
-  text-align:right;
-  min-width:min(120px, 40%);
+  font-size:clamp(16px, 2.6vw, 20px);
+  line-height:1.35;
 }
 .eq-meta{
   font-size:12px;
@@ -1867,35 +1826,18 @@ function renderSavedEq(){
   const esc = (s='') => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
   list.innerHTML = savedEq.map(item => {
-    const exprText = (item.expr || '').trim();
-    const fracText = (item.frac || '').trim();
-    const decText = (item.dec || '').trim();
-    const expr = exprText ? esc(exprText) : '';
-    const frac = fracText ? esc(fracText) : '';
-    const dec = decText ? esc(decText) : '';
-    const hasResults = Boolean(frac || dec);
-    const output = hasResults ? `
-          <div class="eq-output">
-            <div class="eq-result-line">
-              <span class="eq-result-symbol">=</span>
-              ${frac ? `<span class="eq-frac">${frac}</span>` : ''}
-            </div>
-            ${dec ? `<div class="eq-decimal">${dec}</div>` : ''}
-          </div>
-        ` : '';
+    const eqParts = [item.expr, item.frac].filter(Boolean).map(esc);
+    const line = eqParts.join(' = ');
     const meta = esc(item.label && item.label.trim() ? item.label : formatEqTimestamp(item.ts));
     return `
       <div class="eq-row" data-id="${item.id}">
         <button class="eq-body" type="button">
-          <div class="eq-equation">
-            ${expr ? `<div class="eq-expression">${expr}</div>` : ''}
-            ${output}
-          </div>
+          <div class="eq-equation">${line}</div>
           <div class="eq-meta" data-id="${item.id}">${meta}</div>
         </button>
         <div class="eq-actions">
-          <button class="eq-load" type="button" aria-label="Load equation" data-id="${item.id}">?</button>
-          <button class="eq-delete" type="button" aria-label="Delete equation" data-id="${item.id}">??</button>
+          <button class="eq-load" type="button" aria-label="Load equation" data-id="${item.id}">⤓</button>
+          <button class="eq-delete" type="button" aria-label="Delete equation" data-id="${item.id}">🗑</button>
         </div>
       </div>
     `;
@@ -1907,8 +1849,7 @@ function renderSavedEq(){
     btn.addEventListener('click', () => {
       const item = savedEq.find(eq => eq.id === id);
       if (!item) return;
-      const textParts = [item.expr, item.frac, item.dec].filter(part => part && part.trim());
-      const text = textParts.join(' = ');
+      const text = [item.expr, item.frac].filter(Boolean).join(' = ');
       copyEqText(text);
     });
   });
@@ -2284,9 +2225,6 @@ function loadMemorySetById(id){
   renderMemoryLiveRow();
   const name = (set.name && set.name.trim()) || defaultSetName(setIndex + 1);
   showToast(`Loaded ${name}`);
-  if (typeof window._cmClose === 'function'){
-    window._cmClose();
-  }
 }
 
 function updateMemorySetName(id, value){
