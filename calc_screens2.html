@@ -1800,6 +1800,15 @@ function copyEqText(text){
   }
 }
 
+function canonicalEquationDisplay(expr='', frac=''){
+  const exprText = String(expr || '').trim();
+  const fracText = String(frac || '').trim();
+  if (exprText && fracText){
+    return `${exprText} = ${fracText}`.trim();
+  }
+  return (exprText || fracText).trim();
+}
+
 function renderSavedEq(){
   const list = document.getElementById('eqList');
   if (!list) return;
@@ -1812,8 +1821,8 @@ function renderSavedEq(){
   const esc = (s='') => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 
   list.innerHTML = savedEq.map(item => {
-    const exprText = item.expr ? esc(item.expr) : '';
-    const fracText = item.frac ? esc(item.frac) : '';
+    const exprText = esc((item.expr || '').trim());
+    const fracText = esc((item.frac || '').trim());
     let line = '';
     if (exprText && fracText){
       line = `${exprText}<span class="eq-result-group"> = ${fracText}</span>`;
@@ -1886,6 +1895,17 @@ function snapshotCurrentEquation(){
   }
   const frac = (fractionLine.textContent || '').trim();
   const dec = (decimalLine.textContent || '').trim();
+  const displayKey = canonicalEquationDisplay(expr, frac);
+  if (!displayKey){
+    showToast('Nothing to save');
+    return;
+  }
+
+  const duplicate = savedEq.some(item => canonicalEquationDisplay(item.expr, item.frac) === displayKey);
+  if (duplicate){
+    showToast('This equation is already saved.');
+    return;
+  }
 
   const tokensSnapshot = tokens.map(t => (t == null ? null : String(t)));
   const displaysSnapshot = tokenDisplays.map(v => (v === undefined ? null : v));
@@ -1906,7 +1926,7 @@ function snapshotCurrentEquation(){
 
   saveSavedEq();
   renderSavedEq();
-  showToast('Equation saved');
+  showToast('Equation saved.');
 }
 
 function deleteSavedEquation(id){
@@ -2028,6 +2048,15 @@ let memorySets = [];
 
 function uid(){ return Math.random().toString(36).slice(2,9); }
 const sanitizeMemoryValue = (v) => (Number.isFinite(v) ? v : null);
+function memorySetSignature(values){
+  const normalized = [];
+  const arr = Array.isArray(values) ? values : [];
+  for (let i=0;i<MEMORY_SLOT_COUNT;i++){
+    const val = sanitizeMemoryValue(arr[i]);
+    normalized.push(val == null ? 'null' : `${val}`);
+  }
+  return normalized.join('|');
+}
 
 function loadMemorySets(){
   try{
@@ -2183,6 +2212,12 @@ function addCurrentSlotsAsSet(){
     showToast('Nothing to save');
     return;
   }
+  const signature = memorySetSignature(values);
+  const duplicate = memorySets.some(set => memorySetSignature(set.values) === signature);
+  if (duplicate){
+    showToast('This button set is already saved.');
+    return;
+  }
   const set = {
     id: uid(),
     name: defaultSetName(memorySets.length + 1),
@@ -2191,7 +2226,7 @@ function addCurrentSlotsAsSet(){
   memorySets.push(set);
   saveMemorySets();
   renderMemorySets();
-  showToast('Set saved');
+  showToast('Button set saved.');
 }
 
 function deleteMemorySetById(id){
@@ -2784,7 +2819,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
     });
   }
 
-  function showToast(msg='Copied', ms=900){
+  function showToast(msg='Copied', ms=3400){
     const toast = document.getElementById('copyToast');
     if (!toast) return;
     toast.querySelector('span').textContent = msg;
