@@ -322,92 +322,7 @@
   }
 	  
 	  
-	  /* ===== Modal Carousel ===== */
-.modal {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.45);
-  display: none;               /* toggled to 'flex' in JS */
-  align-items: center; justify-content: center;
-  z-index: 30;
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-}
-.modal__sheet {
-  width: min(680px, 92vw);
-  height: min(80vh, 700px);
-  background: #0f1515;         /* matches your bezel tone */
-  color: #eefbf6;
-  border-radius: 14px;
-  box-shadow: 0 18px 60px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04);
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  overflow: hidden;
-}
-.modal__bar {
-  display:flex; align-items:center; justify-content:space-between;
-  gap:8px; padding:10px 12px;
-  background: linear-gradient(#121b1b, #0f1515);
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-.modal__title { font-weight:700; letter-spacing:.02em }
-.modal__controls { display:flex; gap:8px }
-.modal__btn {
-  appearance:none; border:0; border-radius:10px; padding:8px 10px; font-weight:700;
-  background:#0ea5a5; color:#0b1515; cursor:pointer;
-}
-.modal__btn--ghost {
-  background:transparent; color:#aee; border:1px solid rgba(255,255,255,.12);
-}
-
-.carousel {
-  position: relative;
-  height: 100%;
-  --idx: 0; /* current slide index */
-}
-.car-track {
-  display: flex; height: 100%;
-  transition: transform .35s ease;
-  will-change: transform;
-}
-.carousel.dragging .car-track { transition: none; }
-.car-slide {
-  flex: 0 0 100%;
-  overflow: auto; /* content scrolls */
-  padding: 14px;
-}
-.car-slide h3 { margin: 6px 0 10px; font-size: 1.1rem }
-.car-slide p, .car-slide li { color:#d4efe7 }
-
-.car-edge {
-  position: absolute; inset: 0;
-  pointer-events: none; /* only buttons are clickable */
-}
-.car-nav {
-  position: absolute; top: 50%; transform: translateY(-50%);
-  pointer-events: auto;
-  width: 34px; height: 34px; border: 0; border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  color: #eaffff; font-size: 18px; font-weight: 900;
-  display: grid; place-items: center; cursor: pointer;
-  opacity: .6; transition: opacity .2s ease, background .2s ease;
-}
-.car-nav:hover, .car-nav:focus-visible { opacity: 1; background: rgba(255,255,255,.12); outline:2px solid #0ea5a5; outline-offset:2px }
-.car-nav[disabled] { opacity: .25; cursor: default }
-.car-nav.prev { left: 8px }
-.car-nav.next { right: 8px }
-
-.car-dots {
-  display: flex; gap: 8px; align-items:center; justify-content:center;
-  padding: 8px 10px; border-top: 1px solid rgba(255,255,255,.06);
-  background: linear-gradient(#0f1515, #121b1b);
-}
-.car-dot {
-  width: 7px; height: 7px; border-radius: 999px; border: 0;
-  background: rgba(255,255,255,.25); cursor: pointer;
-}
-.car-dot[aria-current="true"] { background: #0ea5a5 }
-
-/* Link tiles on the landing card */
+	/* Link tiles on the landing card */
 .link-grid {
   display:grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;
 }
@@ -596,6 +511,9 @@
 }
 .cm-memcell .k{ opacity: .7; }
 .cm-memcell .v{ font-weight: 700; }
+#cmMemPreview{
+  margin-top:10px;
+}
 
 .eq-list{
   display:flex;
@@ -856,11 +774,8 @@
 }
 .mem-sets-empty{
   font-size:13px;
-
-      <button id="cmPrev" class="cm-nav cm-prev" aria-label="Previous">‹</button>
-      <button id="cmNext" class="cm-nav cm-next" aria-label="Next">›</button>  opacity:.75;
+  opacity:.75;
 }
-
 .chalk-width-grid{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -1059,10 +974,17 @@
         <!-- Slide 0: Home / Hub -->
         <section class="cm-card">
           <header class="cm-card-head">Inch Calc &mdash; Tape Measure Calculator</header>
-          <p class="cm-card-sub">Chain inches + feet math built for carpenters.</p>
+          <p class="cm-card-sub">Tape Measure Companion Calculator.</p>
 
           <p>Inch Calc keeps the tape-measure rhythm: punch 42 1/4 + 2.375 + 9/16 and it instantly shows the answer as a clean mixed fraction (snapped to 1/16″) plus the precise decimal.</p>
-          <p>The live tape view keeps a red center line locked on your result, while 1/16th fraction tiles, quick feet entry, and tap-to-copy outputs make it faster than scribbling on a scrap.</p>
+          <p>The live tape view keeps a red center line locked on your result, quick feet entry, and five customizable number buttons make it faster than scribbling on a scrap.</p>
+
+          <div class="cm-tiles">
+            <button id="savedEqTile" class="cm-tile" type="button">Saved Equations &mdash; bookmark full problems</button>
+            <button id="memCenterTile" class="cm-tile" type="button">Memory Center &mdash; reusable M1–M5 sets</button>
+            <button id="chalkHelperTile" class="cm-tile" type="button">Hinge/Style Marker &mdash; quick door spacing</button>
+            <a href="segment_tape.html" class="cm-tile">Segment Calculator &mdash; break spans into equal pieces ↗</a>
+          </div>
 
           <h3>What Inch Calc Does</h3>
           <ul class="cm-list">
@@ -1080,12 +1002,7 @@
           <h3>Every-day shop workflow</h3>
           <p>Tap a whole number, add a fraction tile, convert to feet mid-stream, recall M1–M5, then copy the answer straight to your cut list.</p>
 
-          <div class="cm-tiles">
-            <button id="savedEqTile" class="cm-tile" type="button">Saved Equations &mdash; bookmark full problems</button>
-            <button id="memCenterTile" class="cm-tile" type="button">Memory Center &mdash; reusable M1–M5 sets</button>
-            <button id="chalkHelperTile" class="cm-tile" type="button">Hinge/Style Marker &mdash; quick door spacing</button>
-            <a href="segment_tape.html" class="cm-tile">Segment Calculator &mdash; break spans into equal pieces ↗</a>
-          </div>
+
           <button id="installBtn" class="cm-tile" style="display:none;">Install App</button>
         </section>
 
@@ -1119,6 +1036,8 @@
             </div>
             <div class="mem-live-row" id="memLiveRow"></div>
           </div>
+
+          <div class="cm-memgrid" id="cmMemPreview" aria-live="polite"></div>
 
           <div class="mem-sets">
             <div class="mem-sets-heading">
@@ -3291,30 +3210,6 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   document.addEventListener('contextmenu', (e) => {
     if (e.target.closest('.btn')) e.preventDefault();
   }, { capture: true });
-
-  // Optional orientation transform helper (no-op if .app is absent)
-  function applyOrientationFix() {
-    const app = document.querySelector('.app');
-    if (!app) return;
-
-    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-    const rawAngle = (screen.orientation && typeof screen.orientation.angle === 'number')
-      ? screen.orientation.angle
-      : (typeof window.orientation === 'number' ? window.orientation : 0);
-    const angle = ((rawAngle % 360) + 360) % 360; // 0, 90, 180, 270
-
-    if (!isLandscape) { app.style.transform = ''; app.style.transformOrigin = ''; return; }
-
-    if (angle === 270)       app.style.transform = 'rotate(-90deg) translateX(-100%)';
-    else if (angle === 90)   app.style.transform = 'rotate(90deg) translateY(-100%)';
-    else if (angle === 180)  app.style.transform = 'rotate(90deg) translateY(-100%)';
-    else                     app.style.transform = 'rotate(90deg) translateY(-100%)';
-
-    app.style.transformOrigin = 'top left';
-  }
-  window.addEventListener('DOMContentLoaded', applyOrientationFix);
-  window.addEventListener('resize', applyOrientationFix);
-  window.addEventListener('orientationchange', () => setTimeout(applyOrientationFix, 60));
 
   /* PWA: Service Worker + Install */
   let deferredPrompt = null;
