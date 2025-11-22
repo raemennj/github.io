@@ -36,14 +36,12 @@
     -webkit-font-smoothing:antialiased;
     display:flex; justify-content:center; align-items:stretch;
     padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 10px) 10px;
-    min-height: var(--app-height, 100dvh);
-    height: var(--app-height, 100dvh);
+    min-height: 100dvh;
+    height: 100dvh;
     overflow:hidden;
   }
 
   :root{
-    --app-height: 100dvh;
-    --app-width: 100vw;
     --card-max:420px; --gap:8px; --tile:56px; --pad:var(--gap);
     --tape-min:120px; --results-min:140px; --history-min:40px; --output-min:40px;
     --results-pad-top: var(--pad);
@@ -72,30 +70,6 @@
     "bezel"
     "memory"
     "keypad";
-}
-
-@media (orientation: landscape) and (min-width: 820px){
-  .card{
-    width:100%;
-    max-width:1100px;
-    grid-template-columns:minmax(360px, 1.15fr) minmax(360px, .85fr);
-    grid-template-rows:auto 1fr;
-    grid-template-areas:
-      "bezel keypad"
-      "memory keypad";
-    align-items:stretch;
-  }
-  .panel.memory{
-    align-self:start;
-  }
-  .panel.keypad{
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-start;
-  }
-  .panel.keypad .console-grid{
-    margin-bottom:var(--gap);
-  }
 }
 
   .panel{
@@ -1184,47 +1158,6 @@
 
   const ro = new ResizeObserver(computeTile);
   ro.observe(document.getElementById('card'));
-
-  /* ===== Orientation + viewport stabilizer ===== */
-  function initOrientationStabilizer(){
-    const meta = document.querySelector('meta[name="viewport"]');
-    const BASE_VIEWPORT = 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no';
-
-    if (meta) meta.setAttribute('content', BASE_VIEWPORT);
-
-    const updateViewportVars = () => {
-      const vv = window.visualViewport;
-      const height = vv ? vv.height : window.innerHeight;
-      const width = vv ? vv.width : window.innerWidth;
-      setVar('--app-height', `${height}px`);
-      setVar('--app-width', `${width}px`);
-    };
-
-    let settleTimer = null;
-    const scheduleSettle = () => {
-      clearTimeout(settleTimer);
-      settleTimer = setTimeout(() => {
-        settleTimer = null;
-        updateViewportVars();
-        computeTile();
-      }, 120);
-    };
-
-    const handleOrientationChange = () => {
-      if (meta) meta.setAttribute('content', BASE_VIEWPORT);
-      scheduleSettle();
-    };
-
-    window.addEventListener('resize', scheduleSettle);
-    window.addEventListener('orientationchange', handleOrientationChange);
-
-    if (window.visualViewport){
-      window.visualViewport.addEventListener('resize', scheduleSettle);
-      window.visualViewport.addEventListener('scroll', scheduleSettle);
-    }
-
-    updateViewportVars();
-  }
 
   /* ====== Calculator logic (Feet behavior + safe eval) ====== */
   const tape = document.getElementById('tape');
@@ -3301,7 +3234,6 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   });
 
   // Bootstrap
-  initOrientationStabilizer();
   computeTile();
   initTape();
   loadMemory();
