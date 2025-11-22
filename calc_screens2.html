@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>Inch Calc</title>
 
   <!-- Fonts & CSS -->
@@ -36,10 +36,14 @@
     -webkit-font-smoothing:antialiased;
     display:flex; justify-content:center; align-items:stretch;
     padding: 10px 10px calc(env(safe-area-inset-bottom, 0px) + 10px) 10px;
-    min-height: 100dvh; overflow:hidden;
+    min-height: var(--app-height, 100dvh);
+    height: var(--app-height, 100dvh);
+    overflow:hidden;
   }
 
   :root{
+    --app-height: 100dvh;
+    --app-width: 100vw;
     --card-max:420px; --gap:8px; --tile:56px; --pad:var(--gap);
     --tape-min:120px; --results-min:140px; --history-min:40px; --output-min:40px;
 
@@ -1172,8 +1176,47 @@
 
   const ro = new ResizeObserver(computeTile);
   ro.observe(document.getElementById('card'));
-  window.addEventListener('resize', computeTile);
-  window.addEventListener('orientationchange', () => setTimeout(computeTile, 60));
+
+  /* ===== Orientation + viewport stabilizer ===== */
+  function initOrientationStabilizer(){
+    const meta = document.querySelector('meta[name="viewport"]');
+    const BASE_VIEWPORT = 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no';
+
+    if (meta) meta.setAttribute('content', BASE_VIEWPORT);
+
+    const updateViewportVars = () => {
+      const vv = window.visualViewport;
+      const height = vv ? vv.height : window.innerHeight;
+      const width = vv ? vv.width : window.innerWidth;
+      setVar('--app-height', `${height}px`);
+      setVar('--app-width', `${width}px`);
+    };
+
+    let settleTimer = null;
+    const scheduleSettle = () => {
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(() => {
+        settleTimer = null;
+        updateViewportVars();
+        computeTile();
+      }, 120);
+    };
+
+    const handleOrientationChange = () => {
+      if (meta) meta.setAttribute('content', BASE_VIEWPORT);
+      scheduleSettle();
+    };
+
+    window.addEventListener('resize', scheduleSettle);
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    if (window.visualViewport){
+      window.visualViewport.addEventListener('resize', scheduleSettle);
+      window.visualViewport.addEventListener('scroll', scheduleSettle);
+    }
+
+    updateViewportVars();
+  }
 
   /* ====== Calculator logic (Feet behavior + safe eval) ====== */
   const tape = document.getElementById('tape');
@@ -3250,6 +3293,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   });
 
   // Bootstrap
+  initOrientationStabilizer();
   computeTile();
   initTape();
   loadMemory();
