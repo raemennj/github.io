@@ -1159,6 +1159,28 @@
   const ro = new ResizeObserver(computeTile);
   ro.observe(document.getElementById('card'));
 
+  function initPortraitLock(){
+    const orientation = window.screen?.orientation;
+    if (!orientation?.lock) return;
+
+    const tryLock = () => {
+      orientation.lock('portrait').catch(() => {});
+    };
+
+    const onceOnInteract = () => {
+      tryLock();
+      window.removeEventListener('pointerdown', onceOnInteract);
+      window.removeEventListener('keydown', onceOnInteract);
+    };
+
+    tryLock();
+    window.addEventListener('pointerdown', onceOnInteract);
+    window.addEventListener('keydown', onceOnInteract);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) tryLock();
+    });
+  }
+
   /* ====== Calculator logic (Feet behavior + safe eval) ====== */
   const tape = document.getElementById('tape');
   const sweep = document.getElementById('sweep');
@@ -3234,6 +3256,7 @@ document.querySelectorAll('.btn.mem').forEach(btn=>{
   });
 
   // Bootstrap
+  initPortraitLock();
   computeTile();
   initTape();
   loadMemory();
