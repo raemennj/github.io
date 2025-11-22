@@ -46,6 +46,8 @@
     --app-width: 100vw;
     --card-max:420px; --gap:8px; --tile:56px; --pad:var(--gap);
     --tape-min:120px; --results-min:140px; --history-min:40px; --output-min:40px;
+    --results-pad-top: var(--pad);
+    --results-pad-bottom: var(--pad);
 
     /* theme */
     --card:#fff; --display-bg:#02210a; --display-text:#0f0;
@@ -152,6 +154,8 @@
   .results{ background:var(--display-bg); color:var(--display-text); min-height:0; }
   .results .pad{
     display:flex; flex-direction:column; gap:8px; height:100%;
+    padding-top:var(--results-pad-top, var(--pad));
+    padding-bottom:var(--results-pad-bottom, var(--pad));
   }
   .history-row{
     display:flex;
@@ -1129,6 +1133,10 @@
 
     // Measure minimum results height parts
     const pad = gap;
+    const resultsPadTop = pad;
+    const resultsPadBottom = Math.max(4, Math.round(pad * 0.35));
+    setVar('--results-pad-top', resultsPadTop + 'px');
+    setVar('--results-pad-bottom', resultsPadBottom + 'px');
     const inputEl  = document.getElementById('inputLine');
     const outputEl = document.querySelector('.output');
 
@@ -1154,7 +1162,7 @@
 
     // Results panel minimum = padding*2 + history + (fixed 8px gap between rows) + output + 1px divider
     const INTER_ROW_GAP = 8;
-    const resultsMin = Math.ceil(pad*2 + historyMin + INTER_ROW_GAP + outputMin + 1);
+    const resultsMin = Math.ceil(resultsPadTop + resultsPadBottom + historyMin + INTER_ROW_GAP + outputMin + 1);
     setVar('--results-min', resultsMin + 'px');
 
     // Keypad composition (8 rows total: 1 mem + 4 console + 3 fractions)
