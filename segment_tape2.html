@@ -196,20 +196,43 @@ input {
     text-align: left;
 }
 .saved-solution {
-    background-color: #fffbe6;
     border: 1px solid #363636;
     border-radius: 10px;
     padding: 10px;
     margin-bottom: 10px;
+}
+.saved-solution.saved-equal {
+    background-color: lightblue;
+}
+.saved-solution.saved-near {
+    background-color: lightgreen;
 }
 .saved-solution-title {
     font-weight: 600;
     font-size: 18px;
     margin-bottom: 6px;
 }
-.saved-solution-details {
+.saved-fields-row {
+    display: flex;
+    margin-bottom: 8px;
+}
+.saved-field {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    border-right: 1px solid #363636;
+}
+.saved-field:last-child {
+    border-right: none;
+}
+.saved-field div:first-child {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+.saved-segment-row {
     font-size: 15px;
-    line-height: 1.4;
+    margin-top: 4px;
 }
 .saved-solution-actions {
     display: flex;
@@ -531,20 +554,27 @@ const renderSavedSolutions = () => {
     return;
   }
   container.innerHTML = savedSolutions.map(sol => {
-    const modeLabel = sol.mode === 'near' ? 'Near' : 'Equal';
-    const lastLabel = sol.mode === 'near' ? 'Inches' : 'Segments';
+    const isNear = sol.mode === 'near';
+    const lastLabel = isNear ? 'Inches' : 'Segments';
+    const modeClass = isNear ? 'saved-near' : 'saved-equal';
     const segmentHtml = sol.segmentLengthText ? `${sol.segmentLengthText}&quot;` : '—';
-    return `<div class="saved-solution" data-id="${sol.id}">
+    return `<div class="saved-solution ${modeClass}" data-id="${sol.id}">
       <div class="saved-solution-title">${escapeHTML(sol.name)}</div>
-      <div class="saved-solution-details">
-        <div><strong>Mode:</strong> ${modeLabel}</div>
-        <div><strong>Length:</strong> ${escapeHTML(sol.length || '')}"</div>
-        <div><strong>End allowance:</strong> ${escapeHTML(sol.endDistance || '')}"</div>
-        <div><strong>${lastLabel}:</strong> ${escapeHTML(sol.valueUsed || '')}</div>
-        <div><strong>Segment length:</strong> ${segmentHtml}</div>
-        <div><strong>Total segments:</strong> ${sol.numSegments ?? '—'}</div>
-        <div><strong>Marks:</strong> ${sol.marksCount ?? '—'}</div>
+      <div class="saved-fields-row">
+        <div class="saved-field">
+          <div>Length</div>
+          <div>${escapeHTML(sol.length || '')}"</div>
+        </div>
+        <div class="saved-field">
+          <div>End allowance</div>
+          <div>${escapeHTML(sol.endDistance || '')}"</div>
+        </div>
+        <div class="saved-field">
+          <div>${lastLabel}</div>
+          <div>${escapeHTML(sol.valueUsed || '')}</div>
+        </div>
       </div>
+      <div class="saved-segment-row">Segment length: ${segmentHtml}</div>
       <div class="saved-solution-actions">
         <button class="tape-btn saved-load" type="button" data-id="${sol.id}">Load</button>
         <button class="tape-btn saved-delete" type="button" data-id="${sol.id}">Delete</button>
