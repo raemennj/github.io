@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<!-- 
+         This web page is the sole creation and production of 
+         raemenn jewall. 2023
+
+         By automating the mathematical process, this segment calculator 
+         eliminates errors due to manual calculation. We can focus on the  
+         physical crafting process with accurate numerical backing. 
+         This allows for projects to be completed with a higher  
+         degree of precision, efficiency, and confidence.
+-->
+
+<title>Segment Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://use.typekit.net/iwc3riw.css" rel="stylesheet"/>
+<style>
+body {
+    font-size: 18px;
+    margin: 0;
+    padding: 5px;
+    background-color: darkslategrey;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    user-select: none;
+    font-family: "dunbar-tall", sans-serif;
+}
+.tab-container {
+    display: flex;
+    width: 100%;
+}
+.tab {
+    flex: 1;
+    padding: 15px;
+    font-size: 19px;
+    cursor: pointer;
+    border-left: 1px solid #363636;
+    border-right: 1px solid #363636;
+    border-bottom: 1px solid #363636;
+    text-align: center;
+    background-color: lightyellow;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-top: 5px;
+}
+.tab.active {
+    background-color: #ccc;
+    border-bottom: 0px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    margin-top: 0px;
+}
+#equalTab.active {
+    background-color: lightblue;
+    border-left: 0px;
+}
+#nearTab.active {
+    background-color: lightgreen;
+    border-right: 0px;
+}
+.inputLabel {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+.lightgreen-bg {
+    background-color: lightgreen !important;
+}
+.input-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+.input-container div {
+    flex: 1;
+    text-align: center;
+}
+input {
+    font-size: 18px;
+    max-width: 100%;
+    text-align: center;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: lightyellow;
+    width: 70%;
+    font-family: "dunbar-tall", sans-serif;
+    cursor: pointer;
+}
+#marksResult {
+    text-align: center;
+    max-height: 42vh;
+    overflow-y: auto;
+    padding: 8px 12px;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+#marksResult hr {
+    border: none;
+    border-top: 1px solid #c8c8c8;
+    margin: 6px 0;
+}
+#segmentResult {
+    text-align: center;
+}
+.length {
+    width: 33%;
+    float: left;
+    text-align: center;
+    padding-top: 15px;
+    padding-bottom: 14px;
+    background-color: lightblue;
+    border-bottom: 1px solid #363636;
+}
+.burn {
+    width: 34%;
+    float: left;
+    text-align: center;
+    padding-top: 15px;
+    padding-bottom: 14px;
+    background-color: lightblue;
+    border-bottom: 1px solid #363636;
+}
+.segmentType {
+    width: 33%;
+    float: left;
+    text-align: center;
+    padding-top: 15px;
+    padding-bottom: 14px;
+    background-color: lightblue;
+    border-bottom: 1px solid #363636;
+}
+.resultsBG {
+    text-align: center;
+    background-color: lightyellow;
+    width: 100%;
+}
+.factor sup, .factor sub {
+    font-size: 0.85em;
+}
+.readme-container {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    border: none;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.readme-container button {
+    flex: 1;
+    text-align: center;
+    text-decoration: underline;
+    background-color: lightyellow;
+    border: none;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    font-size: 18px;
+    padding-bottom: 10px;
+    font-family: "dunbar-tall", sans-serif;
+}
+.save-modal-section h3 {
+    margin: 10px 0 6px;
+    font-size: 20px;
+}
+.save-modal-inputs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.save-modal-inputs input {
+    flex: 1;
+    width: 100%;
+    max-width: none;
+    margin-top: 0;
+}
+.save-modal-inputs button {
+    margin-top: 0;
+}
+#saveSolutionBtn, #showSaveModalBtn {
+    cursor: pointer;
+}
+#saveSolutionBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.save-hint {
+    font-size: 14px;
+    margin: 0;
+}
+.saved-solutions-list {
+    max-height: 45vh;
+    overflow-y: auto;
+    text-align: left;
+}
+.saved-solution {
+    background-color: #fffbe6;
+    border: 1px solid #363636;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.saved-solution-title {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 6px;
+}
+.saved-solution-details {
+    font-size: 15px;
+    line-height: 1.4;
+}
+.saved-solution-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+.saved-solution-actions .tape-btn {
+    flex: 1;
+    font-size: 15px;
+    padding: 6px;
+}
+.save-empty {
+    text-align: center;
+    font-style: italic;
+    padding: 12px;
+    background-color: #fffbe6;
+    border-radius: 10px;
+    border: 1px dashed #8a8a8a;
+}
+.close-btn {
+    text-decoration: underline;
+    cursor: pointer;
+}
+.info {
+    float: right;
+    text-align: center;
+    background-color: lightyellow;
+    width: 100%;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.credits {
+    text-align: center;
+    background-color: lightyellow;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    width: 100%;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}
+#showModalBtn {
+    color: black;
+    cursor: pointer;
+}
+.modal-content {
+    background-color: lightyellow;
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 14px;
+    border: 1px solid #888;
+    width: 80%;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+}
+
+@media screen and (orientation:landscape) {
+.modal-content {
+    max-height: calc(100vh - 80px);
+}
+}
+
+@media (min-width: 601px) {
+body {
+    margin: 0 auto;
+    max-width: 600px;
+}
+}
+
+/* ===== Tape (fixed 3" zoom + classic styling) ===== */
+.tape-wrapper {
+    width: 100%;
+    background: lightyellow;
+    border: 1px solid #1b1b1b;
+    border-radius: 12px;
+    margin: 8px 0 6px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.6), inset 0 -2px 0 rgba(0,0,0,.06);
+}
+.tape-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+}
+.tape-head .spacer {
+    flex: 1
+}
+.tape-head .label {
+    min-width: 140px;
+    text-align: center;
+    font-weight: 600
+}
+.tape-btn {
+    appearance: none;
+    border: 1px solid #1b1b1b;
+    background: #fff;
+    padding: 6px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: "dunbar-tall", sans-serif;
+    box-shadow: 0 1px 0 rgba(0,0,0,.06)
+}
+.tape-btn:active {
+    transform: translateY(1px)
+}
+#tapeContainer {
+    width: 100%;
+    height: 114px;
+    position: relative;
+    overflow: hidden;
+    border-top: 1px solid #1b1b1b;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    touch-action: pan-y; /* keep vertical page scroll; capture horizontal swipes */
+}
+#tapeContainer svg {
+    display: block;
+    width: 100%;
+    height: 120px
+}
+.pill {
+    display: inline-block;
+    font-size: 18px;
+    font-family: "dunbar-tall", sans-serif;
+    background: #fff;
+    border: 1px solid #1b1b1b;
+    border-radius: 999px;
+    padding: 4px 12px;
+    line-height: 1
+}
+.pill small {
+    opacity: .9
+}
+
+/* ==== No-select & no-callout on controls ==== */
+.tape-btn, .tab, .pill, .label, #tapeContainer, .readme-container button {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;            /* iOS long-press menu */
+  -webkit-tap-highlight-color: transparent; /* remove tap flash */
+  -ms-user-select: none;
+}
+.tape-btn { touch-action: manipulation; }   /* helps with double-tap zoom */
+
+/* (optional) re-enable selection for results text if you ever remove body{user-select:none}
+#marksResult, #segmentResult { -webkit-user-select: text; user-select: text; } */
+</style>
+</head>
+<body>
+
+<!-- ===== Tape Measure (with zoom) ===== -->
+<div class="tape-wrapper" aria-label="Interactive tape measure">
+  <div class="tape-head">
+    <button class="tape-btn" id="prevMark" aria-label="Previous mark" title="Click: previous • Long-press: first">◀</button>
+    <div class="spacer"></div>
+    <div class="label pill" aria-live="polite"> <span id="markIndex">–</span> of <span id="markCount">0</span> &nbsp;·&nbsp;&nbsp;·&nbsp;&nbsp;·&nbsp;<span id="markFrac">—</span> <small>"</small> </div>
+    <div class="spacer"></div>
+    <button class="tape-btn" id="nextMark" aria-label="Next mark" title="Click: next • Long-press: last">▶</button>
+  </div>
+  <div id="tapeContainer" role="img" aria-label="Ruler with 1/16-inch ticks"></div>
+</div>
+<div class="tab-container">
+  <div id="equalTab" class="tab active" tabindex="0" role="button" onclick="changeTab('equal')">Equal</div>
+  <div id="nearTab" class="tab" tabindex="0" role="button" onclick="changeTab('near')">Near</div>
+</div>
+<form class="input-container">
+  <div class="length">
+    <label for="length">Length:</label>
+    <br>
+    <input type="text" id="length">
+  </div>
+  <div class="burn">
+    <label for="endDistance">End allowance:</label>
+    <br>
+    <input type="text" id="endDistance">
+  </div>
+  <div class="segmentType">
+    <label id="dynamicLabel" for="valueUsed">Segments:</label>
+    <br>
+    <input type="text" id="valueUsed">
+  </div>
+</form>
+<div class="resultsBG">
+  <p id="segmentResult" role="text" aria-live="assertive" aria-label="Segment Length Result"></p>
+  <p id="marksResult" role="text" aria-live="assertive" aria-label="Segment Marks (scrollable list)"></p>
+</div>
+<div class="readme-container">
+  <button id="showModalBtn">Instructions</button>
+  <button id="showSaveModalBtn" type="button">Load</button>
+  <div id="instructionsModal" class="modal">
+    <div class="modal-content"> Tap "Equal" for equal segments or "Near" for segments close to a target size. <br>
+      <br>
+      Fill the "Length" field with the total length of your material. <br>
+      <br>
+      Enter the distance you will leave at each end in the "End allowance" field. <br>
+      <br>
+      In the last field, enter the number of segments or the approximate size of each segment, depending on the chosen mode. <br>
+      <br>
+      <a href="calc_screens.html">Tape Measure Calculator</a> <br>
+      <br>
+      Tip: Swipe left or right instead of using the ◀ ▶ buttons to step through the marks. <br>
+      Long-press ◀ to jump to the first mark; long-press ▶ to jump to the last. <br>
+      <br>
+      <span class="close-btn" id="closeModalBtn" tabindex="0">Close</span> </div>
+  </div>
+  <div id="saveModal" class="modal">
+    <div class="modal-content">
+      <div class="save-modal-section">
+        <h3>Save current solution</h3>
+        <div class="save-modal-inputs">
+          <input type="text" id="saveNameInput" placeholder="Name this solution">
+          <button id="saveSolutionBtn" type="button" class="tape-btn" disabled>Save</button>
+        </div>
+        <p class="save-hint">Solve a layout to enable saving.</p>
+      </div>
+      <hr>
+      <div class="save-modal-section">
+        <h3>Saved solutions</h3>
+        <div id="savedSolutionsList" class="saved-solutions-list"></div>
+      </div>
+      <br>
+      <span class="close-btn" id="closeSaveModalBtn" tabindex="0">Close</span>
+    </div>
+  </div>
+</div>
+<script>
+// ===== Helpers
+const gcd = (a, b) => b ? gcd(b, a % b) : a;
+
+// UPDATED: avoids outputs like 21 1/1; carries to whole when n===d
+const toReadableFraction = (x, denom = 16) => {
+  if (isNaN(x)) return '';
+  const sign = x < 0 ? '-' : '';
+  const ax = Math.abs(x);
+
+  // small epsilon to dodge floating artifacts
+  let whole = Math.floor(ax + 1e-10);
+  const frac = ax - whole;
+
+  let n = Math.round(frac * denom);
+  let d = denom;
+
+  // carry 1 to the whole when rounding hits denom/denom
+  if (n === d) { whole += 1; n = 0; }
+
+  // reduce if needed
+  if (n !== 0) {
+    const div = gcd(n, d);
+    n /= div; d /= div;
+  }
+
+  if (n === 0) return sign + (whole ? String(whole) : '0');
+
+  return whole
+    ? `${sign}${whole} &nbsp;&nbsp;<span class='factor'><sup>${n}</sup>/<sub>${d}</sub></span>`
+    : `${sign}<span class='factor'><sup>${n}</sup>/<sub>${d}</sub></span>`;
+};
+
+const parseInput = input => {
+  if (!input) return NaN;
+  const s = String(input).trim();
+  if (s.includes(' ')) { const [w, f] = s.split(' '), [n, d] = f.split('/').map(Number); return (isNaN(n)||isNaN(d)||d===0)? NaN : Number(w) + (n/d); }
+  if (s.includes('/')) { const [n, d] = s.split('/').map(Number); return (isNaN(n)||isNaN(d)||d===0)? NaN : (n/d); }
+  return Number(s);
+};
+
+// ===== Save / Load helpers
+const STORAGE_KEY = 'segmentCalcSavedSolutions';
+let lastSolution = null;
+let savedSolutions = [];
+
+const escapeHTML = (str = '') => String(str ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+const loadSavedSolutions = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    savedSolutions = Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    savedSolutions = [];
+  }
+  return savedSolutions;
+};
+
+const saveSavedSolutions = (list) => {
+  savedSolutions = Array.isArray(list) ? list.slice() : [];
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedSolutions));
+  } catch (err) {
+    // best-effort storage; ignore quota errors
+  }
+};
+
+const updateSaveLoadButtonLabel = () => {
+  const btn = document.getElementById('showSaveModalBtn');
+  if (!btn) return;
+  btn.textContent = lastSolution ? 'Save/Load' : 'Load';
+};
+
+const updateSaveButtonState = () => {
+  const btn = document.getElementById('saveSolutionBtn');
+  if (!btn) return;
+  btn.disabled = !lastSolution;
+};
+
+const renderSavedSolutions = () => {
+  const container = document.getElementById('savedSolutionsList');
+  if (!container) return;
+  if (!savedSolutions.length) {
+    container.innerHTML = '<p class="save-empty">No saved solutions yet. Solve a layout and tap Save.</p>';
+    return;
+  }
+  container.innerHTML = savedSolutions.map(sol => {
+    const modeLabel = sol.mode === 'near' ? 'Near' : 'Equal';
+    const lastLabel = sol.mode === 'near' ? 'Inches' : 'Segments';
+    const segmentHtml = sol.segmentLengthText ? `${sol.segmentLengthText}&quot;` : '—';
+    return `<div class="saved-solution" data-id="${sol.id}">
+      <div class="saved-solution-title">${escapeHTML(sol.name)}</div>
+      <div class="saved-solution-details">
+        <div><strong>Mode:</strong> ${modeLabel}</div>
+        <div><strong>Length:</strong> ${escapeHTML(sol.length || '')}"</div>
+        <div><strong>End allowance:</strong> ${escapeHTML(sol.endDistance || '')}"</div>
+        <div><strong>${lastLabel}:</strong> ${escapeHTML(sol.valueUsed || '')}</div>
+        <div><strong>Segment length:</strong> ${segmentHtml}</div>
+        <div><strong>Total segments:</strong> ${sol.numSegments ?? '—'}</div>
+        <div><strong>Marks:</strong> ${sol.marksCount ?? '—'}</div>
+      </div>
+      <div class="saved-solution-actions">
+        <button class="tape-btn saved-load" type="button" data-id="${sol.id}">Load</button>
+        <button class="tape-btn saved-delete" type="button" data-id="${sol.id}">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+};
+
+// ===== Tabs
+const changeTab = choice => {
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+  document.getElementById(choice + 'Tab').classList.add('active');
+  document.getElementById('dynamicLabel').innerText = choice === 'equal' ? 'Segments:' : 'Inches:';
+  const els = document.querySelectorAll('.length, .burn, .segmentType');
+  (choice === 'near') ? els.forEach(el => el.classList.add('lightgreen-bg')) : els.forEach(el => el.classList.remove('lightgreen-bg'));
+  calculate();
+};
+
+// ===== Tape zoom state
+let marksDecimal = [];      // absolute inches from 0
+let currentMarkIndex = 0;   // pointer into marksDecimal
+let totalLengthIn = 0;      // total inches for ruler scaling
+let zoomMode = 'window';    // 'window' | 'full'
+let zoomWidth = 3;          // inches when window mode
+
+// ===== Ruler with zoom
+const tape = {
+  left: 14, right: 14, top: 6, bottom: 8, h: 110,
+  window(){
+    let L = 0, R = totalLengthIn || 1;
+    if (zoomMode === 'window' && marksDecimal.length){
+      const center = marksDecimal[currentMarkIndex] ?? 0;
+      const w = Math.max(1/8, zoomWidth); // at least 1/8" window
+      if ((totalLengthIn||0) > w){
+        L = Math.max(0, Math.min(center - w/2, totalLengthIn - w));
+        R = L + w;
+      }
+    }
+    this.winL = L; this.winR = Math.max(L + 1/16, R); // ensure non-zero width
+    return [this.winL, this.winR];
+  },
+  scaleX(x, w){
+    const [L, R] = this.window();
+    const inner = Math.max(1, w - this.left - this.right);
+    const clamped = Math.max(L, Math.min(R, x));
+    return this.left + ((clamped - L) / (R - L)) * inner;
+  },
+  draw(){
+    const wrap = document.getElementById('tapeContainer');
+    wrap.innerHTML = '';
+    const w = wrap.clientWidth || 560, h = this.h;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute('role','img');
+
+    // background
+    const bg = document.createElementNS(svgNS, 'rect');
+    bg.setAttribute('x', 0); bg.setAttribute('y', 0);
+    bg.setAttribute('width', w); bg.setAttribute('height', h);
+    bg.setAttribute('fill', 'lightyellow');
+    svg.appendChild(bg);
+
+    // baseline
+    const base = document.createElementNS(svgNS, 'line');
+    base.setAttribute('x1', this.left); base.setAttribute('x2', w - this.right);
+    base.setAttribute('y1', h - this.bottom); base.setAttribute('y2', h - this.bottom);
+    base.setAttribute('stroke', '#000'); base.setAttribute('stroke-width', 1);
+    svg.appendChild(base);
+
+    // ticks within window
+    const [L, R] = this.window();
+    const startF = Math.floor(L * 16);
+    const endF   = Math.ceil(R * 16);
+
+    // gradient background (classic blade vibe)
+    const defs = document.createElementNS(svgNS,'defs');
+    const grad = document.createElementNS(svgNS,'linearGradient');
+    grad.setAttribute('id','blade'); grad.setAttribute('x1','0'); grad.setAttribute('x2','0'); grad.setAttribute('y1','0'); grad.setAttribute('y2','1');
+    const s1 = document.createElementNS(svgNS,'stop'); s1.setAttribute('offset','0%');  s1.setAttribute('stop-color','#fff6a6');
+    const s2 = document.createElementNS(svgNS,'stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','#ffe06a');
+    grad.appendChild(s1); grad.appendChild(s2); defs.appendChild(grad); svg.appendChild(defs);
+
+    // repaint bg using gradient
+    bg.setAttribute('fill','url(#blade)');
+
+    for(let f=startF; f<=endF; f++){
+      const inch = f/16;
+      const x = this.scaleX(inch, w);
+      const isInch = f % 16 === 0;
+      const isHalf = f % 8 === 0 && !isInch;
+      const isQuarter = f % 4 === 0 && !isInch && !isHalf;
+      const isEighth = f % 2 === 0 && !isInch && !isHalf && !isQuarter;
+      const len = isInch? 75 : isHalf? 55 : isQuarter? 40 : isEighth? 20 : 20;
+      const y1 = h - this.bottom, y2 = y1 - len;
+      const tick = document.createElementNS(svgNS, 'line');
+      tick.setAttribute('x1', x); tick.setAttribute('x2', x);
+      tick.setAttribute('y1', y1); tick.setAttribute('y2', y2);
+      tick.setAttribute('stroke', '#000'); tick.setAttribute('stroke-width', (isInch? 1.5 : 1.5));
+      svg.appendChild(tick);
+
+      if (isInch){
+        const label = document.createElementNS(svgNS, 'text');
+        label.setAttribute('x', x+2); label.setAttribute('y', y2-6);
+        label.setAttribute('font-size', 14);
+        label.setAttribute('font-weight', '700');
+        label.setAttribute('font-family', 'dunbar-tall, sans-serif');
+        label.setAttribute('fill', '#000');
+        label.textContent = String(inch.toFixed(0));
+        svg.appendChild(label);
+      }
+    }
+
+    // subtle edge shading
+    const shadeTop = document.createElementNS(svgNS,'rect');
+    shadeTop.setAttribute('x',0); shadeTop.setAttribute('y',0);
+    shadeTop.setAttribute('width',w); shadeTop.setAttribute('height',8);
+    shadeTop.setAttribute('fill','rgba(0,0,0,.06)');
+    svg.appendChild(shadeTop);
+
+    wrap.appendChild(svg);
+    drawMarker();
+  }
+};
+
+function drawMarker(){
+  const wrap = document.getElementById('tapeContainer');
+  const svg = wrap.querySelector('svg');
+  if (!svg) return;
+  const w = wrap.clientWidth || 560, h = 110;
+  const gOld = svg.querySelector('#marker');
+  if (gOld) gOld.innerHTML = '';
+  const g = gOld || document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('id','marker');
+
+  const x = tape.scaleX(marksDecimal[currentMarkIndex] || 0, w);
+  const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1', x); line.setAttribute('x2', x);
+  line.setAttribute('y1', 0); line.setAttribute('y2', h);
+  line.setAttribute('stroke','#d91e18'); line.setAttribute('stroke-width','4');
+
+  const tri = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+  const t = 8; // size
+//  tri.setAttribute('points', `${x},0 ${x-t},12 ${x+t},12`);
+  tri.setAttribute('fill','#d91e18');
+
+  g.appendChild(tri); g.appendChild(line);
+  svg.appendChild(g);
+
+  // label update
+  document.getElementById('markIndex').textContent = marksDecimal.length? (currentMarkIndex+1) : '–';
+  document.getElementById('markCount').textContent = marksDecimal.length;
+  const v = marksDecimal[currentMarkIndex] || 0;
+  document.getElementById('markFrac').innerHTML = toReadableFraction(v);
+}
+
+function gotoMark(i){
+  if (!marksDecimal.length) return;
+  currentMarkIndex = Math.max(0, Math.min(marksDecimal.length-1, i));
+  tape.draw(); // re-center window on the new mark
+}
+
+// ===== Main calculate (original + hook)
+const calculate = () => {
+  const lengthInputEl = document.getElementById('length');
+  const endDistanceInputEl = document.getElementById('endDistance');
+  const valueUsedInputEl = document.getElementById('valueUsed');
+
+  const inputs = {
+    length: lengthInputEl.value,
+    endDistance: endDistanceInputEl.value,
+    valueUsed: valueUsedInputEl.value
+  };
+
+  const method = document.querySelector('.tab.active').id.startsWith('equal') ? 'equal' : 'near';
+  const [length, endDistance, valueUsed] = [parseInput(inputs.length), parseInput(inputs.endDistance), parseInput(inputs.valueUsed)];
+
+  if (isNaN(length) || isNaN(endDistance) || isNaN(valueUsed)) {
+    document.getElementById('segmentResult').innerText = 'Please enter valid numbers or fractions.';
+    document.getElementById('marksResult').innerHTML = '';
+    marksDecimal = []; totalLengthIn = 0; tape.draw();
+    lastSolution = null;
+    updateSaveLoadButtonLabel();
+    updateSaveButtonState();
+    return;
+  }
+
+  let remainingLength = length - 2 * endDistance, segments = [toReadableFraction(endDistance)], segmentLength, numSegments;
+  if (method === 'equal') { numSegments = Math.max(1, Math.round(valueUsed)); segmentLength = remainingLength / numSegments; }
+  else { const exactNumSegments = remainingLength / valueUsed; numSegments = Math.max(1, Math.round(exactNumSegments)); segmentLength = remainingLength / numSegments; }
+
+  // build marks list (including end burn and each segment)
+  marksDecimal = [endDistance];
+  for (let i = 0; i < numSegments; i++){
+    const p = (i + 1) * segmentLength + endDistance;
+    marksDecimal.push(p);
+    segments.push(toReadableFraction(p));
+  }
+
+  const segmentLengthDisplay = toReadableFraction(segmentLength);
+  document.getElementById('segmentResult').innerHTML = `Segment length: ${segmentLengthDisplay}\"`;
+  document.getElementById('marksResult').innerHTML = `Marks:<br><br>${segments.join('"<hr><br>')} `;
+
+  totalLengthIn = Math.max(0, length);
+  tape.draw();
+  gotoMark(0);
+
+  if (marksDecimal.length) {
+    lastSolution = {
+      mode: method,
+      length: inputs.length,
+      endDistance: inputs.endDistance,
+      valueUsed: inputs.valueUsed,
+      segmentLengthText: segmentLengthDisplay,
+      numSegments,
+      marksCount: marksDecimal.length
+    };
+  } else {
+    lastSolution = null;
+  }
+  updateSaveLoadButtonLabel();
+  updateSaveButtonState();
+};
+
+// ===== Debounce
+let debounceTimer;
+const debounceCalculate = () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(calculate, 200); };
+
+// ===== Button press helper (click vs long-press) + no-select cleanup + keyboard
+function attachPress(btn, onClick, onLongPress){
+  const HOLD_MS = 500; // long-press threshold
+  let timer = null, longed = false;
+
+  const clearSelection = () => {
+    const sel = window.getSelection && window.getSelection();
+    if (sel && sel.removeAllRanges) sel.removeAllRanges();
+    // legacy IE: if (document.selection) document.selection.empty();
+  };
+
+  const start = (e) => {
+    longed = false;
+    if (e && typeof e.preventDefault === 'function') e.preventDefault(); // avoid ghost click
+    clearSelection(); // nuke any existing text highlight (iOS/Android)
+    timer = setTimeout(() => {
+      longed = true;
+      onLongPress();
+      if (navigator.vibrate) try { navigator.vibrate(12); } catch {}
+    }, HOLD_MS);
+  };
+  const clear = () => { if (timer) clearTimeout(timer); timer = null; };
+  const end = () => { clear(); if (!longed) onClick(); };
+
+  if ('PointerEvent' in window){
+    btn.addEventListener('pointerdown', start, {passive:false});
+    btn.addEventListener('pointerup', end);
+    btn.addEventListener('pointerleave', clear);
+    btn.addEventListener('pointercancel', clear);
+  } else {
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('mouseleave', clear);
+    btn.addEventListener('touchstart', start, {passive:false});
+    btn.addEventListener('touchend', end);
+    btn.addEventListener('touchcancel', clear);
+  }
+
+  // Keyboard support (Enter / Space to "click")
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  });
+
+  // Stop context menu on long-press
+  btn.addEventListener('contextmenu', (e)=> e.preventDefault());
+}
+
+// ===== Listeners
+// tabs
+ document.getElementById('equalTab').addEventListener('keydown', e=>{ if (e.key === 'Enter') { e.preventDefault(); changeTab('equal'); }});
+ document.getElementById('nearTab').addEventListener('keydown',  e=>{ if (e.key === 'Enter') { e.preventDefault(); changeTab('near');  }});
+ document.getElementById('equalTab').addEventListener('click', ()=> changeTab('equal'));
+ document.getElementById('nearTab').addEventListener('click',  ()=> changeTab('near'));
+
+// inputs
+ document.getElementById('length').addEventListener('input', debounceCalculate);
+ document.getElementById('endDistance').addEventListener('input', debounceCalculate);
+ document.getElementById('valueUsed').addEventListener('input', debounceCalculate);
+
+// tape nav buttons: click vs long-press
+ const prevBtn = document.getElementById('prevMark');
+ const nextBtn = document.getElementById('nextMark');
+ attachPress(prevBtn,
+  ()=> gotoMark(currentMarkIndex-1),            // click
+  ()=> gotoMark(0)                              // long-press → first
+ );
+ attachPress(nextBtn,
+  ()=> gotoMark(currentMarkIndex+1),            // click
+  ()=> gotoMark(Math.max(0, marksDecimal.length-1)) // long-press → last
+ );
+
+// tape redraw on resize
+ window.addEventListener('resize', ()=> tape.draw());
+ // (no zoom control — fixed 3")
+
+// ===== Swipe / Wheel / Keyboard navigation on the tape
+(() => {
+  const el = document.getElementById('tapeContainer');
+
+  // Keyboard left/right when the tape has focus
+  el.setAttribute('tabindex', '0');
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); gotoMark(currentMarkIndex - 1); }
+    if (e.key === 'ArrowRight') { e.preventDefault(); gotoMark(currentMarkIndex + 1); }
+  });
+
+  // Trackpad/mouse horizontal swipe (wheel) support with a short throttle
+  let lastWheel = 0;
+  el.addEventListener('wheel', (e) => {
+    // Only react to mostly-horizontal gestures
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    const now = performance.now();
+    if (now - lastWheel < 180) return; // throttle
+    lastWheel = now;
+    e.preventDefault();
+    if (e.deltaX > 0) gotoMark(currentMarkIndex + 1);
+    else              gotoMark(currentMarkIndex - 1);
+  }, { passive: false });
+
+  // Touch/mouse swipe with Pointer Events (plus a touch fallback)
+  const THRESH = 28; // px horizontal movement required to count as a swipe
+
+  function installPointerSwipe(target) {
+    let sx = 0, sy = 0, tracking = false, handled = false;
+
+    const onDown = (x, y, id) => {
+      sx = x; sy = y; tracking = true; handled = false;
+      target.setPointerCapture?.(id);
+    };
+
+    const onMove = (x, y, rawEvt) => {
+      if (!tracking || handled) return;
+      const dx = x - sx, dy = y - sy;
+      // Require mostly-horizontal + threshold
+      if (Math.abs(dx) < THRESH || Math.abs(dx) <= Math.abs(dy)) return;
+
+      handled = true; // one step per swipe
+      if (dx < 0) gotoMark(currentMarkIndex + 1);
+      else        gotoMark(currentMarkIndex - 1);
+      rawEvt.preventDefault(); // stop accidental page moves now that we handled it
+    };
+
+    const onUp = (id) => {
+      tracking = false; handled = false;
+      try { target.releasePointerCapture?.(id); } catch {}
+    };
+
+    if ('PointerEvent' in window) {
+      target.addEventListener('pointerdown', e => onDown(e.clientX, e.clientY, e.pointerId), { passive: true });
+      target.addEventListener('pointermove', e => onMove(e.clientX, e.clientY, e), { passive: false });
+      target.addEventListener('pointerup',   e => onUp(e.pointerId), { passive: true });
+      target.addEventListener('pointercancel', e => onUp(e.pointerId), { passive: true });
+    } else {
+      // iOS <13 fallback
+      target.addEventListener('touchstart', e => { const t = e.changedTouches[0]; onDown(t.clientX, t.clientY, 0); }, { passive: true });
+      target.addEventListener('touchmove',  e => { const t = e.changedTouches[0]; onMove(t.clientX, t.clientY, e); }, { passive: false });
+      target.addEventListener('touchend',   () => onUp(0), { passive: true });
+      target.addEventListener('touchcancel',() => onUp(0), { passive: true });
+    }
+  }
+
+  installPointerSwipe(el);
+})();
+
+// ===== Modal
+const modal = document.getElementById('instructionsModal');
+const showModalBtn = document.getElementById('showModalBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const saveModal = document.getElementById('saveModal');
+const showSaveModalBtn = document.getElementById('showSaveModalBtn');
+const closeSaveModalBtn = document.getElementById('closeSaveModalBtn');
+const saveSolutionBtn = document.getElementById('saveSolutionBtn');
+const saveNameInput = document.getElementById('saveNameInput');
+const savedSolutionsListEl = document.getElementById('savedSolutionsList');
+
+function openModal() { modal.style.display = "block"; closeModalBtn.focus(); }
+function closeModal() { modal.style.display = "none"; showModalBtn.focus(); }
+function openSaveModal() {
+  if (!saveModal) return;
+  renderSavedSolutions();
+  saveModal.style.display = "block";
+  updateSaveButtonState();
+  closeSaveModalBtn?.focus();
+}
+function closeSaveModal() {
+  if (!saveModal) return;
+  saveModal.style.display = "none";
+  showSaveModalBtn?.focus();
+}
+
+showModalBtn.addEventListener('click', openModal);
+closeModalBtn.addEventListener('click', closeModal);
+closeModalBtn.addEventListener('keypress', function(event) { if (event.key === 'Enter' || event.keyCode === 13) { closeModal(); }});
+showSaveModalBtn.addEventListener('click', openSaveModal);
+closeSaveModalBtn.addEventListener('click', closeSaveModal);
+closeSaveModalBtn.addEventListener('keypress', function(event) { if (event.key === 'Enter' || event.keyCode === 13) { closeSaveModal(); }});
+
+const makeSolutionId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+
+if (saveSolutionBtn) {
+  saveSolutionBtn.addEventListener('click', () => {
+    if (!lastSolution) return;
+    const rawName = (saveNameInput?.value || '').trim();
+    const fallbackName = `Solution #${savedSolutions.length + 1}`;
+    const newSolution = {
+      ...lastSolution,
+      id: makeSolutionId(),
+      name: rawName || fallbackName,
+      createdAt: Date.now()
+    };
+    savedSolutions = [newSolution, ...savedSolutions];
+    saveSavedSolutions(savedSolutions);
+    renderSavedSolutions();
+    if (saveNameInput) saveNameInput.value = '';
+  });
+}
+
+if (savedSolutionsListEl) {
+  savedSolutionsListEl.addEventListener('click', (event) => {
+    const btn = event.target.closest('button');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (!id) return;
+    if (btn.classList.contains('saved-load')) {
+      const sol = savedSolutions.find(item => item.id === id);
+      if (!sol) return;
+      document.getElementById('length').value = sol.length || '';
+      document.getElementById('endDistance').value = sol.endDistance || '';
+      document.getElementById('valueUsed').value = sol.valueUsed || '';
+      changeTab(sol.mode === 'near' ? 'near' : 'equal');
+      closeSaveModal();
+    } else if (btn.classList.contains('saved-delete')) {
+      if (!confirm('Are you sure you want to delete this saved solution?')) return;
+      savedSolutions = savedSolutions.filter(item => item.id !== id);
+      saveSavedSolutions(savedSolutions);
+      renderSavedSolutions();
+    }
+  });
+}
+
+window.addEventListener('click', function(event) {
+  if (event.target === modal) { closeModal(); }
+  if (event.target === saveModal) { closeSaveModal(); }
+});
+
+// ===== Initialize saved storage + Start
+loadSavedSolutions();
+renderSavedSolutions();
+updateSaveLoadButtonLabel();
+updateSaveButtonState();
+calculate();
+</script>
+</body>
+</html>
