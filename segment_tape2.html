@@ -207,20 +207,54 @@ input {
 .saved-solution.saved-near {
     background-color: lightgreen;
 }
+.saved-solution-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
 .saved-solution-title {
     font-weight: 600;
     font-size: 18px;
-    margin-bottom: 6px;
+    margin-bottom: 0;
+    flex: 1;
+    padding-right: 8px;
+}
+.saved-solution-icons {
+    display: flex;
+    gap: 4px;
+}
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 2px 4px;
+    font-size: 18px;
+    line-height: 1;
+}
+.icon-btn:active {
+    transform: translateY(1px);
+}
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
 }
 .saved-fields-row {
     display: flex;
-    margin-bottom: 8px;
+    margin: 6px 0 4px;
 }
 .saved-field {
     flex: 1;
     text-align: center;
-    padding: 8px 4px;
+    padding: 10px 6px;
     border-right: 1px solid #363636;
+    background-color: rgba(255, 255, 255, 0.8);
 }
 .saved-field:last-child {
     border-right: none;
@@ -233,16 +267,7 @@ input {
 .saved-segment-row {
     font-size: 15px;
     margin-top: 4px;
-}
-.saved-solution-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-}
-.saved-solution-actions .tape-btn {
-    flex: 1;
-    font-size: 15px;
-    padding: 6px;
+    padding-bottom: 4px;
 }
 .save-empty {
     text-align: center;
@@ -559,7 +584,13 @@ const renderSavedSolutions = () => {
     const modeClass = isNear ? 'saved-near' : 'saved-equal';
     const segmentHtml = sol.segmentLengthText ? `${sol.segmentLengthText}&quot;` : '—';
     return `<div class="saved-solution ${modeClass}" data-id="${sol.id}">
-      <div class="saved-solution-title">${escapeHTML(sol.name)}</div>
+      <div class="saved-solution-header">
+        <div class="saved-solution-title">${escapeHTML(sol.name)}</div>
+        <div class="saved-solution-icons">
+          <button class="icon-btn saved-load" type="button" data-id="${sol.id}"><span aria-hidden="true">⤓</span><span class="sr-only">Load</span></button>
+          <button class="icon-btn saved-delete" type="button" data-id="${sol.id}"><span aria-hidden="true">🗑</span><span class="sr-only">Delete</span></button>
+        </div>
+      </div>
       <div class="saved-fields-row">
         <div class="saved-field">
           <div>Length</div>
@@ -575,10 +606,6 @@ const renderSavedSolutions = () => {
         </div>
       </div>
       <div class="saved-segment-row">Segment length: ${segmentHtml}</div>
-      <div class="saved-solution-actions">
-        <button class="tape-btn saved-load" type="button" data-id="${sol.id}">Load</button>
-        <button class="tape-btn saved-delete" type="button" data-id="${sol.id}">Delete</button>
-      </div>
     </div>`;
   }).join('');
 };
