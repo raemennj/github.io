@@ -619,6 +619,19 @@ const deleteIconSVG = `<svg viewBox="0 0 24 24" role="img" aria-hidden="true" fo
   <path class="icon-accent" d="M10 11v6H8v-6zm6 0v6h-2v-6z"/>
 </svg>`;
 
+const findMatchingSolution = (candidate, list) => {
+  if (!candidate || !Array.isArray(list)) return null;
+  return list.find(sol =>
+    sol.mode === candidate.mode &&
+    sol.length === candidate.length &&
+    sol.endDistance === candidate.endDistance &&
+    sol.valueUsed === candidate.valueUsed &&
+    sol.segmentLengthText === candidate.segmentLengthText &&
+    sol.numSegments === candidate.numSegments &&
+    sol.marksCount === candidate.marksCount
+  ) || null;
+};
+
 const renderSavedSolutions = () => {
   const container = document.getElementById('savedSolutionsList');
   if (!container) return;
@@ -1035,6 +1048,8 @@ const closeSaveModalBtn = document.getElementById('closeSaveModalBtn');
 const saveSolutionBtn = document.getElementById('saveSolutionBtn');
 const saveNameInput = document.getElementById('saveNameInput');
 const savedSolutionsListEl = document.getElementById('savedSolutionsList');
+const saveHintEl = document.querySelector('.save-hint');
+const defaultSaveHintText = saveHintEl ? saveHintEl.textContent : '';
 
 function openModal() { modal.style.display = "block"; closeModalBtn.focus(); }
 function closeModal() { modal.style.display = "none"; showModalBtn.focus(); }
@@ -1065,6 +1080,18 @@ if (saveSolutionBtn) {
     if (!lastSolution) return;
     const rawName = (saveNameInput?.value || '').trim();
     const fallbackName = `Solution #${savedSolutions.length + 1}`;
+    const existing = findMatchingSolution(lastSolution, savedSolutions);
+    if (existing) {
+      if (saveNameInput && existing.name) {
+        saveNameInput.value = existing.name;
+      }
+      if (saveHintEl) {
+        const displayName = existing.name || 'this name';
+        saveHintEl.textContent = `Already saved as "${displayName}".`;
+      }
+      return;
+    }
+
     const newSolution = {
       ...lastSolution,
       id: makeSolutionId(),
@@ -1075,6 +1102,7 @@ if (saveSolutionBtn) {
     saveSavedSolutions(savedSolutions);
     renderSavedSolutions();
     if (saveNameInput) saveNameInput.value = '';
+    if (saveHintEl) saveHintEl.textContent = defaultSaveHintText;
   });
 }
 
