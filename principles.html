@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>12 Spiritual Principles — Scroll Journey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    /* 
+      GLOBAL DESIGN TOKENS
+      Tweak these first if you want to change the overall “feel”
+    */
+    :root {
+      --page-bg: hsl(220 35% 6%);
+      --page-accent: hsl(210 60% 55%);
+      --page-text: #f9fafb;
+      --page-text-muted: #cbd5f5;
+
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   sans-serif;
+
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-pill: 999px;
+
+      --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.4);
+      --transition-fast: 200ms ease-out;
+      --transition-med: 400ms ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body {
+      font-family: var(--font-main);
+      color: var(--page-text);
+      background: radial-gradient(circle at top, #111827 0, var(--page-bg) 45%, #020617 100%);
+      transition: background 800ms ease-out;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page-shell {
+      min-height: 100vh;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px 16px 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    main {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+      scroll-behavior: smooth;
+    }
+
+    /* 
+      HEADER / HERO SECTION
+    */
+
+    .hero {
+      position: relative;
+      padding: 32px 24px 40px;
+      border-radius: var(--radius-lg);
+      background: radial-gradient(circle at top left,
+                  rgba(148, 163, 253, 0.25),
+                  rgba(15, 23, 42, 0.95));
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      animation: heroIntro 800ms ease-out both;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(
+        from 120deg,
+        rgba(59, 130, 246, 0.1),
+        rgba(244, 114, 182, 0.06),
+        rgba(34, 197, 94, 0.08),
+        rgba(59, 130, 246, 0.1)
+      );
+      opacity: 0.8;
+      filter: blur(48px);
+      mix-blend-mode: screen;
+      animation: heroGlow 12s linear infinite;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-kicker {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--page-text-muted);
+      margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .hero-kicker-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--page-accent);
+      box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.4);
+      animation: dotPulse 1400ms ease-out infinite;
+    }
+
+    .hero-title {
+      font-size: clamp(1.8rem, 5vw, 2.3rem);
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .hero-sub {
+      font-size: 0.95rem;
+      color: var(--page-text-muted);
+      max-width: 34rem;
+      margin-bottom: 20px;
+    }
+
+    .hero-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-pill {
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 0.8rem;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 253, 0.6);
+      color: var(--page-text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .hero-pill-badge {
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      background: rgba(129, 140, 248, 0.3);
+      color: #e5e7eb;
+    }
+
+    .hero-cta {
+      border: none;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(120deg, var(--page-accent), #a855f7);
+      color: #0b1020;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      transform-origin: center;
+      transition:
+        transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        filter var(--transition-fast);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-cta::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(255,255,255,0.35), transparent 45%);
+      mix-blend-mode: screen;
+      opacity: 0;
+      transform: translateX(-30%);
+      transition: opacity 220ms ease-out, transform 220ms ease-out;
+    }
+
+    .hero-cta:hover {
+      transform: translateY(-1px) scale(1.02);
+      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.9);
+      filter: brightness(1.05);
+    }
+
+    .hero-cta:hover::after {
+      opacity: 1;
+      transform: translateX(10%);
+    }
+
+    .hero-cta-icon {
+      display: inline-block;
+      transform-origin: center;
+      animation: bounceDown 1200ms ease-in-out infinite;
+    }
+
+    .scroll-indicator {
+      margin-top: 18px;
+      font-size: 0.8rem;
+      color: var(--page-text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0.8;
+    }
+
+    .scroll-indicator-arrow {
+      width: 10px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 253, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scroll-indicator-arrow::before {
+      content: "";
+      width: 2px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(129, 140, 248, 1);
+      animation: arrowSlide 1300ms ease-in-out infinite;
+    }
+
+    /* 
+      PRINCIPLE SECTIONS
+    */
+
+    section.principle {
+      position: relative;
+      min-height: 80vh;
+      padding: 24px 18px 32px;
+      border-radius: var(--radius-lg);
+      background:
+        linear-gradient(
+          145deg,
+          hsl(var(--base-hue) var(--base-sat) calc(var(--base-light) + 14%)),
+          hsl(var(--base-hue) var(--base-sat) calc(var(--base-light) - 4%))
+        );
+      color: #0b1020;
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      opacity: 0;
+      transform: translateY(45px) scale(0.97);
+      transition:
+        opacity var(--transition-med),
+        transform var(--transition-med);
+    }
+
+    section.principle::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background:
+        radial-gradient(circle at top, hsla(var(--base-hue) var(--base-sat) 90% / 0.4), transparent 60%),
+        radial-gradient(circle at bottom left, rgba(15, 23, 42, 0.4), transparent 60%);
+      opacity: 0.9;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+
+    section.principle.is-visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .principle-inner {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    @media (max-width: 640px) {
+      .principle-inner {
+        grid-template-columns: minmax(0,1fr);
+        gap: 16px;
+      }
+    }
+
+    .principle-meta {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      margin-bottom: 10px;
+      color: hsla(220 35% 10% / 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .principle-index {
+      font-weight: 600;
+    }
+
+    .principle-tag {
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      border: 1px solid hsla(220 35% 16% / 0.1);
+      background: hsla(220 35% 96% / 0.4);
+      font-size: 0.7rem;
+    }
+
+    .principle-title {
+      font-size: 1.4rem;
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .principle-motto {
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      color: hsla(220 35% 12% / 0.75);
+    }
+
+    .principle-body {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: hsla(220 35% 12% / 0.9);
+    }
+
+    .principle-body em {
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    .principle-pulse-bar {
+      width: 100%;
+      height: 3px;
+      border-radius: var(--radius-pill);
+      background: linear-gradient(90deg,
+        hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) + 15%) / 0.3),
+        hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) + 35%) / 1),
+        hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) + 15%) / 0.3)
+      );
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .principle-pulse-bar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 0% 50%, rgba(255,255,255,0.9), transparent 60%);
+      mix-blend-mode: screen;
+      animation: pulseSweep 2600ms linear infinite;
+    }
+
+    /* “Art” block – ready to get wilder later */
+    .principle-art {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at 15% 15%,
+          hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) + 24%) / 0.7),
+          transparent 55%),
+        radial-gradient(circle at 80% 85%,
+          hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) - 6%) / 0.85),
+          transparent 55%),
+        linear-gradient(
+          135deg,
+          hsla(var(--base-hue) calc(var(--base-sat) - 15%) calc(var(--base-light) - 10%) / 0.7),
+          hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) + 12%) / 0.9)
+        );
+      overflow: hidden;
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.45);
+      transform-origin: center;
+      transform: perspective(900px) rotateX(16deg) rotateY(-12deg) translateY(6px);
+      animation: cardFloat 4000ms ease-in-out infinite alternate;
+    }
+
+    .principle-orbit {
+      position: absolute;
+      inset: 18%;
+      border-radius: 40%;
+      border: 1px solid hsla(220 35% 10% / 0.08);
+      box-shadow:
+        0 0 0 1px hsla(220 35% 100% / 0.1),
+        0 0 40px hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) + 18%) / 0.9);
+      animation: orbitSpin 18s linear infinite;
+      mix-blend-mode: soft-light;
+    }
+
+    .principle-core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 42%;
+      height: 42%;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 30% 30%, #ffffff, transparent 50%),
+        radial-gradient(circle at 80% 80%, hsla(220 35% 10% / 0.8), transparent 70%);
+      mix-blend-mode: screen;
+      box-shadow:
+        0 0 40px rgba(255, 255, 255, 0.5),
+        0 0 70px hsla(var(--base-hue) var(--base-sat) calc(var(--base-light) + 26%) / 0.9);
+      animation: corePulse 2600ms ease-in-out infinite;
+    }
+
+    .principle-ring {
+      position: absolute;
+      inset: 7%;
+      border-radius: 32px;
+      border: 1px solid hsla(220 35% 8% / 0.2);
+      background: radial-gradient(circle at 50% 10%,
+          rgba(255, 255, 255, 0.8), transparent 55%);
+      opacity: 0.9;
+      mix-blend-mode: soft-light;
+    }
+
+    .principle-label-float {
+      position: absolute;
+      bottom: 10px;
+      left: 14px;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      font-size: 0.7rem;
+      background: rgba(15, 23, 42, 0.75);
+      color: hsla(var(--base-hue) 100% 90% / 1);
+      backdrop-filter: blur(12px);
+      border: 1px solid hsla(220 35% 80% / 0.3);
+    }
+
+    /* 
+      KEYFRAMES
+    */
+
+    @keyframes heroIntro {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes heroGlow {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes dotPulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(129, 140, 248, 0.3);
+      }
+      50% {
+        transform: scale(1.24);
+        box-shadow: 0 0 0 12px rgba(129, 140, 248, 0);
+      }
+    }
+
+    @keyframes arrowSlide {
+      0% {
+        transform: translateY(-6px);
+        opacity: 0;
+      }
+      40% {
+        transform: translateY(2px);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(8px);
+        opacity: 0;
+      }
+    }
+
+    @keyframes bounceDown {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(2px);
+      }
+    }
+
+    @keyframes pulseSweep {
+      0% {
+        transform: translateX(-60%);
+      }
+      100% {
+        transform: translateX(120%);
+      }
+    }
+
+    @keyframes cardFloat {
+      0% {
+        transform: perspective(900px) rotateX(16deg) rotateY(-12deg) translateY(6px);
+      }
+      100% {
+        transform: perspective(900px) rotateX(12deg) rotateY(-16deg) translateY(1px);
+      }
+    }
+
+    @keyframes orbitSpin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes corePulse {
+      0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.08);
+        opacity: 0.85;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="hero-kicker">
+          <span class="hero-kicker-dot"></span>
+          <span>Practice in motion</span>
+        </div>
+        <h1 class="hero-title">12 Spiritual Principles</h1>
+        <p class="hero-sub">
+          A quiet, scrollable walk through the principles that shape your life.
+          Each section holds a single idea, a single color, and a single
+          invitation to act differently today.
+        </p>
+        <div class="hero-foot">
+          <div class="hero-pill">
+            <span class="hero-pill-badge">Journey</span>
+            <span>Scroll slowly. Breathe. Notice where you pause.</span>
+          </div>
+          <button class="hero-cta" id="startJourney">
+            <span>Begin below</span>
+            <span class="hero-cta-icon">⬇︎</span>
+          </button>
+        </div>
+        <div class="scroll-indicator">
+          <div class="scroll-indicator-arrow"></div>
+          <span>Scroll to reveal each principle</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="principles">
+      <!-- We’ll fill these with colors from JS config -->
+      <section class="principle" data-id="honesty">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">01 — Honesty</span>
+              <span class="principle-tag">Step One</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Honesty</h2>
+            <p class="principle-motto">Telling the truth, especially to yourself.</p>
+            <p class="principle-body">
+              Notice where you are <em>pretending</em>. The first movement of change
+              is dropping the act—one small admission at a time.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Honesty · Step One</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="hope">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">02 — Hope</span>
+              <span class="principle-tag">Step Two</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Hope</h2>
+            <p class="principle-motto">Maybe I don’t have to live like this forever.</p>
+            <p class="principle-body">
+              Hope is a tiny crack in the wall. Let in a bit of light. Let yourself
+              imagine a life that’s not run by fear or compulsion.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Hope · Step Two</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="faith">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">03 — Faith</span>
+              <span class="principle-tag">Step Three</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Faith</h2>
+            <p class="principle-motto">Trusting something wiser than your fear.</p>
+            <p class="principle-body">
+              You don’t have to know how it all works. Just move your weight a little
+              off of yourself and onto something steadier.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Faith · Step Three</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="courage">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">04 — Courage</span>
+              <span class="principle-tag">Step Four</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Courage</h2>
+            <p class="principle-motto">Looking inward without turning away.</p>
+            <p class="principle-body">
+              Courage isn’t loud. It’s steady. It lets you look at your life on paper
+              and still show up again tomorrow.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Courage · Step Four</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="integrity">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">05 — Integrity</span>
+              <span class="principle-tag">Step Five</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Integrity</h2>
+            <p class="principle-motto">Bringing your insides and outsides closer together.</p>
+            <p class="principle-body">
+              When you speak your story out loud, shame loses its power. You become
+              someone you can trust with the truth.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Integrity · Step Five</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="willingness">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">06 — Willingness</span>
+              <span class="principle-tag">Step Six</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Willingness</h2>
+            <p class="principle-motto">Letting go of what’s killing you, one finger at a time.</p>
+            <p class="principle-body">
+              You don’t have to be <em>ready</em> all at once. Start with: “I’m open
+              to being changed here.”
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Willingness · Step Six</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="humility">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">07 — Humility</span>
+              <span class="principle-tag">Step Seven</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Humility</h2>
+            <p class="principle-motto">Knowing your size—and that it’s enough.</p>
+            <p class="principle-body">
+              Humility isn’t groveling. It’s standing at your actual height and
+              asking for help you can’t manufacture alone.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Humility · Step Seven</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="love">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">08 — Love</span>
+              <span class="principle-tag">Step Eight</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Love</h2>
+            <p class="principle-motto">Letting compassion lead the cleanup.</p>
+            <p class="principle-body">
+              Love is not a feeling here. It’s a decision: I’ll become willing to
+              repair the damage I caused.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Love · Step Eight</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="discipline">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">09 — Discipline</span>
+              <span class="principle-tag">Step Nine</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Discipline</h2>
+            <p class="principle-motto">Making living amends, not just speeches.</p>
+            <p class="principle-body">
+              Discipline is quiet: showing up, following through, staying out of
+              harm’s way while you repair what can be repaired.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Discipline · Step Nine</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="perseverance">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">10 — Perseverance</span>
+              <span class="principle-tag">Step Ten</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Perseverance</h2>
+          <p class="principle-motto">Staying in the maintenance, not the meltdown.</p>
+            <p class="principle-body">
+              You keep sweeping the floor. You keep watching your part. You don’t
+              wait for the mess to drown you again.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Perseverance · Step Ten</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="awareness">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">11 — Awareness</span>
+              <span class="principle-tag">Step Eleven</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Awareness</h2>
+            <p class="principle-motto">Listening for guidance instead of panic.</p>
+            <p class="principle-body">
+              Prayer, meditation, quiet. You tune the station, turn down the volume
+              of fear, and see what comes through.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Awareness · Step Eleven</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="principle" data-id="service">
+        <div class="principle-inner">
+          <div class="principle-text">
+            <div class="principle-meta">
+              <span class="principle-index">12 — Service</span>
+              <span class="principle-tag">Step Twelve</span>
+            </div>
+            <div class="principle-pulse-bar"></div>
+            <h2 class="principle-title">Service</h2>
+            <p class="principle-motto">Giving away what you’ve been given.</p>
+            <p class="principle-body">
+              You carry the message by living it: showing up sober, kind, honest,
+              available. You become the proof that change is possible.
+            </p>
+          </div>
+          <div class="principle-art">
+            <div class="principle-ring"></div>
+            <div class="principle-orbit"></div>
+            <div class="principle-core"></div>
+            <div class="principle-label-float">Service · Step Twelve</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // CENTRAL COLOR CONFIG
+    // Change colors here and everywhere else updates automatically.
+    // Base values are HSL; we use lighter/darker variants via CSS calc().
+    const PRINCIPLE_COLORS = [
+      { id: "honesty",      hue: 20,  sat: 85, light: 45 },
+      { id: "hope",         hue: 215, sat: 80, light: 55 },
+      { id: "faith",        hue: 260, sat: 70, light: 50 },
+      { id: "courage",      hue: 12,  sat: 85, light: 50 },
+      { id: "integrity",    hue: 175, sat: 70, light: 45 },
+      { id: "willingness",  hue: 45,  sat: 90, light: 52 },
+      { id: "humility",     hue: 210, sat: 40, light: 60 },
+      { id: "love",         hue: 340, sat: 75, light: 55 },
+      { id: "discipline",   hue: 30,  sat: 70, light: 40 },
+      { id: "perseverance", hue: 260, sat: 45, light: 40 },
+      { id: "awareness",    hue: 190, sat: 70, light: 52 },
+      { id: "service",      hue: 130, sat: 50, light: 45 }
+    ];
+
+    const sectionMap = new Map();
+    const sections = document.querySelectorAll("section.principle");
+
+    PRINCIPLE_COLORS.forEach(cfg => {
+      const section = document.querySelector(`section.principle[data-id="${cfg.id}"]`);
+      if (!section) return;
+      sectionMap.set(section, cfg);
+      section.style.setProperty("--base-hue", cfg.hue);
+      section.style.setProperty("--base-sat", cfg.sat + "%");
+      section.style.setProperty("--base-light", cfg.light + "%");
+    });
+
+    const root = document.documentElement;
+    let activeId = null;
+
+    function setPageColorsFromConfig(cfg) {
+      const bgLight = cfg.light - 18;
+      const accentLight = cfg.light + 16;
+      root.style.setProperty("--page-bg", `hsl(${cfg.hue} ${cfg.sat}% ${bgLight}%)`);
+      root.style.setProperty("--page-accent", `hsl(${cfg.hue} ${cfg.sat}% ${accentLight}%)`);
+    }
+
+    // IntersectionObserver for scroll-driven animation + background color
+    const observer = new IntersectionObserver(
+      entries => {
+        let bestEntry = null;
+
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            if (!bestEntry || entry.intersectionRatio > bestEntry.intersectionRatio) {
+              bestEntry = entry;
+            }
+          }
+        }
+
+        if (bestEntry) {
+          const cfg = sectionMap.get(bestEntry.target);
+          if (!cfg) return;
+          if (activeId !== cfg.id) {
+            activeId = cfg.id;
+            setPageColorsFromConfig(cfg);
+          }
+        }
+      },
+      {
+        threshold: 0.4
+      }
+    );
+
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    // Set initial colors based on the first principle
+    const firstSectionCfg = sectionMap.get(sections[0]);
+    if (firstSectionCfg) {
+      setPageColorsFromConfig(firstSectionCfg);
+      sections[0].classList.add("is-visible");
+    }
+
+    // Smooth scroll from "Begin below" button
+    const startBtn = document.getElementById("startJourney");
+    if (startBtn && sections[0]) {
+      startBtn.addEventListener("click", () => {
+        sections[0].scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  </script>
+</body>
+</html>
