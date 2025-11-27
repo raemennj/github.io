@@ -11,7 +11,6 @@
       Tweak these first if you want to change the overall “feel”
     */
     :root {
-      --page-bg: hsl(220 35% 6%);
       --page-accent: hsl(210 60% 55%);
       --page-text: #f9fafb;
       --page-text-muted: #cbd5f5;
@@ -41,8 +40,14 @@
     body {
       font-family: var(--font-main);
       color: var(--page-text);
-      background: radial-gradient(circle at top, #111827 0, var(--page-bg) 45%, #020617 100%);
-      transition: background 800ms ease-out;
+      background-color: #020617;
+      background-image: radial-gradient(
+        circle at top,
+        rgba(17, 24, 39, 0.45) 0,
+        rgba(2, 6, 23, 0.35) 45%,
+        rgba(2, 6, 23, 0.75) 100%
+      );
+      transition: background-color 150ms linear;
       -webkit-font-smoothing: antialiased;
     }
 
@@ -558,7 +563,7 @@
       <div class="hero-inner">
         <div class="hero-kicker">
           <span class="hero-kicker-dot"></span>
-          <span>Practice in motion</span>
+          <span>Having had a spiritual awakening as a result of these steps, we tried to carry this message to alcoholics, and to practice these principles in <b>all</b> our affairs.</span>
         </div>
         <h1 class="hero-title">12 Spiritual Principles</h1>
         <p class="hero-sub">
@@ -908,12 +913,60 @@
 
     const root = document.documentElement;
     let activeId = null;
+    let currentBg = null;
+    let bgAnimFrame = null;
+
+    function easeInOutQuad(t) {
+      return t < 0.5
+        ? 2 * t * t
+        : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    }
+
+    function animatePageBg(targetCfg, duration = 900) {
+      const startTime = performance.now();
+
+      const start = currentBg || {
+        h: targetCfg.hue,
+        s: targetCfg.sat,
+        l: targetCfg.light - 18
+      };
+
+      const end = {
+        h: targetCfg.hue,
+        s: targetCfg.sat,
+        l: targetCfg.light - 18
+      };
+
+      if (bgAnimFrame) {
+        cancelAnimationFrame(bgAnimFrame);
+      }
+
+      function frame(now) {
+        const elapsed = now - startTime;
+        const t = Math.min(1, Math.max(0, elapsed / duration));
+        const eased = easeInOutQuad(t);
+
+        const h = start.h + (end.h - start.h) * eased;
+        const s = start.s + (end.s - start.s) * eased;
+        const l = start.l + (end.l - start.l) * eased;
+
+        document.body.style.backgroundColor = `hsl(${h} ${s}% ${l}%)`;
+
+        if (t < 1) {
+          bgAnimFrame = requestAnimationFrame(frame);
+        } else {
+          currentBg = end;
+          bgAnimFrame = null;
+        }
+      }
+
+      bgAnimFrame = requestAnimationFrame(frame);
+    }
 
     function setPageColorsFromConfig(cfg) {
-      const bgLight = cfg.light - 18;
       const accentLight = cfg.light + 16;
-      root.style.setProperty("--page-bg", `hsl(${cfg.hue} ${cfg.sat}% ${bgLight}%)`);
       root.style.setProperty("--page-accent", `hsl(${cfg.hue} ${cfg.sat}% ${accentLight}%)`);
+      animatePageBg(cfg);
     }
 
     // IntersectionObserver for scroll-driven animation + background color
@@ -951,6 +1004,13 @@
     // Set initial colors based on the first principle
     const firstSectionCfg = sectionMap.get(sections[0]);
     if (firstSectionCfg) {
+      currentBg = {
+        h: firstSectionCfg.hue,
+        s: firstSectionCfg.sat,
+        l: firstSectionCfg.light - 18
+      };
+      document.body.style.backgroundColor =
+        `hsl(${currentBg.h} ${currentBg.s}% ${currentBg.l}%)`;
       setPageColorsFromConfig(firstSectionCfg);
       sections[0].classList.add("is-visible");
     }
