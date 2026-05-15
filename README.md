@@ -2,6 +2,10 @@
 
 This repository contains a few small HTML demos. The main landing page lists each example.
 
+## Calculator PWA handoff
+
+A detailed technical and product handoff for the Inch Calc PWA is available at [`docs/calculator-pwa-handoff.md`](docs/calculator-pwa-handoff.md).
+
 ## Viewing locally
 
 Open `index.html` in any modern web browser to view the list of demos.
